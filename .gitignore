@@ -44,3 +44,4 @@ public/worker-*.js.map
 # supabase
 supabase/.branches
 supabase/.temp
+node_modules
