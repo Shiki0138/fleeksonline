@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 
 
 
@@ -43,10 +44,34 @@ dist/
 build/
 .npm
 .nyc_output/
+=======
+# dependencies
+/node_modules
+/.pnp
+.pnp.js
+node_modules/
+
+# testing
+/coverage
+
+# next.js
+/.next/
+/out/
+
+# production
+/build
+
+# misc
+.DS_Store
+*.pem
+
+# debug
+>>>>>>> 459783e5ff4a66eaf5c8c10346e7f8e14da0285f
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
+<<<<<<< HEAD
 # TypeScript
 *.tsbuildinfo
 
@@ -133,3 +158,28 @@ hive-mind-prompt-*.txt
 supabase/.env
 supabase/.env.local
 supabase/config.toml
+=======
+# local env files
+.env*.local
+.env
+
+# vercel
+.vercel
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+
+# PWA
+public/sw.js
+public/sw.js.map
+public/workbox-*.js
+public/workbox-*.js.map
+public/worker-*.js
+public/worker-*.js.map
+
+# supabase
+supabase/.branches
+supabase/.temp
+node_modules
+>>>>>>> 459783e5ff4a66eaf5c8c10346e7f8e14da0285f
