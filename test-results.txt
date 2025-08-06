@@ -1,0 +1,20 @@
+
+📊 TEST EXECUTION REPORT
+========================
+⏰ Execution Time: 3.76s
+📅 Timestamp: 2025-08-06T01:43:30.329Z
+
+📈 SUMMARY
+----------
+✅ Passed Test Suites: 2
+❌ Failed Test Suites: 3
+📊 Success Rate: 40.00%
+🎯 Overall Status: ❌ FAILED
+
+📋 DETAILED RESULTS
+------------------
+❌ UNIT: 1.02s
+❌ INTEGRATION: 0.67s
+✅ E2E: 0.53s
+❌ COVERAGE: 1.54s
+✅ PERFORMANCE: 0.00s

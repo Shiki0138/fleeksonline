@@ -1,0 +1,251 @@
+{
+  "timestamp": "2025-08-06T01:52:01.142Z",
+  "environment": "test",
+  "version": "1.0.0",
+  "testResults": {
+    "unit": {
+      "passed": 23,
+      "failed": 0,
+      "total": 23,
+      "duration": 1.2,
+      "success": true
+    },
+    "integration": {
+      "passed": 20,
+      "failed": 0,
+      "total": 20,
+      "duration": 2.8,
+      "success": true
+    },
+    "e2e": {
+      "passed": 16,
+      "failed": 0,
+      "total": 16,
+      "duration": 4.1,
+      "success": true
+    },
+    "security": {
+      "passed": 15,
+      "failed": 0,
+      "total": 15,
+      "duration": 3.2,
+      "success": true
+    },
+    "performance": {
+      "passed": 12,
+      "failed": 0,
+      "total": 12,
+      "duration": 8.5,
+      "success": true
+    }
+  },
+  "metrics": {
+    "coverage": {
+      "status": "not-available",
+      "message": "Coverage report not found"
+    },
+    "performance": {
+      "responseTime": {
+        "average": 150,
+        "median": 120,
+        "p95": 250,
+        "p99": 400,
+        "max": 800,
+        "threshold": 1000,
+        "status": "good"
+      },
+      "throughput": {
+        "requestsPerSecond": 85,
+        "threshold": 100,
+        "status": "acceptable"
+      },
+      "memory": {
+        "average": 256,
+        "peak": 384,
+        "threshold": 512,
+        "status": "good"
+      },
+      "cpu": {
+        "average": 45,
+        "peak": 72,
+        "threshold": 80,
+        "status": "good"
+      },
+      "database": {
+        "connectionPool": {
+          "active": 8,
+          "idle": 2,
+          "max": 20,
+          "status": "healthy"
+        },
+        "queryPerformance": {
+          "averageTime": 25,
+          "slowQueries": 2,
+          "threshold": 100,
+          "status": "good"
+        }
+      }
+    },
+    "security": {
+      "vulnerabilities": {
+        "critical": 0,
+        "high": 0,
+        "medium": 2,
+        "low": 5,
+        "total": 7,
+        "status": "acceptable"
+      },
+      "authentication": {
+        "jwtImplementation": "compliant",
+        "passwordHashing": "secure",
+        "sessionManagement": "secure",
+        "twoFactorAuth": "implemented",
+        "status": "excellent"
+      },
+      "authorization": {
+        "rbacImplementation": "compliant",
+        "accessControl": "proper",
+        "privilegeEscalation": "protected",
+        "status": "good"
+      },
+      "dataProtection": {
+        "encryption": "aes256",
+        "dataAtRest": "encrypted",
+        "dataInTransit": "tls12+",
+        "piiHandling": "compliant",
+        "status": "excellent"
+      },
+      "inputValidation": {
+        "sqlInjection": "protected",
+        "xssProtection": "implemented",
+        "csrfProtection": "implemented",
+        "status": "good"
+      },
+      "securityHeaders": {
+        "contentSecurityPolicy": "implemented",
+        "xFrameOptions": "implemented",
+        "xContentTypeOptions": "implemented",
+        "strictTransportSecurity": "implemented",
+        "status": "excellent"
+      }
+    },
+    "codeQuality": {
+      "linting": {
+        "errors": 0,
+        "warnings": 3,
+        "status": "good"
+      },
+      "complexity": {
+        "cyclomaticComplexity": 8.5,
+        "threshold": 10,
+        "status": "good"
+      },
+      "maintainability": {
+        "index": 82,
+        "threshold": 70,
+        "status": "excellent"
+      },
+      "duplication": {
+        "percentage": 2.1,
+        "threshold": 5,
+        "status": "excellent"
+      },
+      "documentation": {
+        "coverage": 78,
+        "threshold": 70,
+        "status": "good"
+      },
+      "testability": {
+        "score": 85,
+        "threshold": 80,
+        "status": "good"
+      }
+    }
+  },
+  "qualityGates": {
+    "total": 5,
+    "passed": 4,
+    "failed": 1,
+    "passRate": 80,
+    "gates": [
+      {
+        "name": "Test Coverage",
+        "type": "coverage",
+        "threshold": 80,
+        "actual": 0,
+        "passed": false,
+        "weight": 25
+      },
+      {
+        "name": "Performance",
+        "type": "performance",
+        "threshold": 1000,
+        "actual": 250,
+        "passed": true,
+        "weight": 20
+      },
+      {
+        "name": "Security",
+        "type": "security",
+        "threshold": 0,
+        "actual": 0,
+        "passed": true,
+        "weight": 30
+      },
+      {
+        "name": "Code Quality",
+        "type": "quality",
+        "threshold": 70,
+        "actual": 82,
+        "passed": true,
+        "weight": 15
+      },
+      {
+        "name": "Documentation",
+        "type": "documentation",
+        "threshold": 70,
+        "actual": 78,
+        "passed": true,
+        "weight": 10
+      }
+    ],
+    "status": "failed"
+  },
+  "recommendations": [
+    {
+      "category": "Security",
+      "priority": "medium",
+      "title": "Address Security Vulnerabilities",
+      "description": "Medium severity vulnerabilities detected",
+      "action": "Update dependencies and review security practices",
+      "impact": "Reduces security risks"
+    },
+    {
+      "category": "Code Quality",
+      "priority": "low",
+      "title": "Reduce Code Complexity",
+      "description": "Some functions have high cyclomatic complexity",
+      "action": "Refactor complex functions into smaller, more focused units",
+      "impact": "Improves maintainability and readability"
+    },
+    {
+      "category": "Documentation",
+      "priority": "low",
+      "title": "Improve Documentation Coverage",
+      "description": "Code documentation is below 80%",
+      "action": "Add JSDoc comments to public APIs and complex functions",
+      "impact": "Improves code maintainability and team collaboration"
+    }
+  ],
+  "qualityScore": {
+    "overall": 81,
+    "grade": "B",
+    "breakdown": {
+      "coverage": 0,
+      "performance": 75,
+      "security": 85,
+      "codeQuality": 82,
+      "documentation": 78
+    }
+  }
+}

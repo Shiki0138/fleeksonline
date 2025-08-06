@@ -1,0 +1,45 @@
+{
+  "metrics": {
+    "responseTime": {
+      "threshold": 1000,
+      "percentile": 95
+    },
+    "throughput": {
+      "threshold": 100
+    },
+    "errorRate": {
+      "threshold": 0.01
+    },
+    "memoryUsage": {
+      "threshold": 512
+    },
+    "cpuUsage": {
+      "threshold": 80
+    }
+  },
+  "alerts": [
+    {
+      "condition": "responseTime > 2000",
+      "action": "notify-team",
+      "severity": "high"
+    },
+    {
+      "condition": "errorRate > 0.05",
+      "action": "rollback-deployment",
+      "severity": "critical"
+    },
+    {
+      "condition": "memoryUsage > 80%",
+      "action": "scale-resources",
+      "severity": "medium"
+    }
+  ],
+  "monitoring": {
+    "interval": 30,
+    "retention": "7d",
+    "dashboards": [
+      "grafana",
+      "datadog"
+    ]
+  }
+}

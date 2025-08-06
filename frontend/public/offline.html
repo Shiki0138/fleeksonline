@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fleeks - Offline</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background: linear-gradient(135deg, #1e1e2e 0%, #2d1b69 50%, #4a1942 100%);
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+    
+    .container {
+      text-align: center;
+      max-width: 500px;
+      width: 100%;
+    }
+    
+    .icon {
+      width: 120px;
+      height: 120px;
+      margin: 0 auto 30px;
+      background: linear-gradient(135deg, #ec4899 0%, #8b5cf6 100%);
+      border-radius: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    }
+    
+    .icon svg {
+      width: 60px;
+      height: 60px;
+      fill: white;
+    }
+    
+    h1 {
+      font-size: 2.5rem;
+      margin-bottom: 20px;
+      background: linear-gradient(135deg, #ec4899 0%, #8b5cf6 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    
+    p {
+      font-size: 1.25rem;
+      line-height: 1.6;
+      color: #e0e0e0;
+      margin-bottom: 30px;
+    }
+    
+    .features {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      border-radius: 20px;
+      padding: 30px;
+      margin-top: 40px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    .features h2 {
+      font-size: 1.5rem;
+      margin-bottom: 20px;
+      color: #ffffff;
+    }
+    
+    .features ul {
+      list-style: none;
+      text-align: left;
+    }
+    
+    .features li {
+      padding: 10px 0;
+      display: flex;
+      align-items: center;
+      color: #e0e0e0;
+    }
+    
+    .features li:before {
+      content: "✨";
+      margin-right: 10px;
+      font-size: 1.2rem;
+    }
+    
+    .retry-button {
+      margin-top: 30px;
+      padding: 15px 30px;
+      background: linear-gradient(135deg, #ec4899 0%, #8b5cf6 100%);
+      color: white;
+      border: none;
+      border-radius: 30px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+    
+    .retry-button:hover {
+      transform: scale(1.05);
+    }
+    
+    @media (max-width: 600px) {
+      h1 {
+        font-size: 2rem;
+      }
+      
+      p {
+        font-size: 1.1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="icon">
+      <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path d="M4.5 13.5l1.5 1.5L9 12M4.5 8.5l1.5 1.5L9 7M19.5 10.5l-1.5 1.5L15 9M19.5 5.5l-1.5 1.5L15 4M12 2v20M7 4h10a2 2 0 012 2v12a2 2 0 01-2 2H7a2 2 0 01-2-2V6a2 2 0 012-2z"/>
+      </svg>
+    </div>
+    
+    <h1>You're Offline</h1>
+    <p>Don't worry! Fleeks works offline too. You can still access many features while you're disconnected.</p>
+    
+    <div class="features">
+      <h2>Available Offline Features</h2>
+      <ul>
+        <li>Browse cached products and tutorials</li>
+        <li>Use AR beauty filters with saved data</li>
+        <li>Access your favorite looks and wishlists</li>
+        <li>View your beauty profile and preferences</li>
+        <li>Continue using gesture and voice controls</li>
+      </ul>
+    </div>
+    
+    <button class="retry-button" onclick="window.location.reload()">
+      Try Again
+    </button>
+  </div>
+  
+  <script>
+    // Check for connection periodically
+    setInterval(() => {
+      fetch('/').then(() => {
+        window.location.reload();
+      }).catch(() => {
+        // Still offline
+      });
+    }, 5000);
+  </script>
+</body>
+</html>

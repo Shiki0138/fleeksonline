@@ -1,0 +1,135 @@
+
+
+
+
+# 🚨 セキュリティ重要ファイル - 絶対にコミットしない
+**/.env
+**/.env.local
+**/.env.development
+**/.env.test
+**/.env.production
+*.env
+*.env.*
+.env*
+!.env.example
+!**/.env.example
+
+# 特に危険な設定ファイル
+fleeks-ai-platform/.env.local
+src/backend/.env
+src/frontend/.env
+
+# API キーと機密情報
+**/config/secrets.json
+**/config/keys/*
+**/*api*key*
+**/*secret*
+**/*password*
+**/*token*
+**/database.json
+**/credentials.json
+**/service-account*.json
+
+# データベース接続情報
+DATABASE_URL
+SUPABASE_*
+JWT_SECRET*
+*_SECRET_KEY
+*_PRIVATE_KEY
+
+# Node.js
+node_modules/
+dist/
+build/
+.npm
+.nyc_output/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# TypeScript
+*.tsbuildinfo
+
+# データベース
+*.db
+*.db-journal
+*.db-wal
+*.sqlite
+*.sqlite-journal
+*.sqlite-wal
+*.sqlite3
+database.json
+prisma/dev.db*
+
+# Testing
+coverage/
+.nyc_output/
+test-results*/
+
+# Cache
+.cache/
+.parcel-cache/
+.next/
+.nuxt/
+.vuepress/dist/
+.temp/
+
+# IDE
+.vscode/settings.json
+.vscode/launch.json
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Uploads & User Content
+uploads/
+public/uploads/
+user-content/
+
+# Logs
+logs/
+*.log
+
+# Backup files
+*.bak
+*.backup
+*.old
+
+# Temporary files
+tmp/
+temp/
+.tmp/
+
+# Claude Flow generated files
+.claude/settings.local.json
+.mcp.json
+claude-flow.config.json
+.swarm/
+.hive-mind/
+memory/claude-flow-data.json
+memory/sessions/*
+!memory/sessions/README.md
+memory/agents/*
+!memory/agents/README.md
+coordination/memory_bank/*
+coordination/subtasks/*
+coordination/orchestration/*
+claude-flow
+claude-flow.bat
+claude-flow.ps1
+hive-mind-prompt-*.txt
+
+# Supabase
+supabase/.env
+supabase/.env.local
+supabase/config.toml
