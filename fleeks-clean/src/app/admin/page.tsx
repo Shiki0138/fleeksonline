@@ -26,13 +26,18 @@ export default function AdminDashboard() {
       }
 
       // プロファイル取得
-      const { data: profileData } = await supabase
-        .from('profiles')
+      const { data: profileData, error: profileError } = await supabase
+        .from('fleeks_profiles')
         .select('*')
         .eq('id', user.id)
         .single()
 
+      console.log('Admin check - User:', user.email, 'ID:', user.id)
+      console.log('Admin check - Profile:', profileData)
+      console.log('Admin check - Profile Error:', profileError)
+
       if (!profileData || (profileData.role !== 'admin' && user.email !== 'greenroom51@gmail.com')) {
+        console.log('Admin check failed - Role:', profileData?.role, 'Email:', user.email)
         router.push('/dashboard')
         return
       }

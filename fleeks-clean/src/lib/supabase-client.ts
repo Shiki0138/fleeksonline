@@ -42,7 +42,7 @@ export const customAuth = {
   // プロファイル情報の取得
   async getProfile(userId: string) {
     const { data: profile } = await supabase
-      .from('profiles')
+      .from('fleeks_profiles')
       .select('*')
       .eq('id', userId)
       .single()

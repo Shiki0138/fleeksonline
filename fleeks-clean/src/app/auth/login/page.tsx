@@ -31,7 +31,25 @@ export default function LoginPage() {
       }
 
       if (data.user) {
-        router.push('/dashboard')
+        console.log('Login - User:', data.user.email, 'ID:', data.user.id)
+        
+        // プロファイルを確認して管理者なら/adminへ
+        const { data: profileData, error: profileError } = await supabase
+          .from('fleeks_profiles')
+          .select('role')
+          .eq('id', data.user.id)
+          .single()
+
+        console.log('Login - Profile:', profileData)
+        console.log('Login - Profile Error:', profileError)
+
+        if (profileData?.role === 'admin' || data.user.email === 'greenroom51@gmail.com') {
+          console.log('Login - Redirecting to /admin')
+          router.push('/admin')
+        } else {
+          console.log('Login - Redirecting to /dashboard')
+          router.push('/dashboard')
+        }
       }
     } catch (err) {
       setError('ログインに失敗しました')

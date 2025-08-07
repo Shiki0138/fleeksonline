@@ -31,14 +31,14 @@ export async function POST(
 
     // Get video details (if exists in database)
     const { data: video } = await supabase
-      .from('videos')
+      .from('fleeks_videos')
       .select('duration, title')
       .eq('youtube_id', params.videoId)
       .single();
 
     // Insert viewing history
     const { data, error } = await supabase
-      .from('video_access_logs')
+      .from('fleeks_video_access_logs')
       .insert({
         user_id: user.id,
         video_id: params.videoId,

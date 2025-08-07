@@ -46,7 +46,7 @@ export default function NewBlogPage() {
       const tags = formData.tags.split(',').map(tag => tag.trim()).filter(tag => tag)
 
       const { error } = await supabase
-        .from('blog_posts')
+        .from('fleeks_blog_posts')
         .insert({
           title: formData.title,
           content: formData.content,

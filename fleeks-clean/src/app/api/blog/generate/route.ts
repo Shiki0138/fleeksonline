@@ -104,7 +104,7 @@ ${content}
 
     // Supabaseに保存
     const { data: blogPost, error } = await supabase
-      .from('blog_posts')
+      .from('fleeks_blog_posts')
       .insert({
         title: generatedContent.title,
         content: generatedContent.content,
@@ -127,7 +127,7 @@ ${content}
     if (error) throw error
 
     // 生成ログを記録
-    await supabase.from('blog_generation_logs').insert({
+    await supabase.from('fleeks_blog_generation_logs').insert({
       post_id: blogPost.id,
       source_content: content.substring(0, 1000), // 最初の1000文字のみ保存
       prompt: prompt,

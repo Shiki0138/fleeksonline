@@ -45,7 +45,7 @@ export default function VideoPage() {
   const fetchVideo = async () => {
     // 動画情報を取得
     const { data: videoData, error: videoError } = await supabase
-      .from('videos')
+      .from('fleeks_videos')
       .select('*')
       .eq('id', videoId)
       .single()
@@ -56,7 +56,7 @@ export default function VideoPage() {
       // 視聴履歴を記録（watch_historyテーブルがある場合のみ）
       if (profile) {
         try {
-          await supabase.from('watch_history').insert({
+          await supabase.from('fleeks_watch_history').insert({
             user_id: profile.id,
             video_id: videoData.id,
             watched_seconds: 0,
@@ -72,7 +72,7 @@ export default function VideoPage() {
 
       // 関連動画を取得
       const { data: relatedData } = await supabase
-        .from('videos')
+        .from('fleeks_videos')
         .select('*')
         .eq('category', videoData.category)
         .neq('id', videoData.id)

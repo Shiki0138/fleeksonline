@@ -37,7 +37,7 @@ export default function EditVideoPage({ params }: { params: { id: string } }) {
   const fetchVideo = async () => {
     try {
       const { data, error } = await supabase
-        .from('videos')
+        .from('fleeks_videos')
         .select('*')
         .eq('id', params.id)
         .single()
@@ -70,7 +70,7 @@ export default function EditVideoPage({ params }: { params: { id: string } }) {
 
     try {
       const { error } = await supabase
-        .from('videos')
+        .from('fleeks_videos')
         .update({
           youtube_id: formData.youtube_id,
           title: formData.title,
@@ -99,7 +99,7 @@ export default function EditVideoPage({ params }: { params: { id: string } }) {
 
     try {
       const { error } = await supabase
-        .from('videos')
+        .from('fleeks_videos')
         .delete()
         .eq('id', params.id)
 

@@ -36,7 +36,7 @@ async function createAdminUser() {
 
     // プロフィールテーブルに管理者情報を追加
     const { error: profileError } = await supabase
-      .from('profiles')
+      .from('fleeks_profiles')
       .insert({
         id: data.user.id,
         full_name: 'システム管理者',

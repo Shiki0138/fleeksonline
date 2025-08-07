@@ -44,22 +44,35 @@ export default function DashboardPage() {
     }
 
     // プロファイル取得
-    const { data: profileData } = await supabase
-      .from('profiles')
+    const { data: profileData, error: profileError } = await supabase
+      .from('fleeks_profiles')
       .select('*')
       .eq('id', user.id)
       .single()
 
+    console.log('Dashboard - User:', user.email, 'ID:', user.id)
+    console.log('Dashboard - Profile:', profileData)
+    console.log('Dashboard - Profile Error:', profileError)
+
     if (profileData) {
       setProfile(profileData)
       // 管理者権限チェック
-      setIsAdmin(profileData.role === 'admin' || user.email === 'greenroom51@gmail.com')
+      const isAdminUser = profileData.role === 'admin' || user.email === 'greenroom51@gmail.com'
+      console.log('Dashboard - Is Admin:', isAdminUser, 'Role:', profileData.role)
+      setIsAdmin(isAdminUser)
+      
+      // 管理者の場合は/adminへリダイレクト
+      if (isAdminUser) {
+        console.log('Dashboard - Redirecting to /admin')
+        router.push('/admin')
+        return
+      }
     }
   }
 
   const fetchVideos = async () => {
     const { data, error } = await supabase
-      .from('videos')
+      .from('fleeks_videos')
       .select('*')
       .order('created_at', { ascending: false })
 

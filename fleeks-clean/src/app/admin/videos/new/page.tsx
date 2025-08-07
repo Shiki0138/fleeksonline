@@ -39,7 +39,7 @@ export default function NewVideoPage() {
 
     try {
       const { error } = await supabase
-        .from('videos')
+        .from('fleeks_videos')
         .insert({
           youtube_id: extractYouTubeId(formData.youtube_id),
           title: formData.title,
