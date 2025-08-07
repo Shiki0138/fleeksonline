@@ -53,13 +53,21 @@ export default function VideoPage() {
     if (!videoError && videoData) {
       setVideo(videoData)
       
-      // 視聴履歴を記録
+      // 視聴履歴を記録（watch_historyテーブルがある場合のみ）
       if (profile) {
-        await supabase.from('watch_history').insert({
-          user_id: profile.id,
-          video_id: videoData.id,
-          watched_at: new Date().toISOString()
-        })
+        try {
+          await supabase.from('watch_history').insert({
+            user_id: profile.id,
+            video_id: videoData.id,
+            watched_seconds: 0,
+            last_position: 0,
+            completed: false,
+            last_watched_at: new Date().toISOString()
+          })
+        } catch (historyError) {
+          // watch_historyテーブルが存在しない場合は無視
+          console.log('Watch history logging skipped:', historyError)
+        }
       }
 
       // 関連動画を取得

@@ -6,12 +6,13 @@ import { Lock, AlertCircle, Crown } from 'lucide-react'
 
 interface VideoPlayerProps {
   videoId: string
-  title: string
+  title?: string
   isPremium: boolean
   userMembershipType: 'free' | 'premium' | 'vip'
+  userId?: string
 }
 
-export default function VideoPlayer({ videoId, title, isPremium, userMembershipType }: VideoPlayerProps) {
+export default function VideoPlayer({ videoId, title, isPremium, userMembershipType, userId }: VideoPlayerProps) {
   const [timeWatched, setTimeWatched] = useState(0)
   const [isRestricted, setIsRestricted] = useState(false)
   const [player, setPlayer] = useState<any>(null)
