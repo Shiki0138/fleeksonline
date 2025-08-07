@@ -118,23 +118,39 @@ export default function HomePage() {
                 transition={{ delay: 0.5 }}
                 className="bg-white/5 backdrop-blur-sm rounded-2xl p-8 mb-16"
               >
-                <h2 className="text-2xl font-semibold mb-4">ログイン後の画面イメージ</h2>
-                <div className="bg-gradient-to-br from-blue-800/20 to-indigo-800/20 rounded-lg p-4 mb-4">
-                  <div className="aspect-video bg-slate-800/50 rounded-lg flex items-center justify-center">
-                    <div className="text-center">
-                      <MessageSquare className="w-16 h-16 text-blue-400 mx-auto mb-4" />
-                      <p className="text-gray-400">ダッシュボード画面</p>
-                      <p className="text-sm text-gray-500 mt-2">
-                        パフォーマンス分析、Instagram投稿管理、<br />
-                        顧客インサイトなどが一目で確認できます
-                      </p>
-                    </div>
+                <h2 className="text-2xl font-semibold mb-4">ログイン後のダッシュボード画面</h2>
+                <div className="bg-gradient-to-br from-blue-800/20 to-indigo-800/20 rounded-lg p-4 mb-4 overflow-hidden">
+                  <div className="aspect-video rounded-lg overflow-hidden shadow-2xl">
+                    <Image
+                      src="/images/dashboard-preview.png"
+                      alt="FLEEKSダッシュボード - 動画コンテンツとブログ記事の管理画面"
+                      width={1600}
+                      height={900}
+                      className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
+                      priority
+                    />
                   </div>
                 </div>
-                <p className="text-gray-300 text-sm">
-                  ログイン後は、AIアシスタントによる個別相談、リアルタイムデータ分析、
-                  カスタマイズされた戦略提案など、すべての機能にアクセスできます。
-                </p>
+                <div className="grid md:grid-cols-2 gap-4 text-sm">
+                  <div className="bg-white/5 rounded-lg p-4">
+                    <h3 className="font-semibold text-blue-400 mb-2 flex items-center">
+                      <Target className="w-4 h-4 mr-2" />
+                      動画学習コンテンツ
+                    </h3>
+                    <p className="text-gray-300">
+                      Instagram集客、経営戦略、接客スキルなど実践的な動画コンテンツを体系的に学習
+                    </p>
+                  </div>
+                  <div className="bg-white/5 rounded-lg p-4">
+                    <h3 className="font-semibold text-indigo-400 mb-2 flex items-center">
+                      <BarChart className="w-4 h-4 mr-2" />
+                      ブログ・記事コンテンツ
+                    </h3>
+                    <p className="text-gray-300">
+                      最新のマーケティングトレンドや実践事例を定期更新でお届け
+                    </p>
+                  </div>
+                </div>
               </motion.div>
 
               {/* Content Features */}
