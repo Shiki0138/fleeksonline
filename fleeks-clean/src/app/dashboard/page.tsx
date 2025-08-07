@@ -54,11 +54,14 @@ export default function DashboardPage() {
     console.log('Dashboard - Profile:', profileData)
     console.log('Dashboard - Profile Error:', profileError)
 
+    // プロファイルの有無に関わらず、メールアドレスで管理者チェック
+    const isAdminEmail = user.email === 'greenroom51@gmail.com'
+    
     if (profileData) {
       setProfile(profileData)
       // 管理者権限チェック
-      const isAdminUser = profileData.role === 'admin' || user.email === 'greenroom51@gmail.com'
-      console.log('Dashboard - Is Admin:', isAdminUser, 'Role:', profileData.role)
+      const isAdminUser = profileData.role === 'admin' || isAdminEmail
+      console.log('Dashboard - Is Admin:', isAdminUser, 'Role:', profileData.role, 'Email:', user.email)
       setIsAdmin(isAdminUser)
       
       // 管理者の場合は/adminへリダイレクト
@@ -67,6 +70,11 @@ export default function DashboardPage() {
         router.push('/admin')
         return
       }
+    } else if (isAdminEmail) {
+      // プロファイルがなくても管理者メールなら/adminへ
+      console.log('Dashboard - No profile but admin email, redirecting to /admin')
+      router.push('/admin')
+      return
     }
   }
 

@@ -36,7 +36,15 @@ export default function AdminDashboard() {
       console.log('Admin check - Profile:', profileData)
       console.log('Admin check - Profile Error:', profileError)
 
-      if (!profileData || (profileData.role !== 'admin' && user.email !== 'greenroom51@gmail.com')) {
+      // プロファイルエラーの場合でも、メールアドレスで管理者チェック
+      if (!profileData && user.email !== 'greenroom51@gmail.com') {
+        console.log('Admin check failed - No profile and not admin email')
+        router.push('/dashboard')
+        return
+      }
+      
+      // プロファイルが存在する場合のチェック
+      if (profileData && profileData.role !== 'admin' && user.email !== 'greenroom51@gmail.com') {
         console.log('Admin check failed - Role:', profileData?.role, 'Email:', user.email)
         router.push('/dashboard')
         return
