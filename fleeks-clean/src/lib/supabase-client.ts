@@ -22,6 +22,35 @@ export const supabaseAdmin = () => {
   )
 }
 
+// カスタム認証テーブルを使用する場合のヘルパー関数
+export const customAuth = {
+  // beauty_usersテーブルを使用した認証チェック
+  async getCurrentUser() {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return null
+    
+    // beauty_usersテーブルからユーザー情報を取得
+    const { data: beautyUser } = await supabase
+      .from('beauty_users')
+      .select('*')
+      .eq('email', user.email)
+      .single()
+    
+    return beautyUser
+  },
+  
+  // プロファイル情報の取得
+  async getProfile(userId: string) {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', userId)
+      .single()
+    
+    return profile
+  }
+}
+
 // 型定義
 export type Profile = {
   id: string
