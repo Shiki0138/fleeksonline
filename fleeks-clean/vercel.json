@@ -1,9 +1,19 @@
 {
-  "name": "fleeks-app",
   "buildCommand": "npm run build",
   "outputDirectory": ".next",
   "framework": "nextjs",
   "env": {
     "NEXT_PUBLIC_APP_URL": "https://app.fleeks.jp"
+  },
+  "crons": [
+    {
+      "path": "/api/blog/generate",
+      "schedule": "0 10 * * 1"
+    }
+  ],
+  "functions": {
+    "src/app/api/blog/generate/route.ts": {
+      "maxDuration": 60
+    }
   }
 }
