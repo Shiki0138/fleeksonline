@@ -2,6 +2,7 @@
   "buildCommand": "npm run build",
   "outputDirectory": ".next",
   "framework": "nextjs",
+  "installCommand": "npm install",
   "env": {
     "NEXT_PUBLIC_APP_URL": "https://app.fleeks.jp"
   },
