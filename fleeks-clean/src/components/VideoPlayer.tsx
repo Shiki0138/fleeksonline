@@ -40,18 +40,18 @@ export default function VideoPlayer({ videoId, title, isPremium, userMembershipT
             controls: 1,
             modestbranding: 1,
             rel: 0,
-            showinfo: 0,
             fs: 1,
-            disablekb: 0,
             iv_load_policy: 3,
             origin: window.location.origin,
-            widget_referrer: window.location.href,
-            // 埋め込み専用設定
             playsinline: 1,
           },
           events: {
             onReady: onPlayerReady,
             onStateChange: onPlayerStateChange,
+            onError: (event: any) => {
+              console.error('YouTube Player Error:', event.data)
+              // エラーコード: 2 = 無効な動画ID, 5 = HTML5プレーヤーエラー, 100 = 動画が見つからない, 101/150 = 埋め込み不可
+            }
           },
         })
         setPlayer(ytPlayer)

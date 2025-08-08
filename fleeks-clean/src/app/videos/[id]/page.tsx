@@ -50,46 +50,58 @@ export default function VideoPage() {
       .eq('id', videoId)
       .single()
 
-    if (!videoError && videoData) {
-      setVideo(videoData)
-      
-      // 動画が公開設定でない場合、プレミアム会員のみアクセス可能かチェック
-      if (videoData.is_premium && profile?.membership_type === 'free') {
-        // is_premiumがtrueなら、プレミアム会員限定
-        // ただし、VideoPlayerコンポーネントで5分制限があるので、ここでは制限しない
-      }
-      
-      // 視聴履歴を記録または更新
-      if (profile) {
-        try {
-          await supabase.from('fleeks_watch_history').upsert({
-            user_id: profile.id,
-            video_id: videoData.id,
-            watched_seconds: 0,
-            last_position: 0,
-            completed: false,
-            last_watched_at: new Date().toISOString()
-          }, {
-            onConflict: 'user_id,video_id'
-          })
-        } catch (historyError) {
-          // watch_historyテーブルが存在しない場合は無視
-          console.log('Watch history logging skipped:', historyError)
-        }
-      }
+    console.log('Video fetch result:', { videoData, videoError })
 
-      // 関連動画を取得
-      const { data: relatedData } = await supabase
-        .from('fleeks_videos')
-        .select('*')
-        .eq('category', videoData.category)
-        .neq('id', videoData.id)
-        .limit(5)
-        .order('published_at', { ascending: false })
+    if (videoError) {
+      console.error('Error fetching video:', videoError)
+      setIsLoading(false)
+      return
+    }
 
-      if (relatedData) {
-        setRelatedVideos(relatedData)
+    if (!videoData) {
+      console.error('No video found with ID:', videoId)
+      setIsLoading(false)
+      return
+    }
+
+    setVideo(videoData)
+    
+    // 動画が公開設定でない場合、プレミアム会員のみアクセス可能かチェック
+    if (videoData.is_premium && profile?.membership_type === 'free') {
+      // is_premiumがtrueなら、プレミアム会員限定
+      // ただし、VideoPlayerコンポーネントで5分制限があるので、ここでは制限しない
+    }
+    
+    // 視聴履歴を記録または更新
+    if (profile) {
+      try {
+        await supabase.from('fleeks_watch_history').upsert({
+          user_id: profile.id,
+          video_id: videoData.id,
+          watched_seconds: 0,
+          last_position: 0,
+          completed: false,
+          last_watched_at: new Date().toISOString()
+        }, {
+          onConflict: 'user_id,video_id'
+        })
+      } catch (historyError) {
+        // watch_historyテーブルが存在しない場合は無視
+        console.log('Watch history logging skipped:', historyError)
       }
+    }
+
+    // 関連動画を取得
+    const { data: relatedData } = await supabase
+      .from('fleeks_videos')
+      .select('*')
+      .eq('category', videoData.category)
+      .neq('id', videoData.id)
+      .limit(5)
+      .order('published_at', { ascending: false })
+
+    if (relatedData) {
+      setRelatedVideos(relatedData)
     }
 
     setIsLoading(false)
@@ -152,13 +164,22 @@ export default function VideoPage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
             >
-              <VideoPlayer
-                videoId={video.youtube_id}
-                title={video.title}
-                isPremium={video.is_premium}
-                userMembershipType={profile.membership_type}
-                userId={profile.id}
-              />
+              {video.youtube_id ? (
+                <VideoPlayer
+                  videoId={video.youtube_id}
+                  title={video.title}
+                  isPremium={video.is_premium}
+                  userMembershipType={profile.membership_type}
+                  userId={profile.id}
+                />
+              ) : (
+                <div className="aspect-video bg-gray-800 rounded-lg flex items-center justify-center">
+                  <div className="text-center">
+                    <p className="text-xl mb-2">動画が利用できません</p>
+                    <p className="text-sm text-gray-400">YouTube IDが設定されていません</p>
+                  </div>
+                </div>
+              )}
 
               {/* Video Details */}
               <div className="mt-6 bg-white/10 backdrop-blur-sm rounded-lg p-6">

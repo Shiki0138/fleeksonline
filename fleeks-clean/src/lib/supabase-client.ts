@@ -2,17 +2,7 @@ import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { createClient } from '@supabase/supabase-js'
 
 // クライアントコンポーネント用
-export const supabase = createClientComponentClient({
-  options: {
-    global: {
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
-        'Prefer': 'return=representation'
-      }
-    }
-  }
-})
+export const supabase = createClientComponentClient()
 
 // サーバーコンポーネント用（必要に応じて）
 export const supabaseAdmin = () => {
