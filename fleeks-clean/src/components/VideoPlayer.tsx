@@ -76,6 +76,46 @@ export default function VideoPlayer({ videoId, title, isPremium, userMembershipT
     if (!canWatchFull) {
       console.log('Free user watching premium content - 5 minute limit applies')
     }
+    
+    // 無料会員の場合、YouTubeロゴやリンクを定期的にチェックして削除
+    if (userMembershipType === 'free') {
+      const hideYouTubeElements = () => {
+        const elementsToHide = [
+          '.ytp-watermark',
+          '.ytp-youtube-button', 
+          '.ytp-title-link',
+          '.ytp-chrome-top-buttons',
+          '[title*="YouTube"]',
+          '[title*="YouTubeで視聴"]',
+          '[aria-label*="YouTube"]',
+          'a[href*="youtube.com"]',
+          'a[href*="youtu.be"]',
+          '.ytp-ce-element',
+          '.ytp-pause-overlay',
+          '.ytp-endscreen-element'
+        ]
+        
+        elementsToHide.forEach(selector => {
+          const elements = document.querySelectorAll(selector)
+          elements.forEach(element => {
+            if (element instanceof HTMLElement) {
+              element.style.display = 'none'
+              element.style.visibility = 'hidden'
+              element.style.opacity = '0'
+              element.style.pointerEvents = 'none'
+            }
+          })
+        })
+      }
+      
+      // 初期実行
+      setTimeout(hideYouTubeElements, 1000)
+      // 定期実行（新しい要素が動的に追加される可能性があるため）
+      const interval = setInterval(hideYouTubeElements, 2000)
+      
+      // クリーンアップ
+      return () => clearInterval(interval)
+    }
   }
 
   const onPlayerStateChange = (event: any) => {
@@ -137,8 +177,8 @@ export default function VideoPlayer({ videoId, title, isPremium, userMembershipT
     <div className="relative w-full">
       {/* 無料会員向けのCSS（YouTubeリンクを隠すスタイル） */}
       {userMembershipType === 'free' && (
-        <style jsx>{`
-          /* 無料会員向け：YouTube特有の要素を非表示 */
+        <style jsx global>{`
+          /* 無料会員向け：YouTubeに遷移する全ての要素を非表示 */
           .ytp-watermark,
           .ytp-youtube-button,
           .ytp-title-link,
@@ -152,17 +192,46 @@ export default function VideoPlayer({ videoId, title, isPremium, userMembershipT
           .ytp-remote-button,
           .ytp-share-button,
           .ytp-watch-later-button,
-          .ytp-overflow-button {
+          .ytp-overflow-button,
+          .ytp-chrome-top-buttons,
+          .ytp-title-channel-logo,
+          .ytp-title-expanded-overlay,
+          .ytp-ce-element,
+          .ytp-pause-overlay,
+          .ytp-contextmenu,
+          .ytp-endscreen-element,
+          .annotation,
+          .iv-click-target,
+          a[data-sessionlink*="feature=player-title"],
+          a[href*="youtube.com/watch"],
+          a[href*="youtu.be"],
+          [title*="YouTube で視聴"],
+          [title*="YouTubeで視聴"],
+          [title*="Watch on YouTube"],
+          [aria-label*="YouTube"],
+          .ytp-impression-link,
+          .ytp-videowall-still,
+          .ytp-ce-covering-overlay,
+          .ytp-ce-element-show,
+          .ytp-ce-covering-image {
+            display: none !important;
+            visibility: hidden !important;
+            opacity: 0 !important;
+            pointer-events: none !important;
+          }
+          
+          /* YouTube プレーヤーの右上ロゴエリア全体を非表示 */
+          .ytp-chrome-top-buttons {
             display: none !important;
           }
           
-          /* 無料会員：右クリック防止だけで、基本的な再生は許可 */
-          iframe {
-            pointer-events: auto;
+          /* コンテクストメニューを完全に無効化 */
+          .html5-video-player {
+            pointer-events: auto !important;
           }
           
-          .player-overlay {
-            pointer-events: auto;
+          .html5-video-player .video-stream {
+            pointer-events: none !important;
           }
           
           /* 無料会員向け：選択を無効化 */
@@ -171,6 +240,11 @@ export default function VideoPlayer({ videoId, title, isPremium, userMembershipT
             -moz-user-select: none;
             -ms-user-select: none;
             user-select: none;
+          }
+          
+          /* iframe 内の要素へのより強い制御 */
+          .free-member-container iframe {
+            pointer-events: auto !important;
           }
         `}</style>
       )}
@@ -203,6 +277,22 @@ export default function VideoPlayer({ videoId, title, isPremium, userMembershipT
             {/* 無料会員用のオーバーレイ */}
             {userMembershipType === 'free' && (
               <>
+                {/* YouTubeロゴエリアをブロック */}
+                <div 
+                  className="absolute top-0 right-0 w-20 h-12 bg-transparent z-20 pointer-events-auto"
+                  onClick={(e) => e.preventDefault()}
+                  onMouseDown={(e) => e.preventDefault()}
+                  style={{ userSelect: 'none' }}
+                />
+                
+                {/* 動画タイトルエリアをブロック */}
+                <div 
+                  className="absolute top-0 left-0 right-20 h-12 bg-transparent z-15 pointer-events-auto"
+                  onClick={(e) => e.preventDefault()}
+                  onMouseDown={(e) => e.preventDefault()}
+                  style={{ userSelect: 'none' }}
+                />
+                
                 {/* 無料会員の警告表示 */}
                 <div className="absolute bottom-4 left-4 bg-black/80 text-white px-3 py-2 rounded-lg text-xs pointer-events-none z-10">
                   <div className="flex items-center space-x-2">
@@ -211,13 +301,32 @@ export default function VideoPlayer({ videoId, title, isPremium, userMembershipT
                   </div>
                 </div>
                 
-                {/* 右クリック防止（軽量版） */}
+                {/* 右クリック防止オーバーレイ */}
                 <div 
-                  className="absolute inset-0 bg-transparent pointer-events-none z-5"
-                  onContextMenu={(e) => e.preventDefault()}
+                  className="absolute inset-0 bg-transparent pointer-events-auto z-5"
+                  onContextMenu={(e) => {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    return false
+                  }}
+                  onClick={(e) => {
+                    // YouTube関連のクリックをブロック
+                    const target = e.target as HTMLElement
+                    if (target && (
+                      target.closest('.ytp-watermark') ||
+                      target.closest('.ytp-youtube-button') ||
+                      target.closest('[title*="YouTube"]') ||
+                      target.closest('a[href*="youtube.com"]') ||
+                      target.closest('a[href*="youtu.be"]')
+                    )) {
+                      e.preventDefault()
+                      e.stopPropagation()
+                      return false
+                    }
+                  }}
                   style={{ 
                     userSelect: 'none',
-                    pointerEvents: 'none' // 基本的な再生は妨害しない
+                    pointerEvents: 'auto'
                   }}
                 />
               </>
