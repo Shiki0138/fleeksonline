@@ -2,7 +2,44 @@ import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { createClient } from '@supabase/supabase-js'
 
 // クライアントコンポーネント用
-export const supabase = createClientComponentClient()
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+
+// Supabaseクライアントの作成
+export const supabase = (() => {
+  // ブラウザ環境の場合
+  if (typeof window !== 'undefined') {
+    return createClient(supabaseUrl, supabaseAnonKey, {
+      auth: {
+        autoRefreshToken: true,
+        persistSession: true,
+        detectSessionInUrl: true,
+        storage: typeof window !== 'undefined' ? window.localStorage : undefined
+      },
+      global: {
+        headers: {
+          'apikey': supabaseAnonKey
+        }
+      },
+      db: {
+        schema: 'public'
+      }
+    })
+  }
+  
+  // サーバー環境の場合
+  return createClient(supabaseUrl, supabaseAnonKey, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false
+    },
+    global: {
+      headers: {
+        'apikey': supabaseAnonKey
+      }
+    }
+  })
+})()
 
 // サーバーコンポーネント用（必要に応じて）
 export const supabaseAdmin = () => {
