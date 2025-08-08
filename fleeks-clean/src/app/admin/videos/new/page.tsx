@@ -3,20 +3,21 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { ArrowLeft, Save, Youtube } from 'lucide-react'
+import { ArrowLeft, Save, Youtube, Loader2 } from 'lucide-react'
 import { supabase } from '@/lib/supabase-client'
 import toast from 'react-hot-toast'
 
 export default function NewVideoPage() {
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
+  const [isLoadingVideo, setIsLoadingVideo] = useState(false)
   const [formData, setFormData] = useState({
     youtube_id: '',
     title: '',
     description: '',
     category: 'Instagram集客',
     duration: '',
-    is_premium: false
+    is_premium: true // デフォルトでプレミアム動画
   })
 
   const categories = [
@@ -28,9 +29,45 @@ export default function NewVideoPage() {
   ]
 
   const extractYouTubeId = (url: string) => {
+    // URLから動画IDを抽出（既にIDの場合はそのまま返す）
     const regex = /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#]+)/
     const match = url.match(regex)
     return match ? match[1] : url
+  }
+
+  // YouTube動画情報を取得
+  const fetchVideoInfo = async (videoId: string) => {
+    setIsLoadingVideo(true)
+    try {
+      // YouTube oEmbed APIを使用（APIキー不要）
+      const response = await fetch(`https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${videoId}&format=json`)
+      if (response.ok) {
+        const data = await response.json()
+        setFormData(prev => ({
+          ...prev,
+          title: data.title || prev.title,
+          // 注: oEmbed APIでは動画の長さは取得できないため、デフォルト値を設定
+          duration: prev.duration || '300' // 5分をデフォルトとして設定
+        }))
+        toast.success('動画情報を取得しました')
+      } else {
+        toast.error('動画情報の取得に失敗しました')
+      }
+    } catch (error) {
+      console.error('Error fetching video info:', error)
+      toast.error('動画情報の取得に失敗しました')
+    } finally {
+      setIsLoadingVideo(false)
+    }
+  }
+
+  // YouTube IDが変更されたら自動的に情報を取得
+  const handleYouTubeIdChange = (value: string) => {
+    setFormData({ ...formData, youtube_id: value })
+    const videoId = extractYouTubeId(value)
+    if (videoId && videoId.length === 11) { // YouTube IDは11文字
+      fetchVideoInfo(videoId)
+    }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -85,18 +122,24 @@ export default function NewVideoPage() {
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
               <label className="block text-sm font-medium mb-2">
-                YouTube URL または動画ID *
+                YouTube 動画ID *
               </label>
-              <input
-                type="text"
-                value={formData.youtube_id}
-                onChange={(e) => setFormData({ ...formData, youtube_id: e.target.value })}
-                placeholder="https://www.youtube.com/watch?v=xdHq_H-VF80"
-                className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:border-blue-400"
-                required
-              />
+              <div className="relative">
+                <input
+                  type="text"
+                  value={formData.youtube_id}
+                  onChange={(e) => handleYouTubeIdChange(e.target.value)}
+                  placeholder="xdHq_H-VF80"
+                  className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:border-blue-400 pr-10"
+                  required
+                  disabled={isLoadingVideo}
+                />
+                {isLoadingVideo && (
+                  <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 animate-spin" />
+                )}
+              </div>
               <p className="text-xs text-gray-400 mt-1">
-                YouTube URLまたは動画IDを入力してください
+                YouTube動画IDを入力してください（例: xdHq_H-VF80）
               </p>
             </div>
 
@@ -108,10 +151,13 @@ export default function NewVideoPage() {
                 type="text"
                 value={formData.title}
                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                placeholder="Instagram集客の基礎：フォロワーを増やす5つの戦略"
+                placeholder={isLoadingVideo ? "動画情報を取得中..." : "動画タイトル（自動取得されます）"}
                 className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:border-blue-400"
                 required
               />
+              <p className="text-xs text-gray-400 mt-1">
+                YouTube IDを入力すると自動的に取得されます
+              </p>
             </div>
 
             <div>
@@ -153,12 +199,12 @@ export default function NewVideoPage() {
                 type="number"
                 value={formData.duration}
                 onChange={(e) => setFormData({ ...formData, duration: e.target.value })}
-                placeholder="1200"
+                placeholder="300"
                 className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:border-blue-400"
                 required
               />
               <p className="text-xs text-gray-400 mt-1">
-                例: 20分 = 1200秒
+                例: 5分 = 300秒、20分 = 1200秒（自動取得できない場合は手動で入力）
               </p>
             </div>
 
@@ -168,9 +214,9 @@ export default function NewVideoPage() {
                   type="checkbox"
                   checked={formData.is_premium}
                   onChange={(e) => setFormData({ ...formData, is_premium: e.target.checked })}
-                  className="w-5 h-5 rounded"
+                  className="w-5 h-5 rounded text-blue-500 focus:ring-blue-400"
                 />
-                <span>プレミアム動画として設定</span>
+                <span>プレミアム動画として設定（デフォルト: ON）</span>
               </label>
               <p className="text-xs text-gray-400 mt-1 ml-8">
                 無料会員は5分までしか視聴できません
@@ -180,8 +226,8 @@ export default function NewVideoPage() {
             <div className="flex space-x-4 pt-6">
               <button
                 type="submit"
-                disabled={isLoading}
-                className="flex-1 bg-blue-500 hover:bg-blue-600 px-6 py-3 rounded-lg font-medium flex items-center justify-center space-x-2 transition disabled:opacity-50"
+                disabled={isLoading || isLoadingVideo}
+                className="flex-1 bg-blue-500 hover:bg-blue-600 px-6 py-3 rounded-lg font-medium flex items-center justify-center space-x-2 transition disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <Save className="w-5 h-5" />
                 <span>{isLoading ? '保存中...' : '動画を追加'}</span>
