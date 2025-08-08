@@ -43,15 +43,33 @@ export default function LoginPage() {
         console.log('Login - Profile:', profileData)
         console.log('Login - Profile Error:', profileError)
 
-        // FLEEKSプロファイルが存在しない場合は拒否
+        // 管理者アカウントのチェック
+        const isAdminEmail = data.user.email === 'greenroom51@gmail.com'
+        
+        // FLEEKSプロファイルが存在しない場合の処理
         if (!profileData && profileError?.code === 'PGRST116') {
-          // 他プロジェクトのユーザーの可能性
+          // 管理者メールアドレスの場合は通過させる
+          if (isAdminEmail) {
+            console.log('Login - Admin email without profile, redirecting to /admin')
+            router.push('/admin')
+            return
+          }
+          
+          // mail@invest-master.net の場合も通過させる（テスト用）
+          if (data.user.email === 'mail@invest-master.net') {
+            console.log('Login - Test account without profile, redirecting to /dashboard')
+            router.push('/dashboard')
+            return
+          }
+          
+          // その他のユーザーは拒否
           await supabase.auth.signOut()
           setError('このアカウントはFLEEKSでは使用できません。FLEEKSに登録されたアカウントでログインしてください。')
           return
         }
 
-        if (profileData?.role === 'admin' || data.user.email === 'greenroom51@gmail.com') {
+        // プロファイルが存在する場合のリダイレクト
+        if (profileData?.role === 'admin' || isAdminEmail) {
           console.log('Login - Redirecting to /admin')
           router.push('/admin')
         } else {
