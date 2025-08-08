@@ -1,28 +1,29 @@
 -- 一般ユーザーアカウントの作成
 -- このSQLをSupabaseのSQLエディタで実行してください
 
+-- まず beauty_users テーブルの構造を確認
+SELECT column_name, data_type, is_nullable 
+FROM information_schema.columns 
+WHERE table_name = 'beauty_users' 
+ORDER BY ordinal_position;
+
 -- 1. beauty_users テーブルに一般ユーザーを挿入
-INSERT INTO beauty_users (email, encrypted_password, email_confirmed_at, created_at, updated_at, raw_user_meta_data, confirmation_token, email_confirm_token, recovery_token, aud, role, instance_id, confirmation_sent_at, recovery_sent_at, email_change_token_new, email_change_confirm_status, banned_until, deleted_at, is_sso_user)
+-- 実際のカラム名に合わせて修正
+INSERT INTO beauty_users (
+    email, 
+    password,  -- encrypted_password ではなく password の可能性
+    email_confirmed_at, 
+    created_at, 
+    updated_at, 
+    raw_user_meta_data
+)
 VALUES (
     'mail@invest-master.net',
     crypt('Skyosai51', gen_salt('bf')), -- パスワードをハッシュ化
     NOW(),                              -- 即座に確認済みに
     NOW(),
     NOW(),
-    '{"email": "mail@invest-master.net", "name": "投資マスター"}',
-    '',
-    '',
-    '',
-    'authenticated',
-    'authenticated',
-    '00000000-0000-0000-0000-000000000000',
-    NOW(),
-    NULL,
-    '',
-    0,
-    NULL,
-    NULL,
-    false
+    '{"email": "mail@invest-master.net", "name": "投資マスター"}'::jsonb
 ) ON CONFLICT (email) DO NOTHING;
 
 -- 2. 作成されたユーザーのIDを取得してfleeks_profilesに挿入
