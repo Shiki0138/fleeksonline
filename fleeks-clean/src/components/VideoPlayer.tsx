@@ -38,7 +38,7 @@ export default function VideoPlayer({ videoId, title, isPremium, userMembershipT
           videoId: videoId,
           playerVars: {
             autoplay: 0,
-            controls: userMembershipType === 'free' ? 0 : 1, // 無料会員はコントロール非表示
+            controls: 1, // 基本コントロールは表示（CSSで制御）
             modestbranding: 1,
             rel: 0,
             fs: userMembershipType === 'free' ? 0 : 1, // 無料会員はフルスクリーン無効
@@ -138,12 +138,13 @@ export default function VideoPlayer({ videoId, title, isPremium, userMembershipT
       {/* 無料会員向けのCSS（YouTubeリンクを隠すスタイル） */}
       {userMembershipType === 'free' && (
         <style jsx>{`
-          .ytp-chrome-top,
-          .ytp-chrome-bottom,
+          /* 無料会員向け：YouTube特有の要素を非表示 */
+          .ytp-watermark,
+          .ytp-youtube-button,
+          .ytp-title-link,
           .ytp-title,
           .ytp-show-cards-title,
           .ytp-cards-button,
-          .ytp-watermark,
           .ytp-context-menu-popup,
           .ytp-popup,
           .ytp-miniplayer-button,
@@ -151,16 +152,25 @@ export default function VideoPlayer({ videoId, title, isPremium, userMembershipT
           .ytp-remote-button,
           .ytp-share-button,
           .ytp-watch-later-button,
-          .ytp-youtube-button {
+          .ytp-overflow-button {
             display: none !important;
           }
           
+          /* 無料会員：右クリック防止だけで、基本的な再生は許可 */
           iframe {
-            pointer-events: ${userMembershipType === 'free' ? 'none' : 'auto'};
+            pointer-events: auto;
           }
           
           .player-overlay {
             pointer-events: auto;
+          }
+          
+          /* 無料会員向け：選択を無効化 */
+          .free-member-container {
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
           }
         `}</style>
       )}
@@ -185,44 +195,32 @@ export default function VideoPlayer({ videoId, title, isPremium, userMembershipT
       )}
 
       {/* 動画プレーヤー */}
-      <div className="relative aspect-video bg-black rounded-lg overflow-hidden">
+      <div className={`relative aspect-video bg-black rounded-lg overflow-hidden ${userMembershipType === 'free' ? 'free-member-container' : ''}`}>
         {!isRestricted ? (
           <>
             <div ref={playerRef} className="w-full h-full" />
             
             {/* 無料会員用のオーバーレイ */}
             {userMembershipType === 'free' && (
-              <div className="absolute inset-0 pointer-events-none player-overlay">
-                {/* カスタム再生ボタン（YouTubeコントロールが非表示の場合） */}
-                <div className="absolute inset-0 flex items-center justify-center pointer-events-auto">
-                  <button
-                    onClick={handlePlayPause}
-                    className="bg-black/60 hover:bg-black/80 text-white p-4 rounded-full transition-all transform hover:scale-105 opacity-0 hover:opacity-100"
-                    disabled={isRestricted}
-                  >
-                    {isPlaying ? (
-                      <Pause className="w-8 h-8" />
-                    ) : (
-                      <Play className="w-8 h-8" />
-                    )}
-                  </button>
-                </div>
-                
+              <>
                 {/* 無料会員の警告表示 */}
-                <div className="absolute bottom-4 left-4 bg-black/80 text-white px-3 py-2 rounded-lg text-xs pointer-events-none">
+                <div className="absolute bottom-4 left-4 bg-black/80 text-white px-3 py-2 rounded-lg text-xs pointer-events-none z-10">
                   <div className="flex items-center space-x-2">
                     <Lock className="w-3 h-3 text-blue-400" />
                     <span>無料会員 - 5分プレビュー中</span>
                   </div>
                 </div>
                 
-                {/* 右クリック防止オーバーレイ */}
+                {/* 右クリック防止（軽量版） */}
                 <div 
-                  className="absolute inset-0 bg-transparent pointer-events-auto"
+                  className="absolute inset-0 bg-transparent pointer-events-none z-5"
                   onContextMenu={(e) => e.preventDefault()}
-                  style={{ userSelect: 'none' }}
+                  style={{ 
+                    userSelect: 'none',
+                    pointerEvents: 'none' // 基本的な再生は妨害しない
+                  }}
                 />
-              </div>
+              </>
             )}
           </>
         ) : (
