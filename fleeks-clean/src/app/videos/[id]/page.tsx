@@ -121,10 +121,23 @@ export default function VideoPage() {
     return `${mins}:${secs.toString().padStart(2, '0')}`
   }
 
-  if (isLoading || !video || !profile) {
+  if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 text-white flex items-center justify-center">
         <div className="animate-pulse">読み込み中...</div>
+      </div>
+    )
+  }
+
+  if (!video) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 text-white flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-xl mb-2">動画が見つかりません</p>
+          <button onClick={() => router.push('/dashboard')} className="text-blue-400 hover:underline">
+            ダッシュボードに戻る
+          </button>
+        </div>
       </div>
     )
   }
@@ -169,8 +182,8 @@ export default function VideoPage() {
                   videoId={video.youtube_id}
                   title={video.title}
                   isPremium={video.is_premium}
-                  userMembershipType={profile.membership_type}
-                  userId={profile.id}
+                  userMembershipType={profile?.membership_type || 'free'}
+                  userId={profile?.id}
                 />
               ) : (
                 <div className="aspect-video bg-gray-800 rounded-lg flex items-center justify-center">
