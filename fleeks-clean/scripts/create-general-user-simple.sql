@@ -29,11 +29,18 @@ ON CONFLICT (id) DO UPDATE SET
     full_name = EXCLUDED.full_name,
     updated_at = NOW();
 
--- 確認用クエリ
+-- まずbeauty_usersテーブルの構造を確認
+SELECT column_name, data_type, is_nullable 
+FROM information_schema.columns 
+WHERE table_name = 'beauty_users' 
+ORDER BY ordinal_position;
+
+-- 確認用クエリ（実際のカラム名に合わせる）
 SELECT 
     bu.id,
     bu.email,
-    bu.email_confirmed_at,
+    -- bu.email_confirmed_at,  -- このカラムが存在しない場合はコメントアウト
+    bu.created_at,
     fp.username,
     fp.full_name,
     fp.membership_type,
