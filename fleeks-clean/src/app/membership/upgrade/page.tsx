@@ -57,7 +57,7 @@ export default function MembershipUpgradePage() {
 
   const plans: Record<'premium' | 'vip', Plan> = {
     premium: {
-      name: 'プレミアム会員',
+      name: '有料会員',
       price: 7980,
       period: '月額',
       description: 'ビジネススキルを本格的に学びたい方へ',
@@ -156,7 +156,7 @@ export default function MembershipUpgradePage() {
           {/* Hero Section */}
           <div className="text-center mb-12">
             <h1 className="text-4xl md:text-5xl font-bold mb-4">
-              プレミアムで全ての動画を視聴
+              有料会員で全ての動画を視聴
             </h1>
             <p className="text-xl text-gray-300 mb-8">
               ビジネススキルを次のレベルへ。今すぐアップグレードして、
@@ -177,7 +177,7 @@ export default function MembershipUpgradePage() {
                 <Zap className="w-12 h-12 text-blue-400 mx-auto mb-3" />
                 <h3 className="font-semibold mb-2">限定コンテンツ</h3>
                 <p className="text-sm text-gray-300">
-                  プレミアム会員限定の特別動画
+                  有料会員限定の特別動画
                 </p>
               </div>
               <div className="bg-white/10 backdrop-blur-sm rounded-lg p-6 text-center">

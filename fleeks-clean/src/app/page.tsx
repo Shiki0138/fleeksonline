@@ -66,7 +66,7 @@ export default function HomePage() {
             >
               <a href="/auth/login" className="hover:text-blue-400 transition">ログイン</a>
               <a href="/auth/signup" className="bg-gradient-to-r from-blue-500 to-indigo-600 px-6 py-2 rounded-full hover:shadow-lg hover:shadow-blue-500/25 transition">
-                無料で始める
+                無料会員登録
               </a>
             </motion.div>
           </div>
@@ -106,7 +106,7 @@ export default function HomePage() {
                   whileTap={{ scale: 0.95 }}
                   className="group bg-gradient-to-r from-blue-500 to-indigo-600 px-8 py-4 rounded-full font-semibold text-lg shadow-xl hover:shadow-2xl hover:shadow-blue-500/25 transition flex items-center justify-center"
                 >
-                  無料アカウント作成
+                  無料会員登録
                   <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition" />
                 </motion.a>
               </div>

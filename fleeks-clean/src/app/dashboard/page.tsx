@@ -199,13 +199,21 @@ export default function DashboardPage() {
                           <Crown className="w-3 h-3 mr-1 text-red-400" />
                           管理者
                         </>
+                      ) : profile.membership_type === 'vip' ? (
+                        <>
+                          <Crown className="w-3 h-3 mr-1 text-purple-400" />
+                          VIP会員
+                        </>
                       ) : profile.membership_type === 'premium' ? (
                         <>
                           <Crown className="w-3 h-3 mr-1 text-yellow-400" />
-                          プレミアム会員
+                          有料会員
                         </>
                       ) : (
-                        '無料会員'
+                        <>
+                          <User className="w-3 h-3 mr-1 text-gray-400" />
+                          無料会員
+                        </>
                       )}
                     </p>
                   </div>
@@ -443,12 +451,15 @@ export default function DashboardPage() {
               className="mt-12 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl p-8 text-center"
             >
               <Crown className="w-16 h-16 mx-auto mb-4 text-yellow-400" />
-              <h2 className="text-3xl font-bold mb-4">プレミアムで全てのコンテンツを視聴</h2>
+              <h2 className="text-3xl font-bold mb-4">有料会員で全てのコンテンツを視聴</h2>
               <p className="text-lg mb-6 opacity-90">
-                無料会員は各動画5分まで。プレミアム会員になって全てのコンテンツをお楽しみください。
+                無料会員は各動画5分まで。有料会員になって全てのコンテンツを無制限でお楽しみください。
               </p>
-              <button className="bg-white text-blue-600 px-8 py-3 rounded-full font-semibold hover:shadow-lg transition">
-                プレミアムプランを見る
+              <button 
+                onClick={() => router.push('/membership/upgrade')}
+                className="bg-white text-blue-600 px-8 py-3 rounded-full font-semibold hover:shadow-lg transition cursor-pointer"
+              >
+                有料プランを見る
               </button>
             </motion.div>
           )}
