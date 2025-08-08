@@ -62,6 +62,13 @@ export default function LoginPage() {
             return
           }
           
+          // self.138@gmail.com の場合も通過させる（無料会員テスト用）
+          if (data.user.email === 'self.138@gmail.com') {
+            console.log('Login - Free member test account without profile, redirecting to /dashboard')
+            router.push('/dashboard')
+            return
+          }
+          
           // その他のユーザーは拒否
           await supabase.auth.signOut()
           setError('このアカウントはFLEEKSでは使用できません。FLEEKSに登録されたアカウントでログインしてください。')
