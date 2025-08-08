@@ -84,7 +84,7 @@ export default function AdminDashboard() {
       title: 'ブログ管理', 
       description: 'ブログ投稿の作成と管理',
       icon: FileText,
-      href: '/admin/blog/new',
+      href: '/admin/blog',
       color: 'from-blue-500 to-blue-600'
     },
     {
