@@ -77,7 +77,13 @@ export default function AnalyticsPage() {
       
       const totalViews = viewData?.reduce((sum, video) => sum + (video.view_count || 0), 0) || 0
 
-      // ダミーデータ（実際の実装では期間別のデータを取得）
+      // ユーザー成長データを取得（実装後はRPC関数を使用）
+      // const { data: growthData } = await supabase.rpc('get_user_growth', { days: 30 })
+      
+      // 平均視聴時間を取得（実装後はRPC関数を使用）
+      // const { data: avgTime } = await supabase.rpc('get_average_watch_time', { days: 30 })
+      
+      // 一時的にダミーデータを使用
       const userGrowth = Array.from({ length: 30 }, (_, i) => {
         const date = new Date()
         date.setDate(date.getDate() - (29 - i))
@@ -94,7 +100,7 @@ export default function AnalyticsPage() {
         totalViews,
         premiumUsers: premiumUsers || 0,
         freeUsers: (totalUsers || 0) - (premiumUsers || 0),
-        avgWatchTime: 425, // ダミーデータ
+        avgWatchTime: 425, // TODO: 実際の平均視聴時間を取得
         popularVideos: videos || [],
         userGrowth
       })

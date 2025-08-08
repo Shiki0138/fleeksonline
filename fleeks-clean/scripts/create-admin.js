@@ -11,15 +11,29 @@ if (!supabaseUrl || !supabaseServiceKey) {
 
 const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
+function generateSecurePassword() {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*'
+  let password = ''
+  for (let i = 0; i < 16; i++) {
+    password += chars.charAt(Math.floor(Math.random() * chars.length))
+  }
+  return password
+}
+
 async function createAdminUser() {
+  // Use environment variables or command line arguments
+  const adminEmail = process.env.ADMIN_EMAIL || process.argv[2] || 'admin@fleeks.jp'
+  const adminPassword = process.env.ADMIN_PASSWORD || process.argv[3] || generateSecurePassword()
+  const adminName = process.env.ADMIN_NAME || process.argv[4] || 'システム管理者'
+  
   try {
     // 管理者アカウントを作成
     const { data, error } = await supabase.auth.admin.createUser({
-      email: 'greenroom51@gmail.com',
-      password: 'Fkyosai51',
+      email: adminEmail,
+      password: adminPassword,
       email_confirm: true,
       user_metadata: {
-        full_name: 'システム管理者',
+        full_name: adminName,
         role: 'admin'
       }
     })
@@ -30,8 +44,8 @@ async function createAdminUser() {
     }
 
     console.log('管理者アカウントが作成されました:')
-    console.log('メールアドレス: greenroom51@gmail.com')
-    console.log('パスワード: Fkyosai51')
+    console.log('メールアドレス:', adminEmail)
+    console.log('パスワード:', adminPassword)
     console.log('ユーザーID:', data.user.id)
 
     // プロフィールテーブルに管理者情報を追加
@@ -53,6 +67,13 @@ async function createAdminUser() {
   } catch (err) {
     console.error('エラーが発生しました:', err)
   }
+}
+
+// Usage instructions
+if (process.argv.length > 2 && process.argv[2] === '--help') {
+  console.log('Usage: node create-admin.js [email] [password] [fullName]')
+  console.log('Or set environment variables: ADMIN_EMAIL, ADMIN_PASSWORD, ADMIN_NAME')
+  process.exit(0)
 }
 
 createAdminUser()

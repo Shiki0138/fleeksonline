@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { ArrowLeft, Settings, Save, Globe, Lock, Bell, CreditCard, Shield, Eye, EyeOff } from 'lucide-react'
@@ -42,14 +42,47 @@ export default function SystemSettingsPage() {
     slackWebhook: ''
   })
 
+  useEffect(() => {
+    loadSettings()
+  }, [])
+
+  const loadSettings = async () => {
+    try {
+      const response = await fetch('/api/admin/settings')
+      if (response.ok) {
+        const data = await response.json()
+        setSettings(prev => ({
+          ...prev,
+          ...data,
+          // Keep sensitive fields masked if they exist
+          stripeSecretKey: data.hasStripeKeys ? '********' : '',
+          openaiApiKey: data.hasOpenAIKey ? '********' : ''
+        }))
+      }
+    } catch (error) {
+      console.error('Error loading settings:', error)
+      toast.error('設定の読み込みに失敗しました')
+    }
+  }
+
   const handleSave = async () => {
     setIsLoading(true)
     try {
-      // 実際の実装では、これらの設定をSupabaseやサーバーに保存します
-      // 現在はデモなので、ローカルストレージに保存
-      localStorage.setItem('fleeks_settings', JSON.stringify(settings))
+      const response = await fetch('/api/admin/settings', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(settings)
+      })
+      
+      if (!response.ok) {
+        throw new Error('Failed to save settings')
+      }
       
       toast.success('設定を保存しました')
+      // Reload settings to get updated state
+      await loadSettings()
     } catch (error) {
       console.error('Error saving settings:', error)
       toast.error('設定の保存に失敗しました')
