@@ -20,14 +20,17 @@ export async function middleware(req: NextRequest) {
       return NextResponse.redirect(redirectUrl)
     }
     
-    // Check admin role
+    // Check admin role or specific admin email
     const { data: profile } = await supabase
       .from('fleeks_profiles')
       .select('role')
       .eq('id', session.user.id)
       .single()
     
-    if (profile?.role !== 'admin') {
+    const isAdminEmail = session.user.email === 'greenroom51@gmail.com'
+    const isAdminRole = profile?.role === 'admin'
+    
+    if (!isAdminRole && !isAdminEmail) {
       const redirectUrl = req.nextUrl.clone()
       redirectUrl.pathname = '/dashboard'
       return NextResponse.redirect(redirectUrl)
@@ -57,7 +60,10 @@ export async function middleware(req: NextRequest) {
       .eq('id', session.user.id)
       .single()
     
-    if (profile?.role !== 'admin') {
+    const isAdminEmail = session.user.email === 'greenroom51@gmail.com'
+    const isAdminRole = profile?.role === 'admin'
+    
+    if (!isAdminRole && !isAdminEmail) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
   }

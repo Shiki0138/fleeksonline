@@ -53,11 +53,13 @@ export default function SystemSettingsPage() {
         const data = await response.json()
         setSettings(prev => ({
           ...prev,
-          ...data,
-          // Keep sensitive fields masked if they exist
-          stripeSecretKey: data.hasStripeKeys ? '********' : '',
-          openaiApiKey: data.hasOpenAIKey ? '********' : ''
+          ...data
+          // APIキーは既にサーバーサイドでマスク済み（'********' または空文字）
         }))
+      } else if (response.status === 403) {
+        // 管理者権限がない場合
+        toast.error('管理者権限が必要です')
+        router.push('/dashboard')
       }
     } catch (error) {
       console.error('Error loading settings:', error)
