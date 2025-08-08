@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef } from 'react'
 import { motion } from 'framer-motion'
-import { Lock, AlertCircle, Crown } from 'lucide-react'
+import { Lock, AlertCircle, Crown, Play, Pause } from 'lucide-react'
 
 interface VideoPlayerProps {
   videoId: string
@@ -16,6 +16,7 @@ export default function VideoPlayer({ videoId, title, isPremium, userMembershipT
   const [timeWatched, setTimeWatched] = useState(0)
   const [isRestricted, setIsRestricted] = useState(false)
   const [player, setPlayer] = useState<any>(null)
+  const [isPlaying, setIsPlaying] = useState(false)
   const playerRef = useRef<HTMLDivElement>(null)
   const intervalRef = useRef<NodeJS.Timeout | null>(null)
 
@@ -37,13 +38,15 @@ export default function VideoPlayer({ videoId, title, isPremium, userMembershipT
           videoId: videoId,
           playerVars: {
             autoplay: 0,
-            controls: 1,
+            controls: userMembershipType === 'free' ? 0 : 1, // 無料会員はコントロール非表示
             modestbranding: 1,
             rel: 0,
-            fs: 1,
+            fs: userMembershipType === 'free' ? 0 : 1, // 無料会員はフルスクリーン無効
             iv_load_policy: 3,
             origin: window.location.origin,
             playsinline: 1,
+            disablekb: userMembershipType === 'free' ? 1 : 0, // 無料会員はキーボード操作無効
+            showinfo: 0, // 動画情報を非表示
           },
           events: {
             onReady: onPlayerReady,
@@ -76,6 +79,9 @@ export default function VideoPlayer({ videoId, title, isPremium, userMembershipT
   }
 
   const onPlayerStateChange = (event: any) => {
+    // 再生状態の更新
+    setIsPlaying(event.data === 1)
+    
     // 再生中
     if (event.data === 1) {
       if (!canWatchFull && !intervalRef.current) {
@@ -104,6 +110,21 @@ export default function VideoPlayer({ videoId, title, isPremium, userMembershipT
     }
   }
 
+  // 無料会員用の再生/一時停止制御
+  const handlePlayPause = () => {
+    if (!player) return
+    
+    if (isPlaying) {
+      player.pauseVideo()
+    } else {
+      if (timeWatched >= FREE_LIMIT_SECONDS) {
+        setIsRestricted(true)
+        return
+      }
+      player.playVideo()
+    }
+  }
+
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60)
     const secs = seconds % 60
@@ -114,6 +135,36 @@ export default function VideoPlayer({ videoId, title, isPremium, userMembershipT
 
   return (
     <div className="relative w-full">
+      {/* 無料会員向けのCSS（YouTubeリンクを隠すスタイル） */}
+      {userMembershipType === 'free' && (
+        <style jsx>{`
+          .ytp-chrome-top,
+          .ytp-chrome-bottom,
+          .ytp-title,
+          .ytp-show-cards-title,
+          .ytp-cards-button,
+          .ytp-watermark,
+          .ytp-context-menu-popup,
+          .ytp-popup,
+          .ytp-miniplayer-button,
+          .ytp-size-button,
+          .ytp-remote-button,
+          .ytp-share-button,
+          .ytp-watch-later-button,
+          .ytp-youtube-button {
+            display: none !important;
+          }
+          
+          iframe {
+            pointer-events: ${userMembershipType === 'free' ? 'none' : 'auto'};
+          }
+          
+          .player-overlay {
+            pointer-events: auto;
+          }
+        `}</style>
+      )}
+      
       {/* 制限メッセージ */}
       {!canWatchFull && !isRestricted && (
         <motion.div
@@ -136,7 +187,44 @@ export default function VideoPlayer({ videoId, title, isPremium, userMembershipT
       {/* 動画プレーヤー */}
       <div className="relative aspect-video bg-black rounded-lg overflow-hidden">
         {!isRestricted ? (
-          <div ref={playerRef} className="w-full h-full" />
+          <>
+            <div ref={playerRef} className="w-full h-full" />
+            
+            {/* 無料会員用のオーバーレイ */}
+            {userMembershipType === 'free' && (
+              <div className="absolute inset-0 pointer-events-none player-overlay">
+                {/* カスタム再生ボタン（YouTubeコントロールが非表示の場合） */}
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-auto">
+                  <button
+                    onClick={handlePlayPause}
+                    className="bg-black/60 hover:bg-black/80 text-white p-4 rounded-full transition-all transform hover:scale-105 opacity-0 hover:opacity-100"
+                    disabled={isRestricted}
+                  >
+                    {isPlaying ? (
+                      <Pause className="w-8 h-8" />
+                    ) : (
+                      <Play className="w-8 h-8" />
+                    )}
+                  </button>
+                </div>
+                
+                {/* 無料会員の警告表示 */}
+                <div className="absolute bottom-4 left-4 bg-black/80 text-white px-3 py-2 rounded-lg text-xs pointer-events-none">
+                  <div className="flex items-center space-x-2">
+                    <Lock className="w-3 h-3 text-blue-400" />
+                    <span>無料会員 - 5分プレビュー中</span>
+                  </div>
+                </div>
+                
+                {/* 右クリック防止オーバーレイ */}
+                <div 
+                  className="absolute inset-0 bg-transparent pointer-events-auto"
+                  onContextMenu={(e) => e.preventDefault()}
+                  style={{ userSelect: 'none' }}
+                />
+              </div>
+            )}
+          </>
         ) : (
           <motion.div
             initial={{ opacity: 0 }}
