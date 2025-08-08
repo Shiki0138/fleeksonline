@@ -37,7 +37,7 @@ export default function VideoPlayer({ videoId, title, isPremium, userMembershipT
         const ytPlayer = new window.YT.Player(playerRef.current, {
           videoId: videoId,
           playerVars: {
-            autoplay: 0,
+            autoplay: 1, // 自動再生を有効にして再生問題を解決
             controls: 1, // 基本コントロールは表示（CSSで制御）
             modestbranding: 1,
             rel: 0,
@@ -47,6 +47,8 @@ export default function VideoPlayer({ videoId, title, isPremium, userMembershipT
             playsinline: 1,
             disablekb: userMembershipType === 'free' ? 1 : 0, // 無料会員はキーボード操作無効
             showinfo: 0, // 動画情報を非表示
+            cc_load_policy: 0, // 字幕を非表示
+            enablejsapi: 1, // JavaScript APIを有効化
           },
           events: {
             onReady: onPlayerReady,
@@ -84,15 +86,27 @@ export default function VideoPlayer({ videoId, title, isPremium, userMembershipT
           '.ytp-watermark',
           '.ytp-youtube-button', 
           '.ytp-title-link',
+          '.ytp-chrome-top',
           '.ytp-chrome-top-buttons',
+          '.ytp-gradient-top',
+          '.ytp-share-button',
+          '.ytp-watch-later-button',
+          '.ytp-overflow-button',
           '[title*="YouTube"]',
-          '[title*="YouTubeで視聴"]',
+          '[title*="見る"]',
+          '[title*="後で見る"]',
+          '[title*="共有"]',
           '[aria-label*="YouTube"]',
+          '[aria-label*="見る"]',
+          '[aria-label*="後で見る"]',
+          '[aria-label*="共有"]',
           'a[href*="youtube.com"]',
           'a[href*="youtu.be"]',
           '.ytp-ce-element',
           '.ytp-pause-overlay',
-          '.ytp-endscreen-element'
+          '.ytp-endscreen-element',
+          '.ytp-context-menu',
+          '.ytp-popup'
         ]
         
         elementsToHide.forEach(selector => {
@@ -103,9 +117,35 @@ export default function VideoPlayer({ videoId, title, isPremium, userMembershipT
               element.style.visibility = 'hidden'
               element.style.opacity = '0'
               element.style.pointerEvents = 'none'
+              element.style.width = '0'
+              element.style.height = '0'
+              element.style.overflow = 'hidden'
+              // 要素を完全に削除
+              element.remove()
             }
           })
         })
+        
+        // iframe内の要素も制御
+        const iframe = document.querySelector('iframe')
+        if (iframe && iframe.contentWindow) {
+          try {
+            const iframeDoc = iframe.contentDocument || iframe.contentWindow.document
+            if (iframeDoc) {
+              elementsToHide.forEach(selector => {
+                const iframeElements = iframeDoc.querySelectorAll(selector)
+                iframeElements.forEach((element: Element) => {
+                  if (element instanceof HTMLElement) {
+                    element.style.display = 'none'
+                    element.remove()
+                  }
+                })
+              })
+            }
+          } catch (e) {
+            // クロスドメインエラーは無視
+          }
+        }
       }
       
       // 初期実行
@@ -178,13 +218,14 @@ export default function VideoPlayer({ videoId, title, isPremium, userMembershipT
       {/* 無料会員向けのCSS（YouTubeリンクを隠すスタイル） */}
       {userMembershipType === 'free' && (
         <style jsx global>{`
-          /* 無料会員向け：YouTubeに遷移する全ての要素を非表示 */
+          /* 無料会員向け：YouTubeに遷移する全ての要素を完全非表示 */
           .ytp-watermark,
           .ytp-youtube-button,
           .ytp-title-link,
           .ytp-title,
           .ytp-show-cards-title,
           .ytp-cards-button,
+          .ytp-context-menu,
           .ytp-context-menu-popup,
           .ytp-popup,
           .ytp-miniplayer-button,
@@ -193,7 +234,9 @@ export default function VideoPlayer({ videoId, title, isPremium, userMembershipT
           .ytp-share-button,
           .ytp-watch-later-button,
           .ytp-overflow-button,
+          .ytp-chrome-top,
           .ytp-chrome-top-buttons,
+          .ytp-title-channel,
           .ytp-title-channel-logo,
           .ytp-title-expanded-overlay,
           .ytp-ce-element,
@@ -202,6 +245,23 @@ export default function VideoPlayer({ videoId, title, isPremium, userMembershipT
           .ytp-endscreen-element,
           .annotation,
           .iv-click-target,
+          .ytp-impression-link,
+          .ytp-videowall-still,
+          .ytp-ce-covering-overlay,
+          .ytp-ce-element-show,
+          .ytp-ce-covering-image,
+          .ytp-gradient-top,
+          .ytp-chrome-controls .ytp-button[aria-label*="YouTube"],
+          .ytp-chrome-controls .ytp-button[aria-label*="見る"],
+          .ytp-chrome-controls .ytp-button[aria-label*="後で見る"],
+          .ytp-chrome-controls .ytp-button[aria-label*="共有"],
+          .ytp-chrome-controls .ytp-button[aria-label*="Watch"],
+          .ytp-chrome-controls .ytp-button[aria-label*="Share"],
+          .ytp-chrome-controls .ytp-button[title*="YouTube"],
+          .ytp-chrome-controls .ytp-button[title*="見る"],
+          .ytp-chrome-controls .ytp-button[title*="後で見る"],
+          .ytp-chrome-controls .ytp-button[title*="共有"],
+          .ytp-button:not(.ytp-play-button):not(.ytp-volume-slider):not(.ytp-time-display):not(.ytp-progress-bar),
           a[data-sessionlink*="feature=player-title"],
           a[href*="youtube.com/watch"],
           a[href*="youtu.be"],
@@ -209,28 +269,30 @@ export default function VideoPlayer({ videoId, title, isPremium, userMembershipT
           [title*="YouTubeで視聴"],
           [title*="Watch on YouTube"],
           [aria-label*="YouTube"],
-          .ytp-impression-link,
-          .ytp-videowall-still,
-          .ytp-ce-covering-overlay,
-          .ytp-ce-element-show,
-          .ytp-ce-covering-image {
+          [aria-label*="見る"],
+          [aria-label*="後で見る"],
+          [aria-label*="共有"] {
             display: none !important;
             visibility: hidden !important;
             opacity: 0 !important;
             pointer-events: none !important;
+            width: 0 !important;
+            height: 0 !important;
+            overflow: hidden !important;
           }
           
-          /* YouTube プレーヤーの右上ロゴエリア全体を非表示 */
-          .ytp-chrome-top-buttons {
+          /* 右上のボタンエリア全体を非表示 */
+          .ytp-chrome-top,
+          .ytp-gradient-top {
             display: none !important;
+            visibility: hidden !important;
           }
           
           /* コンテクストメニューを完全に無効化 */
-          .html5-video-player {
-            pointer-events: auto !important;
-          }
-          
-          .html5-video-player .video-stream {
+          .ytp-contextmenu,
+          .ytp-popup {
+            display: none !important;
+            visibility: hidden !important;
             pointer-events: none !important;
           }
           
@@ -242,9 +304,14 @@ export default function VideoPlayer({ videoId, title, isPremium, userMembershipT
             user-select: none;
           }
           
-          /* iframe 内の要素へのより強い制御 */
+          /* iframeコンテナ内のポインターイベント制御 */
           .free-member-container iframe {
             pointer-events: auto !important;
+          }
+          
+          /* より強力な非表示 */
+          .html5-video-player .ytp-chrome-top {
+            display: none !important;
           }
         `}</style>
       )}
