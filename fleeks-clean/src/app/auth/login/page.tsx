@@ -33,7 +33,7 @@ export default function LoginPage() {
       if (data.user) {
         console.log('Login - User:', data.user.email, 'ID:', data.user.id)
         
-        // プロファイルを確認して管理者なら/adminへ
+        // FLEEKSプロファイルの存在を確認（重要：他プロジェクトユーザーを拒否）
         const { data: profileData, error: profileError } = await supabase
           .from('fleeks_profiles')
           .select('role')
@@ -42,6 +42,14 @@ export default function LoginPage() {
 
         console.log('Login - Profile:', profileData)
         console.log('Login - Profile Error:', profileError)
+
+        // FLEEKSプロファイルが存在しない場合は拒否
+        if (!profileData && profileError?.code === 'PGRST116') {
+          // 他プロジェクトのユーザーの可能性
+          await supabase.auth.signOut()
+          setError('このアカウントはFLEEKSでは使用できません。FLEEKSに登録されたアカウントでログインしてください。')
+          return
+        }
 
         if (profileData?.role === 'admin' || data.user.email === 'greenroom51@gmail.com') {
           console.log('Login - Redirecting to /admin')

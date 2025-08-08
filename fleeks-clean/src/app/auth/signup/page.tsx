@@ -52,6 +52,24 @@ export default function SignupPage() {
       }
 
       if (data.user) {
+        // FLEEKSプロファイルを作成（重要：FLEEKSユーザーとして識別）
+        const { error: profileError } = await supabase
+          .from('fleeks_profiles')
+          .insert({
+            id: data.user.id,
+            username: email.split('@')[0],
+            full_name: fullName || email.split('@')[0],
+            membership_type: 'free',
+            role: 'user',
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          })
+
+        if (profileError) {
+          console.error('Profile creation error:', profileError)
+          // プロファイル作成に失敗してもユーザー作成は成功しているので続行
+        }
+
         setSuccess(true)
         // 確認メールが送信された場合のメッセージ表示
         setTimeout(() => {
