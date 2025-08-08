@@ -129,7 +129,10 @@ export default function AdminDashboard() {
                 <p className="text-xs text-red-400">管理者</p>
               </div>
               <button
-                onClick={() => router.push('/dashboard')}
+                onClick={() => {
+                  console.log('ダッシュボードへ遷移します')
+                  router.push('/dashboard')
+                }}
                 className="flex items-center space-x-2 text-gray-300 hover:text-white transition"
               >
                 <Target className="w-5 h-5" />
