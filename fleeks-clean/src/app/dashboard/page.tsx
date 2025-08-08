@@ -64,17 +64,12 @@ export default function DashboardPage() {
       console.log('Dashboard - Is Admin:', isAdminUser, 'Role:', profileData.role, 'Email:', user.email)
       setIsAdmin(isAdminUser)
       
-      // 管理者の場合は/adminへリダイレクト
-      if (isAdminUser) {
-        console.log('Dashboard - Redirecting to /admin')
-        router.push('/admin')
-        return
+      // 管理者の自動リダイレクトを削除 - 管理者もダッシュボードを見られるように
+    } else {
+      // プロファイルがない場合でも管理者フラグを設定
+      if (isAdminEmail) {
+        setIsAdmin(true)
       }
-    } else if (isAdminEmail) {
-      // プロファイルがなくても管理者メールなら/adminへ
-      console.log('Dashboard - No profile but admin email, redirecting to /admin')
-      router.push('/admin')
-      return
     }
   }
 
@@ -166,11 +161,11 @@ export default function DashboardPage() {
             <div className="flex items-center space-x-6">
               {isAdmin && (
                 <button
-                  onClick={() => handleAdminAction('settings')}
+                  onClick={() => router.push('/admin')}
                   className="flex items-center space-x-2 text-gray-300 hover:text-white transition"
                 >
                   <Settings className="w-5 h-5" />
-                  <span>管理設定</span>
+                  <span>管理画面</span>
                 </button>
               )}
               {profile && (

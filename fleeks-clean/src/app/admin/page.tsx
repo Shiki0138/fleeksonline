@@ -130,9 +130,10 @@ export default function AdminDashboard() {
               </div>
               <button
                 onClick={() => router.push('/dashboard')}
-                className="text-gray-300 hover:text-white transition"
+                className="flex items-center space-x-2 text-gray-300 hover:text-white transition"
               >
-                ユーザー画面
+                <Target className="w-5 h-5" />
+                <span>ダッシュボード</span>
               </button>
               <button
                 onClick={handleLogout}
