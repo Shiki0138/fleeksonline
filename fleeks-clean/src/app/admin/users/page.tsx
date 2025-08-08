@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { ArrowLeft, Users, Crown, Shield, Calendar, Mail, Search } from 'lucide-react'
+import { ArrowLeft, Users, Crown, Shield, Calendar, Mail, Search, Key, RefreshCw } from 'lucide-react'
 import { supabase } from '@/lib/supabase-client'
 import toast from 'react-hot-toast'
 
@@ -25,6 +25,10 @@ export default function UserManagementPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
   const [filter, setFilter] = useState<'all' | 'free' | 'premium' | 'admin'>('all')
+  const [showPasswordModal, setShowPasswordModal] = useState(false)
+  const [selectedUser, setSelectedUser] = useState<User | null>(null)
+  const [newPassword, setNewPassword] = useState('')
+  const [isUpdatingPassword, setIsUpdatingPassword] = useState(false)
 
   useEffect(() => {
     fetchUsers()
@@ -106,6 +110,46 @@ export default function UserManagementPage() {
     } catch (error) {
       console.error('Error updating role:', error)
       toast.error('ロールの更新に失敗しました')
+    }
+  }
+
+  const handlePasswordUpdate = async () => {
+    if (!selectedUser || !newPassword) return
+    
+    setIsUpdatingPassword(true)
+    try {
+      // Supabase Admin APIを使用してパスワードを更新
+      const { error } = await supabase.auth.admin.updateUserById(
+        selectedUser.id,
+        { password: newPassword }
+      )
+
+      if (error) throw error
+
+      toast.success('パスワードを更新しました')
+      setShowPasswordModal(false)
+      setNewPassword('')
+      setSelectedUser(null)
+    } catch (error) {
+      console.error('Error updating password:', error)
+      toast.error('パスワードの更新に失敗しました')
+    } finally {
+      setIsUpdatingPassword(false)
+    }
+  }
+
+  const handlePasswordReset = async (email: string) => {
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/auth/reset-password`,
+      })
+
+      if (error) throw error
+
+      toast.success('パスワードリセットメールを送信しました')
+    } catch (error) {
+      console.error('Error sending reset email:', error)
+      toast.error('リセットメールの送信に失敗しました')
     }
   }
 
@@ -319,6 +363,23 @@ export default function UserManagementPage() {
                                 <option value="admin" className="bg-gray-800">管理者</option>
                               </select>
                             )}
+                            <button
+                              onClick={() => {
+                                setSelectedUser(user)
+                                setShowPasswordModal(true)
+                              }}
+                              className="bg-white/10 hover:bg-white/20 p-2 rounded transition"
+                              title="パスワード設定"
+                            >
+                              <Key className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={() => handlePasswordReset(user.email)}
+                              className="bg-white/10 hover:bg-white/20 p-2 rounded transition"
+                              title="パスワードリセット"
+                            >
+                              <RefreshCw className="w-4 h-4" />
+                            </button>
                           </div>
                         </td>
                       </tr>
@@ -326,6 +387,52 @@ export default function UserManagementPage() {
                   </tbody>
                 </table>
               </div>
+            </div>
+          )}
+
+          {/* パスワード設定モーダル */}
+          {showPasswordModal && selectedUser && (
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="bg-slate-800 rounded-xl p-6 max-w-md w-full mx-4"
+              >
+                <h3 className="text-xl font-semibold mb-4">パスワード設定</h3>
+                <p className="text-gray-400 mb-4">
+                  {selectedUser.email} のパスワードを設定します
+                </p>
+                <input
+                  type="password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  placeholder="新しいパスワード"
+                  className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:border-blue-400 mb-4"
+                  autoFocus
+                />
+                <p className="text-xs text-gray-400 mb-6">
+                  ※ パスワードは8文字以上で設定してください
+                </p>
+                <div className="flex space-x-3">
+                  <button
+                    onClick={handlePasswordUpdate}
+                    disabled={!newPassword || newPassword.length < 8 || isUpdatingPassword}
+                    className="flex-1 bg-blue-500 hover:bg-blue-600 px-4 py-2 rounded-lg font-medium transition disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isUpdatingPassword ? '更新中...' : 'パスワードを設定'}
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowPasswordModal(false)
+                      setNewPassword('')
+                      setSelectedUser(null)
+                    }}
+                    className="px-4 py-2 border border-white/20 rounded-lg hover:bg-white/10 transition"
+                  >
+                    キャンセル
+                  </button>
+                </div>
+              </motion.div>
             </div>
           )}
         </motion.div>

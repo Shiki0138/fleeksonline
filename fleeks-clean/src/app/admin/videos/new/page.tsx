@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { ArrowLeft, Save, Youtube, Loader2 } from 'lucide-react'
+import { ArrowLeft, Save, Youtube, Loader2, Users } from 'lucide-react'
 import { supabase } from '@/lib/supabase-client'
 import toast from 'react-hot-toast'
 
@@ -16,8 +16,9 @@ export default function NewVideoPage() {
     title: '',
     description: '',
     category: 'Instagram集客',
-    duration: '',
-    is_premium: true // デフォルトでプレミアム動画
+    duration: 0,
+    is_premium: true, // デフォルトでプレミアム動画
+    is_public: false // 全員に公開するかどうか
   })
 
   const categories = [
@@ -35,20 +36,33 @@ export default function NewVideoPage() {
     return match ? match[1] : url
   }
 
-  // YouTube動画情報を取得
+  // YouTube動画情報を取得（タイトルと動画の長さ）
   const fetchVideoInfo = async (videoId: string) => {
     setIsLoadingVideo(true)
     try {
-      // YouTube oEmbed APIを使用（APIキー不要）
-      const response = await fetch(`https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${videoId}&format=json`)
-      if (response.ok) {
-        const data = await response.json()
+      // まずoEmbed APIでタイトルを取得
+      const oembedResponse = await fetch(`https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${videoId}&format=json`)
+      if (oembedResponse.ok) {
+        const oembedData = await oembedResponse.json()
+        
+        // NoEmbed APIを使用して動画の長さも取得
+        const noembedResponse = await fetch(`https://noembed.com/embed?url=https://www.youtube.com/watch?v=${videoId}`)
+        let duration = 0
+        
+        if (noembedResponse.ok) {
+          const noembedData = await noembedResponse.json()
+          // duration_msがある場合は秒に変換
+          if (noembedData.duration) {
+            duration = noembedData.duration // NoEmbedは秒単位で返す
+          }
+        }
+        
         setFormData(prev => ({
           ...prev,
-          title: data.title || prev.title,
-          // 注: oEmbed APIでは動画の長さは取得できないため、デフォルト値を設定
-          duration: prev.duration || '300' // 5分をデフォルトとして設定
+          title: oembedData.title || prev.title,
+          duration: duration || 300 // 取得できない場合は5分をデフォルト
         }))
+        
         toast.success('動画情報を取得しました')
       } else {
         toast.error('動画情報の取得に失敗しました')
@@ -61,11 +75,13 @@ export default function NewVideoPage() {
     }
   }
 
-  // YouTube IDが変更されたら自動的に情報を取得
-  const handleYouTubeIdChange = (value: string) => {
-    setFormData({ ...formData, youtube_id: value })
+  // YouTube URLまたはIDが変更されたら自動的に情報を取得
+  const handleYouTubeInputChange = (value: string) => {
     const videoId = extractYouTubeId(value)
-    if (videoId && videoId.length === 11) { // YouTube IDは11文字
+    setFormData({ ...formData, youtube_id: videoId })
+    
+    // YouTube IDは11文字で、有効な文字のみ含む
+    if (videoId && videoId.length === 11 && /^[a-zA-Z0-9_-]+$/.test(videoId)) {
       fetchVideoInfo(videoId)
     }
   }
@@ -78,12 +94,12 @@ export default function NewVideoPage() {
       const { error } = await supabase
         .from('fleeks_videos')
         .insert({
-          youtube_id: extractYouTubeId(formData.youtube_id),
+          youtube_id: formData.youtube_id,
           title: formData.title,
           description: formData.description,
           category: formData.category,
-          duration: parseInt(formData.duration),
-          is_premium: formData.is_premium
+          duration: formData.duration,
+          is_premium: !formData.is_public // is_publicがfalse（チェックなし）の場合、プレミアム動画
         })
 
       if (error) throw error
@@ -122,14 +138,14 @@ export default function NewVideoPage() {
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
               <label className="block text-sm font-medium mb-2">
-                YouTube 動画ID *
+                YouTube URL または 動画ID *
               </label>
               <div className="relative">
                 <input
                   type="text"
                   value={formData.youtube_id}
-                  onChange={(e) => handleYouTubeIdChange(e.target.value)}
-                  placeholder="xdHq_H-VF80"
+                  onChange={(e) => handleYouTubeInputChange(e.target.value)}
+                  placeholder="https://www.youtube.com/watch?v=xdHq_H-VF80 または xdHq_H-VF80"
                   className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:border-blue-400 pr-10"
                   required
                   disabled={isLoadingVideo}
@@ -139,7 +155,7 @@ export default function NewVideoPage() {
                 )}
               </div>
               <p className="text-xs text-gray-400 mt-1">
-                YouTube動画IDを入力してください（例: xdHq_H-VF80）
+                YouTube URLまたは動画IDを入力すると、タイトルと動画の長さが自動的に取得されます
               </p>
             </div>
 
@@ -154,10 +170,8 @@ export default function NewVideoPage() {
                 placeholder={isLoadingVideo ? "動画情報を取得中..." : "動画タイトル（自動取得されます）"}
                 className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:border-blue-400"
                 required
+                readOnly={isLoadingVideo}
               />
-              <p className="text-xs text-gray-400 mt-1">
-                YouTube IDを入力すると自動的に取得されます
-              </p>
             </div>
 
             <div>
@@ -191,37 +205,36 @@ export default function NewVideoPage() {
               </select>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium mb-2">
-                動画の長さ（秒） *
-              </label>
-              <input
-                type="number"
-                value={formData.duration}
-                onChange={(e) => setFormData({ ...formData, duration: e.target.value })}
-                placeholder="300"
-                className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:border-blue-400"
-                required
-              />
-              <p className="text-xs text-gray-400 mt-1">
-                例: 5分 = 300秒、20分 = 1200秒（自動取得できない場合は手動で入力）
-              </p>
-            </div>
+            {/* 動画の長さは自動取得のため非表示 */}
+            <input
+              type="hidden"
+              value={formData.duration}
+            />
 
-            <div>
+            <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4">
               <label className="flex items-center space-x-3 cursor-pointer">
                 <input
                   type="checkbox"
-                  checked={formData.is_premium}
-                  onChange={(e) => setFormData({ ...formData, is_premium: e.target.checked })}
+                  checked={formData.is_public}
+                  onChange={(e) => setFormData({ ...formData, is_public: e.target.checked })}
                   className="w-5 h-5 rounded text-blue-500 focus:ring-blue-400"
                 />
-                <span>プレミアム動画として設定（デフォルト: ON）</span>
+                <div className="flex items-center space-x-2">
+                  <Users className="w-5 h-5 text-blue-400" />
+                  <span className="font-medium">全員に公開</span>
+                </div>
               </label>
-              <p className="text-xs text-gray-400 mt-1 ml-8">
-                無料会員は5分までしか視聴できません
+              <p className="text-xs text-gray-400 mt-2 ml-8">
+                チェックを入れると、無料会員も含めて全員がこの動画を視聴できます。<br />
+                チェックなしの場合、プレミアム会員限定となります。
               </p>
             </div>
+
+            {formData.duration > 0 && (
+              <div className="text-sm text-gray-400">
+                動画の長さ: {Math.floor(formData.duration / 60)}分{formData.duration % 60}秒
+              </div>
+            )}
 
             <div className="flex space-x-4 pt-6">
               <button

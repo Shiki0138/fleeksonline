@@ -263,7 +263,13 @@ export default function DashboardPage() {
                     <div key={i} className="bg-white/10 rounded-xl h-64 animate-pulse"></div>
                   ))
                 ) : videos.length > 0 ? (
-                  videos.map((video) => (
+                  videos.map((video) => {
+                    // 無料会員の場合、プレミアム限定動画をフィルタリング
+                    if (profile?.membership_type === 'free' && video.is_premium) {
+                      // 5分まで視聴可能なので表示はする
+                    }
+                    
+                    return (
                     <motion.div
                       key={video.id}
                       whileHover={{ scale: 1.02 }}
@@ -329,7 +335,7 @@ export default function DashboardPage() {
                         </div>
                       </div>
                     </motion.div>
-                  ))
+                  )})
                 ) : (
                   <div className="col-span-full text-center py-12">
                     <p className="text-gray-400">まだ動画がありません</p>

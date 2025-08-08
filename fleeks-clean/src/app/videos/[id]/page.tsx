@@ -53,6 +53,12 @@ export default function VideoPage() {
     if (!videoError && videoData) {
       setVideo(videoData)
       
+      // 動画が公開設定でない場合、プレミアム会員のみアクセス可能かチェック
+      if (videoData.is_premium && profile?.membership_type === 'free') {
+        // is_premiumがtrueなら、プレミアム会員限定
+        // ただし、VideoPlayerコンポーネントで5分制限があるので、ここでは制限しない
+      }
+      
       // 視聴履歴を記録（watch_historyテーブルがある場合のみ）
       if (profile) {
         try {
