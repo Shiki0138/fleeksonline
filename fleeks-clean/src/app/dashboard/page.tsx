@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { Target, Play, Clock, Star, LogOut, User, Crown, Edit, Plus, FileText, Youtube, Settings } from 'lucide-react'
+import { Target, Play, Clock, Star, LogOut, User, Crown, Edit, Plus, FileText, Youtube, Settings, CheckCircle } from 'lucide-react'
 import { supabase } from '@/lib/supabase-client'
 import type { Profile, Video } from '@/lib/supabase-client'
 
@@ -28,12 +28,19 @@ export default function DashboardPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [isAdmin, setIsAdmin] = useState(false)
   const [activeTab, setActiveTab] = useState<'videos' | 'blog'>('videos')
+  const [watchedVideos, setWatchedVideos] = useState<Set<string>>(new Set())
 
   useEffect(() => {
     checkUser()
     fetchVideos()
     fetchBlogPosts()
   }, [])
+
+  useEffect(() => {
+    if (profile) {
+      fetchWatchHistory()
+    }
+  }, [profile])
 
   const checkUser = async () => {
     const { data: { user } } = await supabase.auth.getUser()
@@ -77,12 +84,26 @@ export default function DashboardPage() {
     const { data, error } = await supabase
       .from('fleeks_videos')
       .select('*')
-      .order('created_at', { ascending: false })
+      .order('published_at', { ascending: false }) // published_atで新しい順に並び替え
 
     if (!error && data) {
       setVideos(data)
     }
     setIsLoading(false)
+  }
+
+  const fetchWatchHistory = async () => {
+    if (!profile) return
+    
+    const { data, error } = await supabase
+      .from('fleeks_watch_history')
+      .select('video_id')
+      .eq('user_id', profile.id)
+    
+    if (!error && data) {
+      const watched = new Set(data.map(item => item.video_id))
+      setWatchedVideos(watched)
+    }
   }
 
   const fetchBlogPosts = async () => {
@@ -311,6 +332,13 @@ export default function DashboardPage() {
                           <div className="absolute top-2 left-2 bg-gradient-to-r from-yellow-400 to-orange-400 px-3 py-1 rounded-full text-xs font-semibold text-black flex items-center">
                             <Crown className="w-3 h-3 mr-1" />
                             Premium
+                          </div>
+                        )}
+                        {/* 閲覧済みバッジ */}
+                        {watchedVideos.has(video.id) && (
+                          <div className="absolute bottom-2 left-2 bg-green-500/80 px-2 py-1 rounded-full text-xs font-medium flex items-center">
+                            <CheckCircle className="w-3 h-3 mr-1" />
+                            閲覧済み
                           </div>
                         )}
                       </div>

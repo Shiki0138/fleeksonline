@@ -32,7 +32,7 @@ export default function VideoPage() {
     }
 
     const { data: profileData } = await supabase
-      .from('profiles')
+      .from('fleeks_profiles')
       .select('*')
       .eq('id', user.id)
       .single()
@@ -59,16 +59,18 @@ export default function VideoPage() {
         // ただし、VideoPlayerコンポーネントで5分制限があるので、ここでは制限しない
       }
       
-      // 視聴履歴を記録（watch_historyテーブルがある場合のみ）
+      // 視聴履歴を記録または更新
       if (profile) {
         try {
-          await supabase.from('fleeks_watch_history').insert({
+          await supabase.from('fleeks_watch_history').upsert({
             user_id: profile.id,
             video_id: videoData.id,
             watched_seconds: 0,
             last_position: 0,
             completed: false,
             last_watched_at: new Date().toISOString()
+          }, {
+            onConflict: 'user_id,video_id'
           })
         } catch (historyError) {
           // watch_historyテーブルが存在しない場合は無視
