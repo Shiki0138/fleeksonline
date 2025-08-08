@@ -169,7 +169,14 @@ export default function VideoPlayer({ videoId, title, isPremium, userMembershipT
           setTimeWatched((prev) => {
             const newTime = prev + 1
             if (newTime >= FREE_LIMIT_SECONDS) {
-              player.pauseVideo()
+              // プレーヤーが存在する場合のみ一時停止
+              if (player && player.pauseVideo) {
+                try {
+                  player.pauseVideo()
+                } catch (e) {
+                  console.log('Player pause error:', e)
+                }
+              }
               setIsRestricted(true)
               if (intervalRef.current) {
                 clearInterval(intervalRef.current)
@@ -403,33 +410,49 @@ export default function VideoPlayer({ videoId, title, isPremium, userMembershipT
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="absolute inset-0 bg-gradient-to-br from-blue-900/90 to-indigo-900/90 flex items-center justify-center"
+            transition={{ duration: 1 }}
+            className="absolute inset-0 bg-gradient-to-br from-gray-900/95 to-black/95 flex items-center justify-center"
           >
-            <div className="text-center p-8 max-w-md">
-              <Lock className="w-16 h-16 text-yellow-400 mx-auto mb-4" />
-              <h3 className="text-2xl font-bold mb-2">視聴制限に達しました</h3>
-              <p className="text-gray-300 mb-6">
-                この動画の続きを視聴するには、プレミアム会員へのアップグレードが必要です
-              </p>
-              <div className="bg-white/10 backdrop-blur-sm rounded-lg p-6 mb-6">
-                <div className="flex items-center justify-center mb-3">
-                  <Crown className="w-8 h-8 text-yellow-400 mr-2" />
-                  <span className="text-xl font-semibold">プレミアム会員特典</span>
-                </div>
-                <ul className="text-sm text-gray-300 space-y-2 text-left">
-                  <li>✓ 全動画を無制限で視聴</li>
-                  <li>✓ HD画質での視聴</li>
-                  <li>✓ 限定コンテンツへのアクセス</li>
-                  <li>✓ 広告なしの快適な視聴体験</li>
-                </ul>
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5, duration: 0.8 }}
+              className="text-center p-8 max-w-2xl"
+            >
+              <div className="mb-8">
+                <Crown className="w-20 h-20 text-yellow-400 mx-auto mb-6 animate-pulse" />
+                <h2 className="text-3xl font-bold mb-4 bg-gradient-to-r from-yellow-400 to-orange-400 bg-clip-text text-transparent">
+                  続きはFLEEKS会員限定のコンテンツです
+                </h2>
+                <p className="text-lg text-gray-300 mb-8">
+                  ご興味がある方はこちらをご覧ください
+                </p>
               </div>
-              <a
-                href="/membership/upgrade"
-                className="inline-block bg-gradient-to-r from-yellow-400 to-orange-400 text-black font-semibold px-8 py-3 rounded-full hover:shadow-lg transition"
-              >
-                プレミアムにアップグレード
-              </a>
-            </div>
+              
+              <div className="space-y-4">
+                <a
+                  href="https://fleeks.jp/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-block bg-gradient-to-r from-yellow-400 to-orange-400 text-black font-bold px-10 py-4 rounded-full hover:shadow-xl hover:scale-105 transition-all duration-300 text-lg"
+                >
+                  FLEEKS公式サイトへ
+                </a>
+                
+                <div className="mt-6">
+                  <a
+                    href="/membership/upgrade"
+                    className="text-yellow-400 hover:text-yellow-300 underline transition text-sm"
+                  >
+                    または今すぐアップグレード
+                  </a>
+                </div>
+              </div>
+              
+              <div className="mt-8 text-sm text-gray-400">
+                <p>FLEEKSでは、ビジネスに役立つ多彩なコンテンツをご用意しています</p>
+              </div>
+            </motion.div>
           </motion.div>
         )}
       </div>
