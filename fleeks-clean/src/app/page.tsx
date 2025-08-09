@@ -64,7 +64,7 @@ export default function HomePage() {
               animate={{ opacity: 1, x: 0 }}
               className="flex items-center space-x-6"
             >
-              <a href="/auth/login" className="bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full hover:bg-white/20 transition md:bg-transparent md:px-0 md:py-0 md:rounded-none md:hover:text-blue-400 md:hover:bg-transparent">
+              <a href="/auth/login" className="bg-white/10 backdrop-blur-sm px-3 py-2 rounded-full hover:bg-white/20 transition text-sm whitespace-nowrap md:bg-transparent md:px-0 md:py-0 md:rounded-none md:hover:text-blue-400 md:hover:bg-transparent md:text-base">
                 ログイン
               </a>
               <a href="/auth/signup" className="bg-gradient-to-r from-blue-500 to-indigo-600 px-4 py-2 rounded-full hover:shadow-lg hover:shadow-blue-500/25 transition text-sm font-medium whitespace-nowrap md:px-6">
@@ -88,9 +88,10 @@ export default function HomePage() {
                 <span className="text-sm">AI搭載のビジネス成長支援プラットフォーム</span>
               </div>
               
-              <h1 className="text-6xl md:text-7xl font-bold mb-6 leading-tight">
+              <h1 className="text-5xl sm:text-6xl md:text-7xl font-bold mb-6 leading-tight">
                 <span className="bg-gradient-to-r from-blue-400 via-indigo-400 to-purple-400 bg-clip-text text-transparent">
-                  ローカルビジネスの成功へ
+                  <span className="block">ローカルビジネスの</span>
+                  <span className="block">成功へ</span>
                 </span>
                 <br />
                 <span className="text-2xl sm:text-3xl md:text-5xl whitespace-nowrap">集客と経営戦略を科学する</span>
