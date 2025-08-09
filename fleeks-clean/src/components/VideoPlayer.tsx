@@ -172,8 +172,11 @@ export default function VideoPlayer({ videoId, title, isPremium, userMembershipT
         intervalRef.current = setInterval(() => {
           setTimeWatched((prev) => {
             const newTime = prev + 1
+            if (newTime % 30 === 0) {
+              console.log(`Free user timer: ${newTime}/${FREE_LIMIT_SECONDS} seconds`)
+            }
             if (newTime >= FREE_LIMIT_SECONDS) {
-              console.log('5-minute limit reached - showing upgrade message')
+              console.log('5-minute limit reached - showing overlay (no player manipulation)')
               
               // タイマーを停止
               if (intervalRef.current) {
@@ -181,19 +184,21 @@ export default function VideoPlayer({ videoId, title, isPremium, userMembershipT
                 intervalRef.current = null
               }
               
-              // フェードアウト効果で制限画面を表示
-              setTimeout(() => {
-                setIsRestricted(true)
-                // プレーヤーを安全に停止
-                if (player && typeof player.pauseVideo === 'function') {
-                  try {
-                    player.pauseVideo()
-                    console.log('Video paused safely after fade')
-                  } catch (e) {
-                    console.log('Player pause error (ignored):', e)
-                  }
+              // プレーヤーは一切触らない - 完全オーバーレイ方式
+              // 音声のみミュート（エラーが出ても無視）
+              if (player && typeof player.mute === 'function') {
+                try {
+                  player.mute()
+                  console.log('Player muted (background continues)')
+                } catch (e) {
+                  console.log('Mute error (ignored):', e)
                 }
-              }, 500) // 0.5秒後に制限画面表示
+              }
+              
+              // 即座にオーバーレイを表示（プレーヤーはバックグラウンドで継続）
+              setIsRestricted(true)
+              
+              console.log('Overlay displayed - player continues in background (hidden and muted)')
             }
             return newTime
           })
@@ -208,6 +213,19 @@ export default function VideoPlayer({ videoId, title, isPremium, userMembershipT
       }
     }
   }
+
+  // エラーハンドリング強化 - プレーヤーエラーでも制限画面を表示
+  useEffect(() => {
+    const handlePlayerError = () => {
+      if (!canWatchFull && timeWatched >= FREE_LIMIT_SECONDS - 10) {
+        console.log('Player error near 5-minute limit - showing overlay')
+        setIsRestricted(true)
+      }
+    }
+
+    window.addEventListener('error', handlePlayerError)
+    return () => window.removeEventListener('error', handlePlayerError)
+  }, [timeWatched, canWatchFull])
 
   const handlePlayVideo = () => {
     console.log('Play button clicked - User type:', userMembershipType)
@@ -366,7 +384,20 @@ export default function VideoPlayer({ videoId, title, isPremium, userMembershipT
             left: 0 !important;
             width: 100vw !important;
             height: 100vh !important;
-            z-index: 10000 !important;
+            z-index: 99999 !important;
+          }
+          
+          /* 5分制限オーバーレイの強制表示 */
+          .free-member-container .absolute[style*="z-index: 99999"] {
+            position: absolute !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100% !important;
+            height: 100% !important;
+            background: linear-gradient(135deg, #111827 0%, #000000 50%, #111827 100%) !important;
+            z-index: 99999 !important;
+            pointer-events: auto !important;
+            backdrop-filter: blur(15px) !important;
           }
           
           /* モバイル対応 */
@@ -491,8 +522,13 @@ export default function VideoPlayer({ videoId, title, isPremium, userMembershipT
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ duration: 1 }}
-            className={`absolute inset-0 bg-gradient-to-br from-gray-900/95 to-black/95 flex items-center justify-center ${isFullscreen ? 'fullscreen-upgrade' : ''}`}
+            transition={{ duration: 1.5, ease: "easeInOut" }}
+            className={`absolute inset-0 bg-gradient-to-br from-gray-900 via-black to-gray-900 flex items-center justify-center ${isFullscreen ? 'fullscreen-upgrade' : ''}`}
+            style={{ 
+              zIndex: 99999,
+              pointerEvents: 'auto',
+              backdropFilter: 'blur(10px)'
+            }}
           >
             <motion.div 
               initial={{ opacity: 0, scale: 0.9 }}
