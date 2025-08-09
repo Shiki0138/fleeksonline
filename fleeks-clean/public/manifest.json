@@ -9,45 +9,45 @@
   "orientation": "portrait",
   "icons": [
     {
-      "src": "/icon-72x72.png",
+      "src": "/icon-72x72.svg",
       "sizes": "72x72",
-      "type": "image/png"
+      "type": "image/svg+xml"
     },
     {
-      "src": "/icon-96x96.png",
+      "src": "/icon-96x96.svg",
       "sizes": "96x96",
-      "type": "image/png"
+      "type": "image/svg+xml"
     },
     {
-      "src": "/icon-128x128.png",
+      "src": "/icon-128x128.svg",
       "sizes": "128x128",
-      "type": "image/png"
+      "type": "image/svg+xml"
     },
     {
-      "src": "/icon-144x144.png",
+      "src": "/icon-144x144.svg",
       "sizes": "144x144",
-      "type": "image/png"
+      "type": "image/svg+xml"
     },
     {
-      "src": "/icon-152x152.png",
+      "src": "/icon-152x152.svg",
       "sizes": "152x152",
-      "type": "image/png"
+      "type": "image/svg+xml"
     },
     {
-      "src": "/icon-192x192.png",
+      "src": "/icon-192x192.svg",
       "sizes": "192x192",
-      "type": "image/png",
+      "type": "image/svg+xml",
       "purpose": "any maskable"
     },
     {
-      "src": "/icon-384x384.png",
+      "src": "/icon-384x384.svg",
       "sizes": "384x384",
-      "type": "image/png"
+      "type": "image/svg+xml"
     },
     {
-      "src": "/icon-512x512.png",
+      "src": "/icon-512x512.svg",
       "sizes": "512x512",
-      "type": "image/png",
+      "type": "image/svg+xml",
       "purpose": "any maskable"
     }
   ],
@@ -56,13 +56,13 @@
   "categories": ["education", "beauty", "lifestyle"],
   "screenshots": [
     {
-      "src": "/screenshot1.png",
+      "src": "/screenshot1.svg",
       "sizes": "1280x720",
       "type": "image/png",
       "label": "ホーム画面"
     },
     {
-      "src": "/screenshot2.png",
+      "src": "/screenshot2.svg",
       "sizes": "1280x720",
       "type": "image/png",
       "label": "動画学習画面"
@@ -74,14 +74,14 @@
       "short_name": "動画",
       "description": "学習動画を見る",
       "url": "/videos",
-      "icons": [{ "src": "/icon-video.png", "sizes": "96x96" }]
+      "icons": [{ "src": "/icon-video.svg", "sizes": "96x96" }]
     },
     {
       "name": "コミュニティ",
       "short_name": "コミュニティ",
       "description": "会員同士で交流",
       "url": "/community",
-      "icons": [{ "src": "/icon-community.png", "sizes": "96x96" }]
+      "icons": [{ "src": "/icon-community.svg", "sizes": "96x96" }]
     }
   ]
 }
