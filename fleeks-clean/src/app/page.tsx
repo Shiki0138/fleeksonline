@@ -64,8 +64,10 @@ export default function HomePage() {
               animate={{ opacity: 1, x: 0 }}
               className="flex items-center space-x-6"
             >
-              <a href="/auth/login" className="hover:text-blue-400 transition">ログイン</a>
-              <a href="/auth/signup" className="bg-gradient-to-r from-blue-500 to-indigo-600 px-6 py-2 rounded-full hover:shadow-lg hover:shadow-blue-500/25 transition">
+              <a href="/auth/login" className="bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full hover:bg-white/20 transition md:bg-transparent md:px-0 md:py-0 md:rounded-none md:hover:text-blue-400 md:hover:bg-transparent">
+                ログイン
+              </a>
+              <a href="/auth/signup" className="bg-gradient-to-r from-blue-500 to-indigo-600 px-4 py-2 rounded-full hover:shadow-lg hover:shadow-blue-500/25 transition text-sm font-medium whitespace-nowrap md:px-6">
                 無料会員登録
               </a>
             </motion.div>
@@ -91,7 +93,7 @@ export default function HomePage() {
                   ローカルビジネスの成功へ
                 </span>
                 <br />
-                <span className="text-4xl md:text-5xl">集客と経営戦略を科学する</span>
+                <span className="text-2xl sm:text-3xl md:text-5xl whitespace-nowrap">集客と経営戦略を科学する</span>
               </h1>
               
               <p className="text-xl text-gray-300 mb-12 max-w-3xl mx-auto">
