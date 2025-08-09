@@ -17,13 +17,22 @@ export default function VideoPlayer({ videoId, title, isPremium, userMembershipT
   const [isRestricted, setIsRestricted] = useState(false)
   const [player, setPlayer] = useState<any>(null)
   const [isPlaying, setIsPlaying] = useState(false)
+  const [showMobileOverlay, setShowMobileOverlay] = useState(true)
   const playerRef = useRef<HTMLDivElement>(null)
   const intervalRef = useRef<NodeJS.Timeout | null>(null)
+  const isMobile = typeof window !== 'undefined' && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)
 
   const FREE_LIMIT_SECONDS = 300 // 5分 = 300秒
   const canWatchFull = userMembershipType !== 'free' || !isPremium
 
   useEffect(() => {
+    // YouTube Player APIがすでに読み込まれているかチェック
+    // @ts-ignore
+    if (window.YT && window.YT.Player) {
+      initializePlayer()
+      return
+    }
+
     // YouTube Player APIを読み込み
     const tag = document.createElement('script')
     tag.src = 'https://www.youtube.com/iframe_api'
@@ -32,6 +41,10 @@ export default function VideoPlayer({ videoId, title, isPremium, userMembershipT
 
     // @ts-ignore
     window.onYouTubeIframeAPIReady = () => {
+      initializePlayer()
+    }
+
+    function initializePlayer() {
       if (playerRef.current) {
         // @ts-ignore
         const ytPlayer = new window.YT.Player(playerRef.current, {
@@ -49,7 +62,8 @@ export default function VideoPlayer({ videoId, title, isPremium, userMembershipT
             showinfo: 0, // 動画情報を非表示
             cc_load_policy: 0, // 字幕を非表示
             enablejsapi: 1, // JavaScript APIを有効化
-            host: 'https://www.youtube.com', // モバイル対応
+            widget_referrer: window.location.href, // モバイル対応
+            mute: 0, // ミュートなしで再生可能に
           },
           events: {
             onReady: onPlayerReady,
@@ -75,6 +89,8 @@ export default function VideoPlayer({ videoId, title, isPremium, userMembershipT
   }, [videoId])
 
   const onPlayerReady = (event: any) => {
+    console.log('Player ready - User type:', userMembershipType)
+    
     // 無料会員の場合、再生時間を監視
     if (!canWatchFull) {
       console.log('Free user watching premium content - 5 minute limit applies')
@@ -83,13 +99,20 @@ export default function VideoPlayer({ videoId, title, isPremium, userMembershipT
     // モバイルデバイスの検出と対応
     const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)
     if (isMobile) {
-      console.log('Mobile device detected - applying mobile optimizations')
-      // モバイルでは明示的な再生ボタンクリックが必要
-      const playButton = document.querySelector('.ytp-play-button')
-      if (playButton) {
-        playButton.addEventListener('click', () => {
-          console.log('Mobile play button clicked')
-        })
+      console.log('Mobile device detected - User Agent:', navigator.userAgent)
+      
+      // モバイルでのプレーヤー設定を確認
+      try {
+        const iframe = document.querySelector('iframe')
+        if (iframe) {
+          // iframeにモバイル用の属性を追加
+          iframe.setAttribute('playsinline', '1')
+          iframe.setAttribute('webkit-playsinline', '1')
+          iframe.style.pointerEvents = 'auto'
+          console.log('Mobile iframe attributes set')
+        }
+      } catch (e) {
+        console.error('Error setting mobile attributes:', e)
       }
     }
     
@@ -173,8 +196,15 @@ export default function VideoPlayer({ videoId, title, isPremium, userMembershipT
   }
 
   const onPlayerStateChange = (event: any) => {
+    console.log('Player state changed:', event.data)
+    
     // 再生状態の更新
     setIsPlaying(event.data === 1)
+    
+    // モバイルオーバーレイを非表示
+    if (event.data === 1 && isMobile) {
+      setShowMobileOverlay(false)
+    }
     
     // 再生中
     if (event.data === 1) {
@@ -339,7 +369,7 @@ export default function VideoPlayer({ videoId, title, isPremium, userMembershipT
           @media (max-width: 768px) {
             .ytp-watermark,
             .ytp-chrome-top,
-            .ytp-chrome-bottom .ytp-button:not(.ytp-play-button),
+            .ytp-chrome-bottom .ytp-button:not(.ytp-play-button):not(.ytp-volume-slider):not(.ytp-time-display),
             .ytp-cued-thumbnail-overlay,
             .ytp-pause-overlay {
               display: none !important;
@@ -355,6 +385,19 @@ export default function VideoPlayer({ videoId, title, isPremium, userMembershipT
             .free-member-label {
               font-size: 11px;
               padding: 0.25rem 0.5rem;
+            }
+            
+            /* プレーヤーコントロールの基本的な部分は表示 */
+            .ytp-chrome-bottom {
+              display: flex !important;
+            }
+            
+            .ytp-play-button,
+            .ytp-volume-slider,
+            .ytp-time-display,
+            .ytp-progress-bar {
+              display: block !important;
+              pointer-events: auto !important;
             }
           }
         `}</style>
@@ -385,19 +428,38 @@ export default function VideoPlayer({ videoId, title, isPremium, userMembershipT
           <>
             <div ref={playerRef} className="w-full h-full" />
             
-            {/* モバイル用の再生オーバーレイ（初回のみ） */}
-            {userMembershipType === 'free' && !isPlaying && (
+            {/* モバイル用の再生オーバーレイ */}
+            {isMobile && showMobileOverlay && (
               <div 
-                className="absolute inset-0 flex items-center justify-center bg-black/50 md:hidden"
-                onClick={() => {
+                className="absolute inset-0 flex flex-col items-center justify-center bg-black/50 z-40 cursor-pointer"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  console.log('Mobile overlay clicked')
+                  setShowMobileOverlay(false)
+                  
+                  // プレーヤーが準備できている場合は再生を試みる
                   if (player && player.playVideo) {
-                    player.playVideo()
+                    setTimeout(() => {
+                      try {
+                        player.playVideo()
+                      } catch (error) {
+                        console.error('Error playing video:', error)
+                      }
+                    }, 100)
                   }
                 }}
               >
-                <div className="bg-white/20 backdrop-blur-sm rounded-full p-6">
-                  <Play className="w-12 h-12 text-white" />
+                <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-full p-8 shadow-2xl transform hover:scale-105 transition-transform">
+                  <Play className="w-20 h-20 text-white fill-white" />
                 </div>
+                <div className="mt-6 text-white text-lg font-medium">
+                  タップして再生
+                </div>
+                {userMembershipType === 'free' && (
+                  <div className="mt-2 text-white/80 text-sm">
+                    無料会員 - 5分プレビュー
+                  </div>
+                )}
               </div>
             )}
             
