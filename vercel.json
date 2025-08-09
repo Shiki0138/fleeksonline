@@ -1,6 +1,6 @@
 {
-  "buildCommand": "cd fleeks-ai-platform && npm install && npm run build",
-  "outputDirectory": "fleeks-ai-platform/.next",
+  "buildCommand": "cd fleeks-clean && npm install --legacy-peer-deps && npm run build",
+  "outputDirectory": "fleeks-clean/.next",
   "framework": "nextjs",
   "env": {
     "NEXT_PUBLIC_SUPABASE_URL": "@supabase_url",
