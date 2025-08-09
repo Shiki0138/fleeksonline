@@ -6,6 +6,7 @@ import { motion } from 'framer-motion'
 import { Target, Play, Clock, Star, LogOut, User, Crown, Edit, Plus, FileText, Youtube, Settings, CheckCircle } from 'lucide-react'
 import { supabase } from '@/lib/supabase-client'
 import type { Profile, Video } from '@/lib/supabase-client'
+import PasswordChangePrompt from '@/components/PasswordChangePrompt'
 
 // ブログ記事の型定義
 interface BlogPost {
@@ -29,6 +30,7 @@ export default function DashboardPage() {
   const [isAdmin, setIsAdmin] = useState(false)
   const [activeTab, setActiveTab] = useState<'videos' | 'blog'>('videos')
   const [watchedVideos, setWatchedVideos] = useState<Set<string>>(new Set())
+  const [showPasswordPrompt, setShowPasswordPrompt] = useState(false)
 
   useEffect(() => {
     checkUser()
@@ -48,6 +50,11 @@ export default function DashboardPage() {
     if (!user) {
       router.push('/auth/login')
       return
+    }
+
+    // Check if user needs to change initial password
+    if (user.user_metadata?.initial_password === true) {
+      setShowPasswordPrompt(true)
     }
 
     // プロファイル取得
@@ -465,6 +472,17 @@ export default function DashboardPage() {
           )}
         </motion.div>
       </main>
+      
+      {/* Password Change Prompt */}
+      {showPasswordPrompt && (
+        <PasswordChangePrompt 
+          onPasswordChanged={() => {
+            setShowPasswordPrompt(false)
+            // Refresh user data to remove the flag
+            checkUser()
+          }}
+        />
+      )}
     </div>
   )
 }

@@ -5,7 +5,7 @@ import { useRouter, useParams } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { Target, ArrowLeft, Calendar, Clock, Eye } from 'lucide-react'
 import { supabase } from '@/lib/supabase-client'
-import UltraSafeVideoPlayer from '@/components/UltraSafeVideoPlayer'
+import SimpleVideoPlayer from '@/components/SimpleVideoPlayer'
 import type { Profile, Video } from '@/lib/supabase-client'
 
 export default function VideoPage() {
@@ -178,7 +178,7 @@ export default function VideoPage() {
               transition={{ duration: 0.5 }}
             >
               {video.youtube_id ? (
-                <UltraSafeVideoPlayer
+                <SimpleVideoPlayer
                   videoId={video.youtube_id}
                   title={video.title}
                   isPremium={video.is_premium}

@@ -61,12 +61,32 @@ export default function UltraSafeVideoPlayer({ videoId, title, isPremium, userMe
       // YouTube iframe の自動再生を開始
       if (iframeRef.current) {
         const iframe = iframeRef.current
-        const currentSrc = iframe.src
         
-        // autoplay=1 を追加して再読み込み
-        if (!currentSrc.includes('autoplay=1')) {
-          // ユーザーのクリック/タップによる再生なのでmuteは不要
-          iframe.src = currentSrc.replace('autoplay=0', 'autoplay=1')
+        // 無料会員の場合は、controls=1で再構築（再生させるため）
+        if (userMembershipType === 'free') {
+          const newUrl = `https://www.youtube.com/embed/${videoId}?` + new URLSearchParams({
+            autoplay: '1',
+            controls: '1', // 一時的にコントロールを有効化して再生を開始
+            mute: '0', // ユーザーのクリックなのでミュート不要
+            modestbranding: '1',
+            rel: '0',
+            fs: '0',
+            iv_load_policy: '3',
+            playsinline: '1',
+            showinfo: '0',
+            cc_load_policy: '0',
+            origin: typeof window !== 'undefined' ? window.location.origin : '',
+            enablejsapi: '1',
+            widget_referrer: typeof window !== 'undefined' ? window.location.href : '',
+          }).toString()
+          
+          iframe.src = newUrl
+        } else {
+          // プレミアム会員は通常通り
+          const currentSrc = iframe.src
+          if (!currentSrc.includes('autoplay=1')) {
+            iframe.src = currentSrc.replace('autoplay=0', 'autoplay=1')
+          }
         }
         
         // すぐに再生状態とタイマーを開始（iframe読み込みを待たない）
@@ -88,7 +108,7 @@ export default function UltraSafeVideoPlayer({ videoId, title, isPremium, userMe
     } catch (error) {
       console.warn('Play video error (ignored):', error)
     }
-  }, [canWatchFull, handleTimeLimitReached])
+  }, [canWatchFull, handleTimeLimitReached, userMembershipType, videoId])
 
   // 全画面処理
   const handleFullscreen = useCallback(() => {
@@ -169,7 +189,7 @@ export default function UltraSafeVideoPlayer({ videoId, title, isPremium, userMe
   // YouTube iframe URL を構築（完全に安全）
   const youtubeUrl = `https://www.youtube.com/embed/${videoId}?` + new URLSearchParams({
     autoplay: '0',
-    controls: userMembershipType === 'free' ? '0' : '1',
+    controls: '1', // 無料会員でも最初はコントロールを有効化（再生を可能にするため）
     modestbranding: '1',
     rel: '0',
     fs: '0',
@@ -215,6 +235,21 @@ export default function UltraSafeVideoPlayer({ videoId, title, isPremium, userMe
           .ultra-safe-overlay {
             pointer-events: auto !important;
           }
+          
+          /* 再生中は下部のコントロールバーを隠す */
+          ${!showPlayButton ? `
+            .ultra-safe-container::after {
+              content: '';
+              position: absolute;
+              bottom: 0;
+              left: 0;
+              right: 0;
+              height: 60px;
+              background: black;
+              z-index: 30;
+              pointer-events: none;
+            }
+          ` : ''}
           
           /* YouTube UI要素の非表示（CSS のみ） */
           .ytp-watermark, .ytp-youtube-button, .ytp-title-link, .ytp-title,
@@ -299,10 +334,10 @@ export default function UltraSafeVideoPlayer({ videoId, title, isPremium, userMe
               <div 
                 className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center z-50"
                 onClick={handlePlayVideo}
-                onTouchStart={handlePlayVideo}
+                onTouchEnd={handlePlayVideo}
                 style={{ cursor: 'pointer', touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' }}
               >
-                <div className="bg-white/90 backdrop-blur-sm rounded-full p-6 sm:p-8 shadow-2xl hover:scale-105 transition-transform">
+                <div className="bg-white/90 backdrop-blur-sm rounded-full p-6 sm:p-8 shadow-2xl hover:scale-105 transition-transform active:scale-95">
                   <Play className="w-12 h-12 sm:w-16 sm:h-16 text-gray-800" />
                 </div>
                 <div className="mt-4 sm:mt-6 text-white text-base sm:text-lg font-medium">
