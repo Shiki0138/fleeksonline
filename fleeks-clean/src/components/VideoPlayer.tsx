@@ -26,7 +26,49 @@ export default function VideoPlayer({ videoId, title, isPremium, userMembershipT
   const canWatchFull = userMembershipType !== 'free' || !isPremium
 
   useEffect(() => {
-    // YouTube Player APIがすでに読み込まれているかチェック
+    // モバイルの場合は、iframeを直接使用するためプレーヤーAPIの初期化をスキップ
+    if (isMobile) {
+      console.log('Mobile device detected - using iframe embed')
+      // モバイルでの再生時間追跡用の簡易実装
+      if (!canWatchFull) {
+        console.log('Free user on mobile - starting 5 minute timer')
+        let videoStarted = false
+        
+        // ビデオの再生開始を検出するための簡易的な方法
+        const startTimer = () => {
+          if (!videoStarted) {
+            videoStarted = true
+            const checkInterval = setInterval(() => {
+              setTimeWatched((prev) => {
+                const newTime = prev + 1
+                console.log(`Mobile timer: ${newTime}/${FREE_LIMIT_SECONDS} seconds`)
+                if (newTime >= FREE_LIMIT_SECONDS) {
+                  setIsRestricted(true)
+                  clearInterval(checkInterval)
+                }
+                return newTime
+              })
+            }, 1000)
+            
+            // クリーンアップ関数に追加
+            intervalRef.current = checkInterval
+          }
+        }
+        
+        // クリックイベントでタイマー開始
+        const iframe = playerRef.current as HTMLIFrameElement
+        if (iframe) {
+          // iframeの親要素にクリックイベントを追加
+          const container = iframe.parentElement
+          if (container) {
+            container.addEventListener('click', startTimer, { once: true })
+          }
+        }
+      }
+      return
+    }
+
+    // デスクトップの場合は従来通りPlayer APIを使用
     // @ts-ignore
     if (window.YT && window.YT.Player) {
       initializePlayer()
@@ -45,32 +87,29 @@ export default function VideoPlayer({ videoId, title, isPremium, userMembershipT
     }
 
     function initializePlayer() {
-      if (playerRef.current) {
+      if (playerRef.current && !isMobile) {
         // @ts-ignore
         const ytPlayer = new window.YT.Player(playerRef.current, {
           videoId: videoId,
           playerVars: {
-            autoplay: 0, // モバイルでは自動再生を無効化
-            controls: 1, // 基本コントロールは表示（CSSで制御）
+            autoplay: 0,
+            controls: 1,
             modestbranding: 1,
             rel: 0,
-            fs: userMembershipType === 'free' ? 0 : 1, // 無料会員はフルスクリーン無効
+            fs: userMembershipType === 'free' ? 0 : 1,
             iv_load_policy: 3,
             origin: window.location.origin,
-            playsinline: 1, // iOS Safari用のインライン再生
-            disablekb: userMembershipType === 'free' ? 1 : 0, // 無料会員はキーボード操作無効
-            showinfo: 0, // 動画情報を非表示
-            cc_load_policy: 0, // 字幕を非表示
-            enablejsapi: 1, // JavaScript APIを有効化
-            widget_referrer: window.location.href, // モバイル対応
-            mute: 0, // ミュートなしで再生可能に
+            playsinline: 1,
+            disablekb: userMembershipType === 'free' ? 1 : 0,
+            showinfo: 0,
+            cc_load_policy: 0,
+            enablejsapi: 1,
           },
           events: {
             onReady: onPlayerReady,
             onStateChange: onPlayerStateChange,
             onError: (event: any) => {
               console.error('YouTube Player Error:', event.data)
-              // エラーコード: 2 = 無効な動画ID, 5 = HTML5プレーヤーエラー, 100 = 動画が見つからない, 101/150 = 埋め込み不可
             }
           },
         })
@@ -399,6 +438,13 @@ export default function VideoPlayer({ videoId, title, isPremium, userMembershipT
               display: block !important;
               pointer-events: auto !important;
             }
+            
+            /* モバイルiframe用のスタイル */
+            .mobile-youtube-player {
+              -webkit-touch-callout: default;
+              -webkit-user-select: none;
+              touch-action: manipulation;
+            }
           }
         `}</style>
       )}
@@ -426,41 +472,22 @@ export default function VideoPlayer({ videoId, title, isPremium, userMembershipT
       <div className={`relative aspect-video bg-black rounded-lg overflow-hidden ${userMembershipType === 'free' ? 'free-member-container' : ''}`}>
         {!isRestricted ? (
           <>
-            <div ref={playerRef} className="w-full h-full" />
-            
-            {/* モバイル用の再生オーバーレイ */}
-            {isMobile && showMobileOverlay && (
-              <div 
-                className="absolute inset-0 flex flex-col items-center justify-center bg-black/50 z-40 cursor-pointer"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  console.log('Mobile overlay clicked')
-                  setShowMobileOverlay(false)
-                  
-                  // プレーヤーが準備できている場合は再生を試みる
-                  if (player && player.playVideo) {
-                    setTimeout(() => {
-                      try {
-                        player.playVideo()
-                      } catch (error) {
-                        console.error('Error playing video:', error)
-                      }
-                    }, 100)
-                  }
-                }}
-              >
-                <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-full p-8 shadow-2xl transform hover:scale-105 transition-transform">
-                  <Play className="w-20 h-20 text-white fill-white" />
-                </div>
-                <div className="mt-6 text-white text-lg font-medium">
-                  タップして再生
-                </div>
-                {userMembershipType === 'free' && (
-                  <div className="mt-2 text-white/80 text-sm">
-                    無料会員 - 5分プレビュー
-                  </div>
-                )}
-              </div>
+            {/* モバイルでは直接iframeを使用 */}
+            {isMobile ? (
+              <iframe
+                ref={playerRef as any}
+                className="mobile-youtube-player"
+                width="100%"
+                height="100%"
+                src={`https://www.youtube.com/embed/${videoId}?enablejsapi=1&origin=${window.location.origin}&playsinline=1&modestbranding=1&rel=0&fs=${userMembershipType === 'free' ? 0 : 1}&controls=1&showinfo=0&iv_load_policy=3`}
+                frameBorder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowFullScreen={userMembershipType !== 'free'}
+                style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
+                title={title || 'FLEEKS Video'}
+              />
+            ) : (
+              <div ref={playerRef} className="w-full h-full" />
             )}
             
             {/* 無料会員用のオーバーレイ */}
