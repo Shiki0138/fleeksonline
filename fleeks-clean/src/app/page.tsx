@@ -88,8 +88,8 @@ export default function HomePage() {
                 <span className="text-sm">AI搭載のビジネス成長支援プラットフォーム</span>
               </div>
               
-              <h1 className="text-5xl sm:text-6xl md:text-7xl font-bold mb-6 leading-tight">
-                <span className="block bg-gradient-to-r from-blue-400 via-indigo-400 to-purple-400 bg-clip-text text-transparent">ローカルビジネスの</span>
+              <h1 className="text-4xl sm:text-6xl md:text-7xl font-bold mb-6 leading-tight">
+                <span className="block bg-gradient-to-r from-blue-400 via-indigo-400 to-purple-400 bg-clip-text text-transparent whitespace-nowrap">ローカルビジネスの</span>
                 <span className="block bg-gradient-to-r from-blue-400 via-indigo-400 to-purple-400 bg-clip-text text-transparent">成功へ</span>
                 <br />
                 <span className="text-2xl sm:text-3xl md:text-5xl whitespace-nowrap">集客と経営戦略を科学する</span>
