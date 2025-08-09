@@ -67,6 +67,25 @@ async function postArticle(article) {
   }
 }
 
+// Vercelデプロイをトリガー
+async function triggerDeploy() {
+  try {
+    const deployHook = process.env.VERCEL_DEPLOY_HOOK
+    if (deployHook) {
+      const response = await fetch(deployHook, { method: 'POST' })
+      if (response.ok) {
+        console.log('📦 Vercelデプロイをトリガーしました')
+      } else {
+        console.error('デプロイトリガー失敗:', response.status)
+      }
+    } else {
+      console.log('ℹ️  VERCEL_DEPLOY_HOOKが設定されていません')
+    }
+  } catch (error) {
+    console.error('デプロイトリガーエラー:', error)
+  }
+}
+
 // 日次投稿タスク
 async function dailyPost() {
   console.log(`\n📅 ${new Date().toLocaleDateString('ja-JP')} の投稿を開始`)
@@ -82,11 +101,14 @@ async function dailyPost() {
     return
   }
   
+  let hasNewPosts = false
+  
   // 各記事を投稿
   for (const article of articlesToPost) {
     const success = await postArticle(article)
     if (success) {
       progress.lastPostedIndex++
+      hasNewPosts = true
     }
     // API制限を考慮して少し待機
     await new Promise(resolve => setTimeout(resolve, 2000))
@@ -96,6 +118,14 @@ async function dailyPost() {
   saveProgress(progress)
   
   console.log(`📊 進捗: ${progress.lastPostedIndex + 1}/${contentPlan.articles.length} 記事`)
+  
+  // 新しい記事が投稿された場合、デプロイをトリガー
+  if (hasNewPosts) {
+    console.log('⏳ 30秒後にデプロイをトリガーします...')
+    setTimeout(() => {
+      triggerDeploy()
+    }, 30000) // 30秒待機
+  }
 }
 
 // 手動実行用
