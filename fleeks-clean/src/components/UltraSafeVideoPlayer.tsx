@@ -17,7 +17,7 @@ export default function UltraSafeVideoPlayer({ videoId, title, isPremium, userMe
   const [timeWatched, setTimeWatched] = useState(0)
   const [isRestricted, setIsRestricted] = useState(false)
   const [isPlaying, setIsPlaying] = useState(false)
-  const [showPlayButton, setShowPlayButton] = useState(userMembershipType === 'free')
+  const [showPlayButton, setShowPlayButton] = useState(true) // 全ユーザーに再生ボタンを表示
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [hasError, setHasError] = useState(false)
   
@@ -57,7 +57,6 @@ export default function UltraSafeVideoPlayer({ videoId, title, isPremium, userMe
     
     try {
       setShowPlayButton(false)
-      setIsPlaying(true)
       
       // YouTube iframe の自動再生を開始
       if (iframeRef.current) {
@@ -68,20 +67,25 @@ export default function UltraSafeVideoPlayer({ videoId, title, isPremium, userMe
         if (!currentSrc.includes('autoplay=1')) {
           // ユーザーのクリック/タップによる再生なのでmuteは不要
           iframe.src = currentSrc.replace('autoplay=0', 'autoplay=1')
-        }
-      }
-      
-      // 無料会員の場合はタイマー開始
-      if (!canWatchFull) {
-        startTimeRef.current = Date.now()
-        intervalRef.current = setInterval(() => {
-          const elapsed = Math.floor((Date.now() - startTimeRef.current) / 1000)
-          setTimeWatched(elapsed)
           
-          if (elapsed >= FREE_LIMIT_SECONDS) {
-            handleTimeLimitReached()
+          // iframe読み込み完了を待ってから再生状態とタイマーを開始
+          iframe.onload = () => {
+            setIsPlaying(true)
+            
+            // 無料会員の場合はタイマー開始
+            if (!canWatchFull) {
+              startTimeRef.current = Date.now()
+              intervalRef.current = setInterval(() => {
+                const elapsed = Math.floor((Date.now() - startTimeRef.current) / 1000)
+                setTimeWatched(elapsed)
+                
+                if (elapsed >= FREE_LIMIT_SECONDS) {
+                  handleTimeLimitReached()
+                }
+              }, 1000)
+            }
           }
-        }, 1000)
+        }
       }
     } catch (error) {
       console.warn('Play video error (ignored):', error)
@@ -292,28 +296,31 @@ export default function UltraSafeVideoPlayer({ videoId, title, isPremium, userMe
               title={title}
             />
             
+            {/* 再生前オーバーレイ - 全ユーザー共通 */}
+            {showPlayButton && (
+              <div 
+                className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center z-50"
+                onClick={handlePlayVideo}
+                onTouchStart={handlePlayVideo}
+                style={{ cursor: 'pointer', touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' }}
+              >
+                <div className="bg-white/90 backdrop-blur-sm rounded-full p-6 sm:p-8 shadow-2xl hover:scale-105 transition-transform">
+                  <Play className="w-12 h-12 sm:w-16 sm:h-16 text-gray-800" />
+                </div>
+                <div className="mt-4 sm:mt-6 text-white text-base sm:text-lg font-medium">
+                  タップして再生開始
+                </div>
+                {userMembershipType === 'free' && (
+                  <div className="mt-2 text-white/80 text-xs sm:text-sm">
+                    無料会員 - 5分プレビュー
+                  </div>
+                )}
+              </div>
+            )}
+            
             {/* 無料会員用オーバーレイ - DOM操作なし */}
             {userMembershipType === 'free' && (
               <>
-                {/* 再生前オーバーレイ */}
-                {showPlayButton && (
-                  <div 
-                    className="ultra-safe-overlay absolute inset-0 bg-black/40 flex flex-col items-center justify-center z-50"
-                    onClick={handlePlayVideo}
-                    onTouchStart={handlePlayVideo}
-                    style={{ cursor: 'pointer', touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' }}
-                  >
-                    <div className="bg-white/90 backdrop-blur-sm rounded-full p-6 sm:p-8 shadow-2xl hover:scale-105 transition-transform">
-                      <Play className="w-12 h-12 sm:w-16 sm:h-16 text-gray-800" />
-                    </div>
-                    <div className="mt-4 sm:mt-6 text-white text-base sm:text-lg font-medium">
-                      タップして再生開始
-                    </div>
-                    <div className="mt-2 text-white/80 text-xs sm:text-sm">
-                      無料会員 - 5分プレビュー
-                    </div>
-                  </div>
-                )}
                 
                 {/* 再生中オーバーレイ */}
                 {!showPlayButton && (
