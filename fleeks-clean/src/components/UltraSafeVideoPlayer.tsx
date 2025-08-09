@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef, useCallback } from 'react'
 import { motion } from 'framer-motion'
-import { Lock, AlertCircle, Crown, Play } from 'lucide-react'
+import { Lock, AlertCircle, Crown, Play, Volume2, VolumeX } from 'lucide-react'
 
 interface VideoPlayerProps {
   videoId: string
@@ -20,6 +20,7 @@ export default function UltraSafeVideoPlayer({ videoId, title, isPremium, userMe
   const [showPlayButton, setShowPlayButton] = useState(userMembershipType === 'free')
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [hasError, setHasError] = useState(false)
+  const [isMuted, setIsMuted] = useState(false)
   
   const intervalRef = useRef<NodeJS.Timeout | null>(null)
   const iframeRef = useRef<HTMLIFrameElement>(null)
@@ -66,10 +67,8 @@ export default function UltraSafeVideoPlayer({ videoId, title, isPremium, userMe
         
         // autoplay=1 を追加して再読み込み
         if (!currentSrc.includes('autoplay=1')) {
-          // モバイルの場合はmutedも追加（自動再生ポリシー対応）
-          const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)
-          const newParams = isMobile ? 'autoplay=1&mute=1' : 'autoplay=1'
-          iframe.src = currentSrc.replace('autoplay=0', newParams)
+          // ユーザーのクリック/タップによる再生なのでmuteは不要
+          iframe.src = currentSrc.replace('autoplay=0', 'autoplay=1')
         }
       }
       
@@ -117,6 +116,25 @@ export default function UltraSafeVideoPlayer({ videoId, title, isPremium, userMe
       console.warn('Fullscreen operation error (ignored):', error)
     }
   }, [isFullscreen])
+
+  // 音声切り替え処理
+  const handleToggleMute = useCallback(() => {
+    if (iframeRef.current) {
+      const newMuted = !isMuted
+      const currentSrc = iframeRef.current.src
+      
+      // URLパラメータを更新
+      const url = new URL(currentSrc)
+      if (newMuted) {
+        url.searchParams.set('mute', '1')
+      } else {
+        url.searchParams.delete('mute')
+      }
+      
+      iframeRef.current.src = url.toString()
+      setIsMuted(newMuted)
+    }
+  }, [isMuted])
 
   // 全画面状態監視
   useEffect(() => {
@@ -335,21 +353,35 @@ export default function UltraSafeVideoPlayer({ videoId, title, isPremium, userMe
                           <span className="text-sm">無料プレビュー - 残り {formatTime(remainingTime)}</span>
                         </div>
                         
-                        <button
-                          onClick={handleFullscreen}
-                          className="bg-white/20 hover:bg-white/30 rounded p-2 transition-colors"
-                          title="全画面表示"
-                        >
-                          {isFullscreen ? (
-                            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                              <path fillRule="evenodd" d="M3 4a1 1 0 011-1h4a1 1 0 010 2H6.414l2.293 2.293a1 1 0 01-1.414 1.414L5 6.414V8a1 1 0 01-2 0V4zm9 1a1 1 0 010-2h4a1 1 0 011 1v4a1 1 0 01-2 0V6.414l-2.293 2.293a1 1 0 01-1.414-1.414L13.586 5H12zm-9 7a1 1 0 012 0v1.586l2.293-2.293a1 1 0 011.414 1.414L6.414 15H8a1 1 0 010 2H4a1 1 0 01-1-1v-4zm13-1a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 010-2h1.586l-2.293-2.293a1 1 0 011.414-1.414L15 13.586V12a1 1 0 011-1z" clipRule="evenodd" />
-                            </svg>
-                          ) : (
-                            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                              <path fillRule="evenodd" d="M3 4a1 1 0 011-1h4a1 1 0 010 2H6.414l2.293 2.293a1 1 0 01-1.414 1.414L5 6.414V8a1 1 0 01-2 0V4zm9 1a1 1 0 010-2h4a1 1 0 011 1v4a1 1 0 01-2 0V6.414l-2.293 2.293a1 1 0 01-1.414-1.414L13.586 5H12zm-9 7a1 1 0 012 0v1.586l2.293-2.293a1 1 0 011.414 1.414L6.414 15H8a1 1 0 010 2H4a1 1 0 01-1-1v-4zm13-1a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 010-2h1.586l-2.293-2.293a1 1 0 011.414-1.414L15 13.586V12a1 1 0 011-1z" clipRule="evenodd" />
-                            </svg>
-                          )}
-                        </button>
+                        <div className="flex items-center space-x-2">
+                          <button
+                            onClick={handleToggleMute}
+                            className="bg-white/20 hover:bg-white/30 rounded p-2 transition-colors"
+                            title={isMuted ? "音声オン" : "音声オフ"}
+                          >
+                            {isMuted ? (
+                              <VolumeX className="w-4 h-4" />
+                            ) : (
+                              <Volume2 className="w-4 h-4" />
+                            )}
+                          </button>
+                          
+                          <button
+                            onClick={handleFullscreen}
+                            className="bg-white/20 hover:bg-white/30 rounded p-2 transition-colors"
+                            title="全画面表示"
+                          >
+                            {isFullscreen ? (
+                              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M3 4a1 1 0 011-1h4a1 1 0 010 2H6.414l2.293 2.293a1 1 0 01-1.414 1.414L5 6.414V8a1 1 0 01-2 0V4zm9 1a1 1 0 010-2h4a1 1 0 011 1v4a1 1 0 01-2 0V6.414l-2.293 2.293a1 1 0 01-1.414-1.414L13.586 5H12zm-9 7a1 1 0 012 0v1.586l2.293-2.293a1 1 0 011.414 1.414L6.414 15H8a1 1 0 010 2H4a1 1 0 01-1-1v-4zm13-1a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 010-2h1.586l-2.293-2.293a1 1 0 011.414-1.414L15 13.586V12a1 1 0 011-1z" clipRule="evenodd" />
+                              </svg>
+                            ) : (
+                              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M3 4a1 1 0 011-1h4a1 1 0 010 2H6.414l2.293 2.293a1 1 0 01-1.414 1.414L5 6.414V8a1 1 0 01-2 0V4zm9 1a1 1 0 010-2h4a1 1 0 011 1v4a1 1 0 01-2 0V6.414l-2.293 2.293a1 1 0 01-1.414-1.414L13.586 5H12zm-9 7a1 1 0 012 0v1.586l2.293-2.293a1 1 0 011.414 1.414L6.414 15H8a1 1 0 010 2H4a1 1 0 01-1-1v-4zm13-1a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 010-2h1.586l-2.293-2.293a1 1 0 011.414-1.414L15 13.586V12a1 1 0 011-1z" clipRule="evenodd" />
+                              </svg>
+                            )}
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </>
