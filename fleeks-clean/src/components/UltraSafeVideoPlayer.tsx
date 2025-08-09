@@ -67,24 +67,22 @@ export default function UltraSafeVideoPlayer({ videoId, title, isPremium, userMe
         if (!currentSrc.includes('autoplay=1')) {
           // ユーザーのクリック/タップによる再生なのでmuteは不要
           iframe.src = currentSrc.replace('autoplay=0', 'autoplay=1')
-          
-          // iframe読み込み完了を待ってから再生状態とタイマーを開始
-          iframe.onload = () => {
-            setIsPlaying(true)
+        }
+        
+        // すぐに再生状態とタイマーを開始（iframe読み込みを待たない）
+        setIsPlaying(true)
+        
+        // 無料会員の場合はタイマー開始
+        if (!canWatchFull) {
+          startTimeRef.current = Date.now()
+          intervalRef.current = setInterval(() => {
+            const elapsed = Math.floor((Date.now() - startTimeRef.current) / 1000)
+            setTimeWatched(elapsed)
             
-            // 無料会員の場合はタイマー開始
-            if (!canWatchFull) {
-              startTimeRef.current = Date.now()
-              intervalRef.current = setInterval(() => {
-                const elapsed = Math.floor((Date.now() - startTimeRef.current) / 1000)
-                setTimeWatched(elapsed)
-                
-                if (elapsed >= FREE_LIMIT_SECONDS) {
-                  handleTimeLimitReached()
-                }
-              }, 1000)
+            if (elapsed >= FREE_LIMIT_SECONDS) {
+              handleTimeLimitReached()
             }
-          }
+          }, 1000)
         }
       }
     } catch (error) {
@@ -394,18 +392,18 @@ export default function UltraSafeVideoPlayer({ videoId, title, isPremium, userMe
                 initial={{ scale: 0.9, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ delay: 0.4, duration: 0.6 }}
-                className="text-center max-w-lg bg-black/30 rounded-xl p-6 backdrop-blur-sm border border-white/10 shadow-2xl"
+                className="text-center max-w-lg bg-black/30 rounded-xl p-4 sm:p-6 backdrop-blur-sm border border-white/10 shadow-2xl"
               >
                 <motion.div
                   initial={{ y: 20, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
                   transition={{ delay: 0.6 }}
                 >
-                  <Crown className="w-12 h-12 text-yellow-400 mx-auto mb-3" />
-                  <h2 className="text-xl sm:text-2xl font-bold mb-3 text-white">
+                  <Crown className="w-10 h-10 sm:w-12 sm:h-12 text-yellow-400 mx-auto mb-2 sm:mb-3" />
+                  <h2 className="text-lg sm:text-xl font-bold mb-2 sm:mb-3 text-white">
                     続きをご覧いただくには
                   </h2>
-                  <p className="text-sm sm:text-base text-gray-200 mb-4">
+                  <p className="text-xs sm:text-sm text-gray-200 mb-3 sm:mb-4">
                     プレミアム会員への登録が必要です
                   </p>
                 </motion.div>
@@ -414,20 +412,20 @@ export default function UltraSafeVideoPlayer({ videoId, title, isPremium, userMe
                   initial={{ y: 20, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
                   transition={{ delay: 0.8 }}
-                  className="space-y-3"
+                  className="space-y-2 sm:space-y-3"
                 >
                   <a
                     href="https://fleeks.jp/"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="block w-full bg-gradient-to-r from-yellow-400 to-orange-400 text-black font-bold py-3 px-6 rounded-full hover:shadow-xl hover:scale-105 transition-all duration-300 text-sm sm:text-base shadow-lg"
+                    className="block w-full bg-gradient-to-r from-yellow-400 to-orange-400 text-black font-bold py-2.5 sm:py-3 px-6 rounded-full hover:shadow-xl hover:scale-105 transition-all duration-300 text-sm shadow-lg"
                   >
                     🚀 今すぐ会員になる
                   </a>
                   
                   <button
                     onClick={() => window.location.reload()}
-                    className="text-gray-300 hover:text-white text-xs sm:text-sm underline transition"
+                    className="text-gray-300 hover:text-white text-xs underline transition"
                   >
                     最初から見直す
                   </button>
@@ -438,7 +436,7 @@ export default function UltraSafeVideoPlayer({ videoId, title, isPremium, userMe
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ delay: 1.0 }}
-                  className="mt-4 flex justify-center gap-4 text-xs"
+                  className="mt-3 sm:mt-4 flex justify-center gap-3 sm:gap-4 text-xs"
                 >
                   <div className="text-gray-300">
                     <span className="text-yellow-400">✓</span> 無制限視聴
