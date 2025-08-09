@@ -18,57 +18,27 @@ export default function VideoPlayer({ videoId, title, isPremium, userMembershipT
   const [player, setPlayer] = useState<any>(null)
   const [isPlaying, setIsPlaying] = useState(false)
   const [showMobileOverlay, setShowMobileOverlay] = useState(true)
+  const [hasError, setHasError] = useState(false)
   const playerRef = useRef<HTMLDivElement>(null)
   const intervalRef = useRef<NodeJS.Timeout | null>(null)
   const isMobile = typeof window !== 'undefined' && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)
+
+  // エラーハンドリング
+  useEffect(() => {
+    const handleError = (error: ErrorEvent) => {
+      console.error('VideoPlayer Error:', error)
+      setHasError(true)
+    }
+    
+    window.addEventListener('error', handleError)
+    return () => window.removeEventListener('error', handleError)
+  }, [])
 
   const FREE_LIMIT_SECONDS = 300 // 5分 = 300秒
   const canWatchFull = userMembershipType !== 'free' || !isPremium
 
   useEffect(() => {
-    // モバイルの場合は、iframeを直接使用するためプレーヤーAPIの初期化をスキップ
-    if (isMobile) {
-      console.log('Mobile device detected - using iframe embed')
-      // モバイルでの再生時間追跡用の簡易実装
-      if (!canWatchFull) {
-        console.log('Free user on mobile - starting 5 minute timer')
-        let videoStarted = false
-        
-        // ビデオの再生開始を検出するための簡易的な方法
-        const startTimer = () => {
-          if (!videoStarted) {
-            videoStarted = true
-            const checkInterval = setInterval(() => {
-              setTimeWatched((prev) => {
-                const newTime = prev + 1
-                console.log(`Mobile timer: ${newTime}/${FREE_LIMIT_SECONDS} seconds`)
-                if (newTime >= FREE_LIMIT_SECONDS) {
-                  setIsRestricted(true)
-                  clearInterval(checkInterval)
-                }
-                return newTime
-              })
-            }, 1000)
-            
-            // クリーンアップ関数に追加
-            intervalRef.current = checkInterval
-          }
-        }
-        
-        // クリックイベントでタイマー開始
-        const iframe = playerRef.current as HTMLIFrameElement
-        if (iframe) {
-          // iframeの親要素にクリックイベントを追加
-          const container = iframe.parentElement
-          if (container) {
-            container.addEventListener('click', startTimer, { once: true })
-          }
-        }
-      }
-      return
-    }
-
-    // デスクトップの場合は従来通りPlayer APIを使用
+    // YouTube Player APIがすでに読み込まれているかチェック
     // @ts-ignore
     if (window.YT && window.YT.Player) {
       initializePlayer()
@@ -87,33 +57,38 @@ export default function VideoPlayer({ videoId, title, isPremium, userMembershipT
     }
 
     function initializePlayer() {
-      if (playerRef.current && !isMobile) {
-        // @ts-ignore
-        const ytPlayer = new window.YT.Player(playerRef.current, {
-          videoId: videoId,
-          playerVars: {
-            autoplay: 0,
-            controls: 1,
-            modestbranding: 1,
-            rel: 0,
-            fs: userMembershipType === 'free' ? 0 : 1,
-            iv_load_policy: 3,
-            origin: window.location.origin,
-            playsinline: 1,
-            disablekb: userMembershipType === 'free' ? 1 : 0,
-            showinfo: 0,
-            cc_load_policy: 0,
-            enablejsapi: 1,
-          },
-          events: {
-            onReady: onPlayerReady,
-            onStateChange: onPlayerStateChange,
-            onError: (event: any) => {
-              console.error('YouTube Player Error:', event.data)
-            }
-          },
-        })
-        setPlayer(ytPlayer)
+      if (playerRef.current) {
+        try {
+          // @ts-ignore
+          const ytPlayer = new window.YT.Player(playerRef.current, {
+            videoId: videoId,
+            playerVars: {
+              autoplay: 0, // モバイルでは自動再生を無効化
+              controls: 1, // 基本コントロールは表示（CSSで制御）
+              modestbranding: 1,
+              rel: 0,
+              fs: userMembershipType === 'free' ? 0 : 1, // 無料会員はフルスクリーン無効
+              iv_load_policy: 3,
+              origin: window.location.origin,
+              playsinline: 1, // iOS Safari用のインライン再生
+              disablekb: userMembershipType === 'free' ? 1 : 0, // 無料会員はキーボード操作無効
+              showinfo: 0, // 動画情報を非表示
+              cc_load_policy: 0, // 字幕を非表示
+              enablejsapi: 1, // JavaScript APIを有効化
+              widget_referrer: window.location.href, // モバイル対応
+            },
+            events: {
+              onReady: onPlayerReady,
+              onStateChange: onPlayerStateChange,
+              onError: (event: any) => {
+                console.error('YouTube Player Error:', event.data)
+              }
+            },
+          })
+          setPlayer(ytPlayer)
+        } catch (error) {
+          console.error('Player initialization error:', error)
+        }
       }
     }
 
@@ -136,7 +111,6 @@ export default function VideoPlayer({ videoId, title, isPremium, userMembershipT
     }
     
     // モバイルデバイスの検出と対応
-    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)
     if (isMobile) {
       console.log('Mobile device detected - User Agent:', navigator.userAgent)
       
@@ -253,11 +227,12 @@ export default function VideoPlayer({ videoId, title, isPremium, userMembershipT
             const newTime = prev + 1
             if (newTime >= FREE_LIMIT_SECONDS) {
               // プレーヤーが存在する場合のみ一時停止
-              if (player && player.pauseVideo) {
+              if (player && typeof player.pauseVideo === 'function') {
                 try {
                   player.pauseVideo()
+                  console.log('Video paused at 5-minute limit')
                 } catch (e) {
-                  console.log('Player pause error:', e)
+                  console.log('Player pause error (safe to ignore):', e)
                 }
               }
               setIsRestricted(true)
@@ -302,6 +277,19 @@ export default function VideoPlayer({ videoId, title, isPremium, userMembershipT
   }
 
   const remainingTime = Math.max(0, FREE_LIMIT_SECONDS - timeWatched)
+
+  // エラー状態の場合の表示
+  if (hasError) {
+    return (
+      <div className="relative aspect-video bg-gray-900 rounded-lg flex items-center justify-center">
+        <div className="text-center p-6">
+          <AlertCircle className="w-12 h-12 text-red-400 mx-auto mb-4" />
+          <h3 className="text-lg font-semibold text-white mb-2">動画の読み込みエラー</h3>
+          <p className="text-gray-300">動画を読み込めませんでした。ページをリロードして再試行してください。</p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="relative w-full">
@@ -472,23 +460,7 @@ export default function VideoPlayer({ videoId, title, isPremium, userMembershipT
       <div className={`relative aspect-video bg-black rounded-lg overflow-hidden ${userMembershipType === 'free' ? 'free-member-container' : ''}`}>
         {!isRestricted ? (
           <>
-            {/* モバイルでは直接iframeを使用 */}
-            {isMobile ? (
-              <iframe
-                ref={playerRef as any}
-                className="mobile-youtube-player"
-                width="100%"
-                height="100%"
-                src={`https://www.youtube.com/embed/${videoId}?enablejsapi=1&origin=${window.location.origin}&playsinline=1&modestbranding=1&rel=0&fs=${userMembershipType === 'free' ? 0 : 1}&controls=1&showinfo=0&iv_load_policy=3`}
-                frameBorder="0"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                allowFullScreen={userMembershipType !== 'free'}
-                style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
-                title={title || 'FLEEKS Video'}
-              />
-            ) : (
-              <div ref={playerRef} className="w-full h-full" />
-            )}
+            <div ref={playerRef} className="w-full h-full" />
             
             {/* 無料会員用のオーバーレイ */}
             {userMembershipType === 'free' && (
