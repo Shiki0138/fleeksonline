@@ -17,7 +17,7 @@ export default function UltraSafeVideoPlayer({ videoId, title, isPremium, userMe
   const [timeWatched, setTimeWatched] = useState(0)
   const [isRestricted, setIsRestricted] = useState(false)
   const [isPlaying, setIsPlaying] = useState(false)
-  const [showPlayButton, setShowPlayButton] = useState(true)
+  const [showPlayButton, setShowPlayButton] = useState(userMembershipType === 'free')
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [hasError, setHasError] = useState(false)
   
@@ -48,7 +48,13 @@ export default function UltraSafeVideoPlayer({ videoId, title, isPremium, userMe
   }, [])
 
   // 再生ボタンクリック処理
-  const handlePlayVideo = useCallback(() => {
+  const handlePlayVideo = useCallback((e?: React.MouseEvent | React.TouchEvent) => {
+    // イベントの重複防止
+    if (e) {
+      e.preventDefault()
+      e.stopPropagation()
+    }
+    
     try {
       setShowPlayButton(false)
       setIsPlaying(true)
@@ -60,7 +66,10 @@ export default function UltraSafeVideoPlayer({ videoId, title, isPremium, userMe
         
         // autoplay=1 を追加して再読み込み
         if (!currentSrc.includes('autoplay=1')) {
-          iframe.src = currentSrc.replace('autoplay=0', 'autoplay=1')
+          // モバイルの場合はmutedも追加（自動再生ポリシー対応）
+          const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)
+          const newParams = isMobile ? 'autoplay=1&mute=1' : 'autoplay=1'
+          iframe.src = currentSrc.replace('autoplay=0', newParams)
         }
       }
       
@@ -170,6 +179,8 @@ export default function UltraSafeVideoPlayer({ videoId, title, isPremium, userMe
     showinfo: '0',
     cc_load_policy: '0',
     origin: typeof window !== 'undefined' ? window.location.origin : '',
+    enablejsapi: '1',
+    widget_referrer: typeof window !== 'undefined' ? window.location.href : '',
   }).toString()
 
   // エラー表示
@@ -278,7 +289,7 @@ export default function UltraSafeVideoPlayer({ videoId, title, isPremium, userMe
               src={youtubeUrl}
               className="w-full h-full"
               frameBorder="0"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
               allowFullScreen
               title={title}
             />
@@ -289,16 +300,18 @@ export default function UltraSafeVideoPlayer({ videoId, title, isPremium, userMe
                 {/* 再生前オーバーレイ */}
                 {showPlayButton && (
                   <div 
-                    className="ultra-safe-overlay absolute inset-0 bg-black/40 flex flex-col items-center justify-center z-50 cursor-pointer"
+                    className="ultra-safe-overlay absolute inset-0 bg-black/40 flex flex-col items-center justify-center z-50"
                     onClick={handlePlayVideo}
+                    onTouchStart={handlePlayVideo}
+                    style={{ cursor: 'pointer', touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' }}
                   >
-                    <div className="bg-white/90 backdrop-blur-sm rounded-full p-8 shadow-2xl hover:scale-105 transition-transform">
-                      <Play className="w-16 h-16 text-gray-800" />
+                    <div className="bg-white/90 backdrop-blur-sm rounded-full p-6 sm:p-8 shadow-2xl hover:scale-105 transition-transform">
+                      <Play className="w-12 h-12 sm:w-16 sm:h-16 text-gray-800" />
                     </div>
-                    <div className="mt-6 text-white text-lg font-medium">
+                    <div className="mt-4 sm:mt-6 text-white text-base sm:text-lg font-medium">
                       タップして再生開始
                     </div>
-                    <div className="mt-2 text-white/80 text-sm">
+                    <div className="mt-2 text-white/80 text-xs sm:text-sm">
                       無料会員 - 5分プレビュー
                     </div>
                   </div>
