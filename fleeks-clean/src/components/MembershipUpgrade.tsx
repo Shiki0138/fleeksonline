@@ -71,22 +71,6 @@ const membershipPlans: MembershipPlan[] = [
     popular: true,
     color: 'primary',
   },
-  {
-    id: 'vip',
-    name: 'VIP会員',
-    price: 14980,
-    period: '月額',
-    features: [
-      'プレミアム会員の全特典',
-      '4K画質での視聴',
-      '独占コンテンツ',
-      '1対1メンタリング',
-      'ライブ配信優先アクセス',
-      '特別イベント招待',
-      '専用コミュニティ',
-    ],
-    color: 'warning',
-  },
 ];
 
 interface MembershipUpgradeProps {
@@ -146,8 +130,6 @@ export default function MembershipUpgrade({
     switch (planId) {
       case 'premium':
         return <Star />;
-      case 'vip':
-        return <Crown />;
       default:
         return <VideoLibrary />;
     }

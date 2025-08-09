@@ -363,18 +363,10 @@ export default function UltraSafeVideoPlayer({ videoId, title, isPremium, userMe
               initial={{ y: -50, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.2, duration: 0.6 }}
-              className="absolute top-0 left-0 right-0 bg-gradient-to-r from-red-600 via-red-500 to-red-600 text-white py-3 px-6 shadow-lg"
+              className="absolute top-0 left-0 right-0 bg-gradient-to-r from-red-600 via-red-500 to-red-600 text-white py-2 px-4 shadow-lg"
             >
-              <div className="flex items-center justify-between max-w-4xl mx-auto">
-                <div className="flex items-center space-x-3">
-                  <div className="animate-pulse">
-                    <Crown className="w-6 h-6 text-yellow-300" />
-                  </div>
-                  <span className="font-bold text-lg">🎬 プレミアム限定コンテンツ</span>
-                </div>
-                <div className="text-sm opacity-90">
-                  音声継続中...
-                </div>
+              <div className="flex items-center justify-center">
+                <span className="font-bold text-sm sm:text-base">🎬 プレミアム限定コンテンツ</span>
               </div>
             </motion.div>
 
@@ -384,19 +376,19 @@ export default function UltraSafeVideoPlayer({ videoId, title, isPremium, userMe
                 initial={{ scale: 0.9, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ delay: 0.4, duration: 0.6 }}
-                className="text-center max-w-2xl bg-black/30 rounded-2xl p-8 backdrop-blur-sm border border-white/10 shadow-2xl"
+                className="text-center max-w-lg bg-black/30 rounded-xl p-6 backdrop-blur-sm border border-white/10 shadow-2xl"
               >
                 <motion.div
                   initial={{ y: 20, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
                   transition={{ delay: 0.6 }}
                 >
-                  <Crown className="w-16 h-16 text-yellow-400 mx-auto mb-4" />
-                  <h2 className="text-3xl font-bold mb-4 bg-gradient-to-r from-yellow-400 to-orange-400 bg-clip-text text-transparent">
+                  <Crown className="w-12 h-12 text-yellow-400 mx-auto mb-3" />
+                  <h2 className="text-xl sm:text-2xl font-bold mb-3 text-white">
                     続きをご覧いただくには
                   </h2>
-                  <p className="text-lg text-gray-200 mb-6">
-                    FLEEKSプレミアム会員へのアップグレードが必要です
+                  <p className="text-sm sm:text-base text-gray-200 mb-4">
+                    プレミアム会員への登録が必要です
                   </p>
                 </motion.div>
                 
@@ -404,52 +396,40 @@ export default function UltraSafeVideoPlayer({ videoId, title, isPremium, userMe
                   initial={{ y: 20, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
                   transition={{ delay: 0.8 }}
-                  className="space-y-4"
+                  className="space-y-3"
                 >
                   <a
                     href="https://fleeks.jp/"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="block w-full bg-gradient-to-r from-yellow-400 to-orange-400 text-black font-bold py-4 px-8 rounded-full hover:shadow-2xl hover:scale-105 transition-all duration-300 text-lg shadow-lg"
+                    className="block w-full bg-gradient-to-r from-yellow-400 to-orange-400 text-black font-bold py-3 px-6 rounded-full hover:shadow-xl hover:scale-105 transition-all duration-300 text-sm sm:text-base shadow-lg"
                   >
-                    🚀 今すぐプレミアム会員になる
+                    🚀 今すぐ会員になる
                   </a>
                   
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
-                    <a
-                      href="/membership/upgrade"
-                      className="bg-white/10 hover:bg-white/20 text-white font-semibold py-3 px-6 rounded-full transition-all duration-300 border border-white/20 text-sm"
-                    >
-                      💳 料金プランを見る
-                    </a>
-                    
-                    <button
-                      onClick={() => window.location.reload()}
-                      className="bg-gray-800/50 hover:bg-gray-700/50 text-yellow-400 font-medium py-3 px-6 rounded-full transition underline text-sm"
-                    >
-                      🔄 最初から見直す
-                    </button>
-                  </div>
+                  <button
+                    onClick={() => window.location.reload()}
+                    className="text-gray-300 hover:text-white text-xs sm:text-sm underline transition"
+                  >
+                    最初から見直す
+                  </button>
                 </motion.div>
                 
-                {/* 特典リスト */}
+                {/* 特典リスト - 簡素化 */}
                 <motion.div 
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ delay: 1.0 }}
-                  className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs"
+                  className="mt-4 flex justify-center gap-4 text-xs"
                 >
-                  <div className="bg-white/5 rounded-lg p-3 text-center">
-                    <div className="text-blue-400 mb-1">🎬</div>
-                    <div className="text-white font-semibold text-sm">無制限視聴</div>
+                  <div className="text-gray-300">
+                    <span className="text-yellow-400">✓</span> 無制限視聴
                   </div>
-                  <div className="bg-white/5 rounded-lg p-3 text-center">
-                    <div className="text-green-400 mb-1">📱</div>
-                    <div className="text-white font-semibold text-sm">全デバイス対応</div>
+                  <div className="text-gray-300">
+                    <span className="text-yellow-400">✓</span> HD画質
                   </div>
-                  <div className="bg-white/5 rounded-lg p-3 text-center">
-                    <div className="text-purple-400 mb-1">⭐</div>
-                    <div className="text-white font-semibold text-sm">HD画質</div>
+                  <div className="text-gray-300">
+                    <span className="text-yellow-400">✓</span> 広告なし
                   </div>
                 </motion.div>
               </motion.div>
