@@ -37,18 +37,19 @@ export default function VideoPlayer({ videoId, title, isPremium, userMembershipT
         const ytPlayer = new window.YT.Player(playerRef.current, {
           videoId: videoId,
           playerVars: {
-            autoplay: 1, // 自動再生を有効にして再生問題を解決
+            autoplay: 0, // モバイルでは自動再生を無効化
             controls: 1, // 基本コントロールは表示（CSSで制御）
             modestbranding: 1,
             rel: 0,
             fs: userMembershipType === 'free' ? 0 : 1, // 無料会員はフルスクリーン無効
             iv_load_policy: 3,
             origin: window.location.origin,
-            playsinline: 1,
+            playsinline: 1, // iOS Safari用のインライン再生
             disablekb: userMembershipType === 'free' ? 1 : 0, // 無料会員はキーボード操作無効
             showinfo: 0, // 動画情報を非表示
             cc_load_policy: 0, // 字幕を非表示
             enablejsapi: 1, // JavaScript APIを有効化
+            host: 'https://www.youtube.com', // モバイル対応
           },
           events: {
             onReady: onPlayerReady,
@@ -77,6 +78,19 @@ export default function VideoPlayer({ videoId, title, isPremium, userMembershipT
     // 無料会員の場合、再生時間を監視
     if (!canWatchFull) {
       console.log('Free user watching premium content - 5 minute limit applies')
+    }
+    
+    // モバイルデバイスの検出と対応
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)
+    if (isMobile) {
+      console.log('Mobile device detected - applying mobile optimizations')
+      // モバイルでは明示的な再生ボタンクリックが必要
+      const playButton = document.querySelector('.ytp-play-button')
+      if (playButton) {
+        playButton.addEventListener('click', () => {
+          console.log('Mobile play button clicked')
+        })
+      }
     }
     
     // 無料会員の場合、YouTubeロゴやリンクを定期的にチェックして削除
@@ -320,6 +334,29 @@ export default function VideoPlayer({ videoId, title, isPremium, userMembershipT
           .html5-video-player .ytp-chrome-top {
             display: none !important;
           }
+          
+          /* モバイル向けの追加制御 */
+          @media (max-width: 768px) {
+            .ytp-watermark,
+            .ytp-chrome-top,
+            .ytp-chrome-bottom .ytp-button:not(.ytp-play-button),
+            .ytp-cued-thumbnail-overlay,
+            .ytp-pause-overlay {
+              display: none !important;
+            }
+            
+            /* モバイルでのタッチ操作制御 */
+            .free-member-container {
+              -webkit-touch-callout: none;
+              -webkit-tap-highlight-color: transparent;
+            }
+            
+            /* 無料会員ラベルをモバイル向けに調整 */
+            .free-member-label {
+              font-size: 11px;
+              padding: 0.25rem 0.5rem;
+            }
+          }
         `}</style>
       )}
       
@@ -348,6 +385,22 @@ export default function VideoPlayer({ videoId, title, isPremium, userMembershipT
           <>
             <div ref={playerRef} className="w-full h-full" />
             
+            {/* モバイル用の再生オーバーレイ（初回のみ） */}
+            {userMembershipType === 'free' && !isPlaying && (
+              <div 
+                className="absolute inset-0 flex items-center justify-center bg-black/50 md:hidden"
+                onClick={() => {
+                  if (player && player.playVideo) {
+                    player.playVideo()
+                  }
+                }}
+              >
+                <div className="bg-white/20 backdrop-blur-sm rounded-full p-6">
+                  <Play className="w-12 h-12 text-white" />
+                </div>
+              </div>
+            )}
+            
             {/* 無料会員用のオーバーレイ */}
             {userMembershipType === 'free' && (
               <>
@@ -368,7 +421,7 @@ export default function VideoPlayer({ videoId, title, isPremium, userMembershipT
                 />
                 
                 {/* 無料会員の警告表示 */}
-                <div className="absolute bottom-4 left-4 bg-black/80 text-white px-3 py-2 rounded-lg text-xs pointer-events-none z-10">
+                <div className="absolute bottom-4 left-4 bg-black/80 text-white px-3 py-2 rounded-lg text-xs pointer-events-none z-10 free-member-label">
                   <div className="flex items-center space-x-2">
                     <Lock className="w-3 h-3 text-blue-400" />
                     <span>無料会員 - 5分プレビュー中</span>
