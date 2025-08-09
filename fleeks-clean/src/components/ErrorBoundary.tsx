@@ -19,11 +19,22 @@ export default class ErrorBoundary extends Component<Props, State> {
   }
 
   static getDerivedStateFromError(error: Error): State {
+    console.error('Caught error in ErrorBoundary:', error)
     return { hasError: true, error }
   }
 
   componentDidCatch(error: Error, errorInfo: any) {
-    console.error('VideoPlayer Error Boundary:', error, errorInfo)
+    console.error('VideoPlayer Error Boundary caught:', error.name, error.message)
+    console.error('Error info:', errorInfo)
+    
+    // removeChild エラーは無視して回復
+    if (error.name === 'NotFoundError' && error.message.includes('removeChild')) {
+      console.log('Ignoring removeChild error and attempting recovery')
+      // 少し遅れて回復を試行
+      setTimeout(() => {
+        this.setState({ hasError: false, error: undefined })
+      }, 100)
+    }
   }
 
   render() {
