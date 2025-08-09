@@ -45,11 +45,11 @@ function VideoPlayerCore({ videoId, title, isPremium, userMembershipType, userId
     }
   }, [])
 
-  // 5分制限処理を完全に分離
+  // 5分制限処理を完全に分離 - プレーヤー操作は一切行わない
   const handleTimeLimitReached = useCallback(() => {
     if (isDestroyedRef.current) return
     
-    console.log('5-minute limit reached - safe overlay display')
+    console.log('5-minute limit reached - banner overlay display (video continues)')
     
     // タイマーを安全に停止
     if (intervalRef.current) {
@@ -57,71 +57,118 @@ function VideoPlayerCore({ videoId, title, isPremium, userMembershipType, userId
       intervalRef.current = null
     }
 
-    // プレーヤーを触らない - オーバーレイのみ表示
+    // プレーヤーは一切触らない - 動画継続、音声継続
+    // バナーオーバーレイのみ表示
     safeExecute(() => {
       setIsRestricted(true)
     }, 'Failed to set restricted state')
 
-    console.log('Safe overlay displayed - no player manipulation')
+    console.log('Banner overlay displayed - video and audio continue in background')
   }, [safeExecute])
 
-  // プレーヤー状態変更を安全に処理
+  // プレーヤー状態変更を安全に処理 - エラー発生を完全に防ぐ
   const onPlayerStateChange = useCallback((event: any) => {
     if (isDestroyedRef.current) return
     
-    safeExecute(() => {
+    try {
+      // eventの存在確認
+      if (!event || typeof event.data === 'undefined') {
+        console.warn('Invalid player state change event')
+        return
+      }
+
       const newIsPlaying = event.data === 1
-      setIsPlaying(newIsPlaying)
       
-      if (newIsPlaying) {
-        setShowPlayButton(false)
+      // State更新を安全に実行
+      try {
+        setIsPlaying(newIsPlaying)
+        if (newIsPlaying) {
+          setShowPlayButton(false)
+        }
+      } catch (stateError) {
+        console.warn('State update error (ignored):', stateError)
       }
       
-      // 再生中 - タイマー開始
+      // 再生中 - タイマー開始（エラーが発生しても他に影響しない）
       if (event.data === 1 && !canWatchFull && !intervalRef.current) {
-        intervalRef.current = setInterval(() => {
-          if (isDestroyedRef.current) return
-          
-          setTimeWatched((prev) => {
-            const newTime = prev + 1
-            if (newTime >= FREE_LIMIT_SECONDS) {
-              // 非同期でhandleTimeLimitReached呼び出し
-              setTimeout(handleTimeLimitReached, 0)
-              return prev // 状態更新は停止
+        try {
+          intervalRef.current = setInterval(() => {
+            if (isDestroyedRef.current) {
+              if (intervalRef.current) {
+                clearInterval(intervalRef.current)
+                intervalRef.current = null
+              }
+              return
             }
-            return newTime
+            
+            try {
+              setTimeWatched((prev) => {
+                const newTime = prev + 1
+                if (newTime >= FREE_LIMIT_SECONDS) {
+                  // 非同期で制限処理呼び出し（エラーが発生してもタイマーを壊さない）
+                  try {
+                    setTimeout(handleTimeLimitReached, 0)
+                  } catch (limitError) {
+                    console.warn('Time limit handler error (ignored):', limitError)
+                  }
+                  return prev // 状態更新は停止
+                }
+                return newTime
+              })
+            } catch (timeError) {
+              console.warn('Time update error (ignored):', timeError)
+            }
+          }, 1000)
+          
+          // クリーンアップ追加
+          addCleanup(() => {
+            if (intervalRef.current) {
+              clearInterval(intervalRef.current)
+              intervalRef.current = null
+            }
           })
-        }, 1000)
-        
-        addCleanup(() => {
-          if (intervalRef.current) {
-            clearInterval(intervalRef.current)
-            intervalRef.current = null
-          }
-        })
+        } catch (timerError) {
+          console.warn('Timer setup error (ignored):', timerError)
+        }
       }
       // 一時停止または停止 - タイマー停止
       else if ((event.data === 2 || event.data === 0) && intervalRef.current) {
-        clearInterval(intervalRef.current)
-        intervalRef.current = null
+        try {
+          clearInterval(intervalRef.current)
+          intervalRef.current = null
+        } catch (clearError) {
+          console.warn('Timer clear error (ignored):', clearError)
+        }
       }
-    }, 'Player state change error')
-  }, [canWatchFull, handleTimeLimitReached, addCleanup, safeExecute])
+    } catch (error) {
+      console.warn('Player state change error (completely ignored):', error)
+      // エラーが発生してもアプリケーションを継続
+    }
+  }, [canWatchFull, handleTimeLimitReached, addCleanup])
 
-  // プレーヤー準備完了処理
+  // プレーヤー準備完了処理 - 完全エラープルーフ
   const onPlayerReady = useCallback((event: any) => {
     if (isDestroyedRef.current) return
     
-    safeExecute(() => {
-      setPlayerReady(true)
+    try {
       console.log('Player ready - User type:', userMembershipType)
+      
+      // 状態更新を安全に実行
+      try {
+        setPlayerReady(true)
+      } catch (stateError) {
+        console.warn('Player ready state error (ignored):', stateError)
+      }
       
       // 無料会員用のスタイル制御のみ（DOM操作は最小限）
       if (userMembershipType === 'free') {
         console.log('Free user - CSS controls enabled')
       }
-    }, 'Player ready error')
-  }, [userMembershipType, safeExecute])
+    } catch (error) {
+      console.warn('Player ready error (completely ignored):', error)
+      // エラーが発生してもプレーヤーは動作し続ける
+    }
+  }, [userMembershipType])
 
   // YouTube Player API初期化
   useEffect(() => {
@@ -132,49 +179,98 @@ function VideoPlayerCore({ videoId, title, isPremium, userMembershipType, userId
       if (!mounted || !playerRef.current) return
 
       try {
-        // @ts-ignore
-        const ytPlayer = new window.YT.Player(playerRef.current, {
-          videoId: videoId,
-          playerVars: {
-            autoplay: 0,
-            controls: userMembershipType === 'free' ? 0 : 1,
-            modestbranding: 1,
-            rel: 0,
-            fs: 0,
-            iv_load_policy: 3,
-            origin: window.location.origin,
-            playsinline: 1,
-            disablekb: userMembershipType === 'free' ? 1 : 0,
-            showinfo: 0,
-            cc_load_policy: 0,
-            enablejsapi: 1,
-          },
-          events: {
-            onReady: onPlayerReady,
-            onStateChange: onPlayerStateChange,
-            onError: (event: any) => {
-              console.warn('YouTube Player Error (non-critical):', event.data)
-              // エラーでも続行 - Error Boundaryでキャッチ
-            }
-          },
-        })
+        console.log('Initializing YouTube player...')
         
-        if (mounted) {
-          setPlayer(ytPlayer)
-          addCleanup(() => {
-            try {
-              if (ytPlayer && typeof ytPlayer.destroy === 'function') {
-                ytPlayer.destroy()
+        // YouTube API の存在確認
+        // @ts-ignore
+        if (!window.YT || !window.YT.Player) {
+          console.warn('YouTube API not available')
+          if (mounted) {
+            setHasError(true)
+          }
+          return
+        }
+
+        // プレーヤー初期化を完全に安全にラップ
+        try {
+          // @ts-ignore
+          const ytPlayer = new window.YT.Player(playerRef.current, {
+            videoId: videoId,
+            playerVars: {
+              autoplay: 0,
+              controls: userMembershipType === 'free' ? 0 : 1,
+              modestbranding: 1,
+              rel: 0,
+              fs: 0,
+              iv_load_policy: 3,
+              origin: window.location.origin,
+              playsinline: 1,
+              disablekb: userMembershipType === 'free' ? 1 : 0,
+              showinfo: 0,
+              cc_load_policy: 0,
+              enablejsapi: 1,
+            },
+            events: {
+              onReady: (event: any) => {
+                try {
+                  onPlayerReady(event)
+                } catch (readyError) {
+                  console.warn('onReady error (ignored):', readyError)
+                }
+              },
+              onStateChange: (event: any) => {
+                try {
+                  onPlayerStateChange(event)
+                } catch (stateChangeError) {
+                  console.warn('onStateChange error (ignored):', stateChangeError)
+                }
+              },
+              onError: (event: any) => {
+                console.warn('YouTube Player Error (non-critical):', event?.data || event)
+                // エラーでも続行 - 致命的エラーは発生させない
               }
-            } catch (e) {
-              console.warn('Player cleanup error (ignored):', e)
-            }
+            },
           })
+          
+          console.log('YouTube player created successfully')
+          
+          if (mounted && ytPlayer) {
+            try {
+              setPlayer(ytPlayer)
+            } catch (setError) {
+              console.warn('Set player error (ignored):', setError)
+            }
+            
+            addCleanup(() => {
+              try {
+                if (ytPlayer && typeof ytPlayer.destroy === 'function') {
+                  ytPlayer.destroy()
+                  console.log('Player destroyed safely')
+                }
+              } catch (e) {
+                console.warn('Player cleanup error (ignored):', e)
+              }
+            })
+          }
+        } catch (playerCreationError) {
+          console.error('YouTube Player creation error:', playerCreationError)
+          if (mounted) {
+            console.log('Setting hasError to true due to player creation failure')
+            try {
+              setHasError(true)
+            } catch (errorStateError) {
+              console.warn('Error setting error state (ignored):', errorStateError)
+            }
+          }
         }
       } catch (error) {
         console.error('Player initialization error:', error)
         if (mounted) {
-          setHasError(true)
+          try {
+            setHasError(true)
+          } catch (errorStateError) {
+            console.warn('Error setting error state (ignored):', errorStateError)
+          }
         }
       }
     }
@@ -210,64 +306,105 @@ function VideoPlayerCore({ videoId, title, isPremium, userMembershipType, userId
     }
   }, [videoId, userMembershipType, onPlayerReady, onPlayerStateChange, addCleanup])
 
-  // 再生ボタン処理
+  // 再生ボタン処理 - 完全エラープルーフ
   const handlePlayVideo = useCallback(() => {
-    if (!player || !playerReady) return
-    
-    safeExecute(() => {
-      player.playVideo()
-      setShowPlayButton(false)
-      setIsPlaying(true)
-    }, 'Play video error')
-  }, [player, playerReady, safeExecute])
-
-  // 全画面表示処理
-  const handleFullscreen = useCallback(() => {
-    const container = document.querySelector('.video-container')
-    if (!container) return
-
-    safeExecute(() => {
-      if (!isFullscreen) {
-        // 全画面表示
-        if (container.requestFullscreen) {
-          container.requestFullscreen()
-        // @ts-ignore
-        } else if (container.webkitRequestFullscreen) {
-          // @ts-ignore
-          container.webkitRequestFullscreen()
-        }
-      } else {
-        // 全画面終了
-        if (document.exitFullscreen) {
-          document.exitFullscreen()
-        // @ts-ignore
-        } else if (document.webkitExitFullscreen) {
-          // @ts-ignore
-          document.webkitExitFullscreen()
-        }
+    try {
+      if (!player || !playerReady) {
+        console.warn('Player not ready for playVideo')
+        return
       }
-    }, 'Fullscreen toggle error')
-  }, [isFullscreen, safeExecute])
+      
+      try {
+        if (typeof player.playVideo === 'function') {
+          player.playVideo()
+          console.log('Video play initiated')
+        }
+      } catch (playError) {
+        console.warn('Play video error (ignored):', playError)
+      }
+      
+      try {
+        setShowPlayButton(false)
+        setIsPlaying(true)
+      } catch (stateError) {
+        console.warn('Play state update error (ignored):', stateError)
+      }
+    } catch (error) {
+      console.warn('Handle play video error (completely ignored):', error)
+    }
+  }, [player, playerReady])
 
-  // 全画面状態の監視
+  // 全画面表示処理 - 完全エラープルーフ
+  const handleFullscreen = useCallback(() => {
+    try {
+      const container = document.querySelector('.video-container')
+      if (!container) {
+        console.warn('Video container not found for fullscreen')
+        return
+      }
+
+      try {
+        if (!isFullscreen) {
+          // 全画面表示
+          if (container.requestFullscreen) {
+            container.requestFullscreen().catch(e => console.warn('Fullscreen request error (ignored):', e))
+          // @ts-ignore
+          } else if (container.webkitRequestFullscreen) {
+            // @ts-ignore
+            container.webkitRequestFullscreen()
+          }
+        } else {
+          // 全画面終了
+          if (document.exitFullscreen) {
+            document.exitFullscreen().catch(e => console.warn('Exit fullscreen error (ignored):', e))
+          // @ts-ignore
+          } else if (document.webkitExitFullscreen) {
+            // @ts-ignore
+            document.webkitExitFullscreen()
+          }
+        }
+      } catch (fullscreenError) {
+        console.warn('Fullscreen operation error (ignored):', fullscreenError)
+      }
+    } catch (error) {
+      console.warn('Handle fullscreen error (completely ignored):', error)
+    }
+  }, [isFullscreen])
+
+  // 全画面状態の監視 - 完全エラープルーフ
   useEffect(() => {
     const handleFullscreenChange = () => {
-      safeExecute(() => {
+      try {
         const isCurrentlyFullscreen = !!(document.fullscreenElement || 
           // @ts-ignore
           document.webkitFullscreenElement)
-        setIsFullscreen(isCurrentlyFullscreen)
-      }, 'Fullscreen state error')
+        
+        try {
+          setIsFullscreen(isCurrentlyFullscreen)
+        } catch (stateError) {
+          console.warn('Fullscreen state update error (ignored):', stateError)
+        }
+      } catch (error) {
+        console.warn('Fullscreen change handler error (ignored):', error)
+      }
     }
 
-    document.addEventListener('fullscreenchange', handleFullscreenChange)
-    document.addEventListener('webkitfullscreenchange', handleFullscreenChange)
+    try {
+      document.addEventListener('fullscreenchange', handleFullscreenChange)
+      document.addEventListener('webkitfullscreenchange', handleFullscreenChange)
+    } catch (eventError) {
+      console.warn('Fullscreen event listener error (ignored):', eventError)
+    }
 
     return () => {
-      document.removeEventListener('fullscreenchange', handleFullscreenChange)
-      document.removeEventListener('webkitfullscreenchange', handleFullscreenChange)
+      try {
+        document.removeEventListener('fullscreenchange', handleFullscreenChange)
+        document.removeEventListener('webkitfullscreenchange', handleFullscreenChange)
+      } catch (cleanupError) {
+        console.warn('Fullscreen cleanup error (ignored):', cleanupError)
+      }
     }
-  }, [safeExecute])
+  }, [])
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60)
@@ -448,102 +585,125 @@ function VideoPlayerCore({ videoId, title, isPremium, userMembershipType, userId
             )}
           </>
         ) : (
+          /* バナー広告風オーバーレイ - 動画は背景で継続再生 */
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 1.5, ease: "easeInOut" }}
-            className={`absolute inset-0 bg-gradient-to-br from-gray-900 via-black to-gray-900 flex items-center justify-center ${isFullscreen ? 'fullscreen-upgrade' : ''}`}
+            initial={{ y: -100, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.8, ease: "easeOut" }}
+            className={`absolute inset-0 ${isFullscreen ? 'fullscreen-upgrade' : ''}`}
             style={{ 
               zIndex: 99999,
               pointerEvents: 'auto',
-              backdropFilter: 'blur(10px)'
+              background: 'linear-gradient(135deg, rgba(0,0,0,0.85) 0%, rgba(17,24,39,0.9) 50%, rgba(0,0,0,0.85) 100%)',
+              backdropFilter: 'blur(8px)'
             }}
           >
+            {/* 上部バナーエリア */}
             <motion.div 
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.3, duration: 0.6 }}
-              className="text-center p-8 max-w-2xl"
+              initial={{ y: -50, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.2, duration: 0.6 }}
+              className="absolute top-0 left-0 right-0 bg-gradient-to-r from-red-600 via-red-500 to-red-600 text-white py-3 px-6 shadow-lg"
             >
-              <div className="mb-8">
-                <Crown className="w-24 h-24 text-yellow-400 mx-auto mb-6" />
-                <motion.h2 
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.6 }}
-                  className="text-4xl font-bold mb-6 bg-gradient-to-r from-yellow-400 to-orange-400 bg-clip-text text-transparent"
-                >
-                  続きはFLEEKS会員限定のコンテンツです
-                </motion.h2>
-                <motion.p 
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.8 }}
-                  className="text-xl text-gray-300 mb-8"
-                >
-                  5分間のプレビューをご視聴いただき、ありがとうございました
-                </motion.p>
+              <div className="flex items-center justify-between max-w-4xl mx-auto">
+                <div className="flex items-center space-x-3">
+                  <div className="animate-pulse">
+                    <Crown className="w-6 h-6 text-yellow-300" />
+                  </div>
+                  <span className="font-bold text-lg">🎬 プレミアム限定コンテンツ</span>
+                </div>
+                <div className="text-sm opacity-90">
+                  音声継続中...
+                </div>
               </div>
-              
+            </motion.div>
+
+            {/* メイン誘導エリア */}
+            <div className="flex items-center justify-center h-full px-4">
               <motion.div 
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 1.0 }}
-                className="space-y-6"
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ delay: 0.4, duration: 0.6 }}
+                className="text-center max-w-2xl bg-black/30 rounded-2xl p-8 backdrop-blur-sm border border-white/10 shadow-2xl"
               >
-                <a
-                  href="https://fleeks.jp/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-block bg-gradient-to-r from-yellow-400 to-orange-400 text-black font-bold px-12 py-5 rounded-full hover:shadow-2xl hover:scale-105 transition-all duration-300 text-xl shadow-lg"
+                <motion.div
+                  initial={{ y: 20, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ delay: 0.6 }}
                 >
-                  FLEEKS公式サイトで詳細を見る
-                </a>
+                  <Crown className="w-16 h-16 text-yellow-400 mx-auto mb-4" />
+                  <h2 className="text-3xl font-bold mb-4 bg-gradient-to-r from-yellow-400 to-orange-400 bg-clip-text text-transparent">
+                    続きをご覧いただくには
+                  </h2>
+                  <p className="text-lg text-gray-200 mb-6">
+                    FLEEKSプレミアム会員へのアップグレードが必要です
+                  </p>
+                </motion.div>
                 
-                <div className="flex flex-col sm:flex-row gap-4 items-center justify-center">
+                <motion.div 
+                  initial={{ y: 20, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ delay: 0.8 }}
+                  className="space-y-4"
+                >
                   <a
-                    href="/membership/upgrade"
-                    className="bg-white/10 hover:bg-white/20 text-white font-semibold px-8 py-3 rounded-full transition-all duration-300 border border-white/20"
+                    href="https://fleeks.jp/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block w-full bg-gradient-to-r from-yellow-400 to-orange-400 text-black font-bold py-4 px-8 rounded-full hover:shadow-2xl hover:scale-105 transition-all duration-300 text-lg shadow-lg"
                   >
-                    今すぐアップグレード
+                    🚀 今すぐプレミアム会員になる
                   </a>
                   
-                  <button
-                    onClick={() => window.location.reload()}
-                    className="text-yellow-400 hover:text-yellow-300 font-medium transition underline"
-                  >
-                    動画を最初から見直す
-                  </button>
-                </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
+                    <a
+                      href="/membership/upgrade"
+                      className="bg-white/10 hover:bg-white/20 text-white font-semibold py-3 px-6 rounded-full transition-all duration-300 border border-white/20 text-sm"
+                    >
+                      💳 料金プランを見る
+                    </a>
+                    
+                    <button
+                      onClick={() => window.location.reload()}
+                      className="bg-gray-800/50 hover:bg-gray-700/50 text-yellow-400 font-medium py-3 px-6 rounded-full transition underline text-sm"
+                    >
+                      🔄 最初から見直す
+                    </button>
+                  </div>
+                </motion.div>
+                
+                {/* 小さな特典リスト */}
+                <motion.div 
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 1.0 }}
+                  className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs"
+                >
+                  <div className="bg-white/5 rounded-lg p-3 text-center">
+                    <div className="text-blue-400 mb-1">🎬</div>
+                    <div className="text-white font-semibold text-sm">無制限視聴</div>
+                  </div>
+                  <div className="bg-white/5 rounded-lg p-3 text-center">
+                    <div className="text-green-400 mb-1">📱</div>
+                    <div className="text-white font-semibold text-sm">全デバイス対応</div>
+                  </div>
+                  <div className="bg-white/5 rounded-lg p-3 text-center">
+                    <div className="text-purple-400 mb-1">⭐</div>
+                    <div className="text-white font-semibold text-sm">HD画質</div>
+                  </div>
+                </motion.div>
               </motion.div>
-              
-              <motion.div 
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 1.2 }}
-                className="mt-10 text-center"
-              >
-                <p className="text-sm text-gray-400 mb-4">
-                  FLEEKSプレミアム会員になると
-                </p>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
-                  <div className="bg-white/5 rounded-lg p-4">
-                    <div className="text-blue-400 mb-2">🎬</div>
-                    <div className="text-white font-semibold">無制限視聴</div>
-                    <div className="text-gray-400">全動画を時間制限なしで</div>
-                  </div>
-                  <div className="bg-white/5 rounded-lg p-4">
-                    <div className="text-green-400 mb-2">📱</div>
-                    <div className="text-white font-semibold">全デバイス対応</div>
-                    <div className="text-gray-400">PC・スマホ・タブレット</div>
-                  </div>
-                  <div className="bg-white/5 rounded-lg p-4">
-                    <div className="text-purple-400 mb-2">⭐</div>
-                    <div className="text-white font-semibold">プレミアム機能</div>
-                    <div className="text-gray-400">高画質・オフライン視聴</div>
-                  </div>
-                </div>
-              </motion.div>
+            </div>
+
+            {/* 音声継続の表示 */}
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 1.2, duration: 0.8 }}
+              className="absolute bottom-4 left-4 bg-green-600/20 border border-green-500/30 text-green-300 px-3 py-1 rounded-full text-sm flex items-center space-x-2"
+            >
+              <div className="animate-pulse w-2 h-2 bg-green-400 rounded-full"></div>
+              <span>音声継続中</span>
             </motion.div>
           </motion.div>
         )}
