@@ -134,7 +134,7 @@ export default function VideoPlayer({ videoId, title, isPremium, userMembershipT
               el.style.display = 'none !important'
               el.style.visibility = 'hidden !important'
               el.style.pointerEvents = 'none !important'
-              el.remove()
+              // Removed el.remove() to prevent React DOM conflicts
             }
           })
         })

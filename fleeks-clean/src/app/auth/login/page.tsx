@@ -38,7 +38,7 @@ export default function LoginPage() {
           .from('fleeks_profiles')
           .select('role')
           .eq('id', data.user.id)
-          .single()
+          .maybeSingle()
 
         console.log('Login - Profile:', profileData)
         console.log('Login - Profile Error:', profileError)
@@ -47,7 +47,7 @@ export default function LoginPage() {
         const isAdminEmail = data.user.email === 'greenroom51@gmail.com'
         
         // FLEEKSプロファイルが存在しない場合の処理
-        if (!profileData && profileError?.code === 'PGRST116') {
+        if (!profileData) {
           // 管理者メールアドレスの場合は通過させる
           if (isAdminEmail) {
             console.log('Login - Admin email without profile, redirecting to /admin')
