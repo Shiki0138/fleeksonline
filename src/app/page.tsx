@@ -1,324 +1,221 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useAuth } from '@/components/Providers'
-import { supabase } from '@/lib/supabase'
 import { motion } from 'framer-motion'
-
-interface Video {
-  id: string
-  title: string
-  description: string | null
-  youtube_id: string
-  thumbnail_url: string | null
-  category: string | null
-  is_premium: boolean
-  preview_seconds: number
-  view_count: number
-}
+import { TrendingUp, Target, MessageSquare, Brain, BarChart, Users, ArrowRight, CheckCircle } from 'lucide-react'
+import Image from 'next/image'
 
 export default function HomePage() {
-  const { user, loading } = useAuth()
-  const [videos, setVideos] = useState<Video[]>([])
-  const [featuredVideos, setFeaturedVideos] = useState<Video[]>([])
-  const [loadingVideos, setLoadingVideos] = useState(true)
+  const [isLoaded, setIsLoaded] = useState(false)
 
   useEffect(() => {
-    fetchVideos()
-  }, [user])
+    setIsLoaded(true)
+  }, [])
 
-  const fetchVideos = async () => {
-    try {
-      setLoadingVideos(true)
-      
-      // 動画一覧を取得
-      const { data: videosData, error } = await supabase
-        .from('beauty_videos')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(12)
-
-      if (error) {
-        console.error('Error fetching videos:', error)
-        return
-      }
-
-      setVideos(videosData || [])
-      
-      // 注目動画（view_countが多い）を取得
-      const { data: featuredData } = await supabase
-        .from('beauty_videos')
-        .select('*')
-        .order('view_count', { ascending: false })
-        .limit(3)
-
-      setFeaturedVideos(featuredData || [])
-      
-    } catch (error) {
-      console.error('Error in fetchVideos:', error)
-    } finally {
-      setLoadingVideos(false)
-    }
-  }
-
-  const handleAuth = async (type: 'signin' | 'signup') => {
-    try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: `${window.location.origin}/auth/callback`
-        }
-      })
-      
-      if (error) {
-        console.error('Auth error:', error)
-      }
-    } catch (error) {
-      console.error('Error in handleAuth:', error)
-    }
-  }
-
-  if (loading) {
-    return (
-      <div className="splash-screen">
-        <div className="text-center">
-          <div className="ai-shimmer w-32 h-32 rounded-full bg-gradient-to-r from-purple-400 to-pink-400 mx-auto mb-8"></div>
-          <h1 className="text-4xl font-bold gradient-text mb-4">Fleeks AI</h1>
-          <p className="text-xl text-white/80">最先端の美容学習プラットフォーム</p>
-        </div>
-      </div>
-    )
-  }
+  const features = [
+    {
+      title: 'Instagram集客戦略',
+      description: 'フォロワー増加とエンゲージメント向上の実践的手法',
+      icon: TrendingUp,
+    },
+    {
+      title: '経営戦略・マーケティング',
+      description: 'データドリブンな意思決定と市場分析手法',
+      icon: BarChart,
+    },
+    {
+      title: '接客問題解決スキル',
+      description: '顧客満足度向上のための実践的アプローチ',
+      icon: Users,
+    },
+    {
+      title: '心理学的アプローチ',
+      description: '顧客心理を理解し、ビジネスに活かす方法',
+      icon: Brain,
+    },
+  ]
 
   return (
-    <div className="min-h-screen">
-      {/* ヘッダー */}
-      <header className="glass-morphism m-4 p-6 sticky top-4 z-30">
-        <div className="flex items-center justify-between max-w-7xl mx-auto">
-          <div className="flex items-center space-x-4">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-r from-purple-400 to-pink-400 animate-pulse-glow"></div>
-            <h1 className="text-2xl font-bold gradient-text">Fleeks AI</h1>
-          </div>
-          
-          <nav className="hidden md:flex items-center space-x-8">
-            <a href="#videos" className="text-white/80 hover:text-white transition-colors">動画</a>
-            <a href="#community" className="text-white/80 hover:text-white transition-colors">コミュニティ</a>
-            <a href="#ai-tools" className="text-white/80 hover:text-white transition-colors">AIツール</a>
-          </nav>
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 text-white overflow-hidden">
+      {/* Animated Background */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute inset-0 bg-[url('/grid.svg')] bg-center opacity-10"></div>
+        <div className="absolute top-0 -left-4 w-72 h-72 md:w-96 md:h-96 bg-blue-600 rounded-full mix-blend-multiply filter blur-2xl md:blur-3xl opacity-20 animate-blob hidden md:block"></div>
+        <div className="absolute top-0 -right-4 w-72 h-72 md:w-96 md:h-96 bg-indigo-600 rounded-full mix-blend-multiply filter blur-2xl md:blur-3xl opacity-20 animate-blob animation-delay-2000 hidden md:block"></div>
+        <div className="absolute -bottom-8 left-20 w-72 h-72 md:w-96 md:h-96 bg-slate-600 rounded-full mix-blend-multiply filter blur-2xl md:blur-3xl opacity-20 animate-blob animation-delay-4000 hidden md:block"></div>
+      </div>
 
-          <div className="flex items-center space-x-4">
-            {user ? (
-              <div className="flex items-center space-x-4">
-                <span className="text-sm text-white/80">
-                  {user.user_metadata?.full_name || user.email}
-                </span>
-                <div className="w-8 h-8 rounded-full bg-gradient-to-r from-purple-400 to-pink-400"></div>
+      <div className="relative z-10">
+        {/* Navigation */}
+        <nav className="container mx-auto px-6 py-6">
+          <div className="flex justify-between items-center">
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              className="flex items-center space-x-2"
+            >
+              <Target className="w-8 h-8 text-blue-400" />
+              <span className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent">
+                FLEEKS
+              </span>
+            </motion.div>
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              className="flex items-center space-x-6"
+            >
+              <a href="/auth/login" className="bg-white/10 backdrop-blur-sm px-3 py-2 rounded-full hover:bg-white/20 transition text-sm whitespace-nowrap md:bg-transparent md:px-0 md:py-0 md:rounded-none md:hover:text-blue-400 md:hover:bg-transparent md:text-base">
+                ログイン
+              </a>
+              <a href="/auth/signup" className="bg-gradient-to-r from-blue-500 to-indigo-600 px-4 py-2 rounded-full hover:shadow-lg hover:shadow-blue-500/25 transition text-sm font-medium whitespace-nowrap md:px-6">
+                無料会員登録
+              </a>
+            </motion.div>
+          </div>
+        </nav>
+
+        {/* Hero Section */}
+        <div className="container mx-auto px-6 py-20">
+          <div className="text-center max-w-5xl mx-auto">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: isLoaded ? 1 : 0, y: isLoaded ? 0 : 20 }}
+              transition={{ duration: 0.8 }}
+              className="mb-8"
+            >
+              <div className="inline-flex items-center bg-white/10 backdrop-blur-sm rounded-full px-4 py-2 mb-8">
+                <BarChart className="w-5 h-5 mr-2 text-blue-400" />
+                <span className="text-sm">AI搭載のビジネス成長支援プラットフォーム</span>
               </div>
-            ) : (
-              <div className="flex items-center space-x-2">
-                <button 
-                  onClick={() => handleAuth('signin')}
-                  className="btn-secondary text-sm"
+              
+              <h1 className="text-4xl sm:text-6xl md:text-7xl font-bold mb-6 leading-tight">
+                <span className="block bg-gradient-to-r from-blue-400 via-indigo-400 to-purple-400 bg-clip-text text-transparent whitespace-nowrap">ローカルビジネスの</span>
+                <span className="block bg-gradient-to-r from-blue-400 via-indigo-400 to-purple-400 bg-clip-text text-transparent">成功へ</span>
+                <br />
+                <span className="text-2xl sm:text-3xl md:text-5xl whitespace-nowrap">集客と経営戦略を科学する</span>
+              </h1>
+              
+              <p className="text-xl text-gray-300 mb-12 max-w-3xl mx-auto">
+                Instagram集客、経営戦略、マーケティング、接客問題解決、心理学的アプローチを統合。
+                データとAIの力で、あなたのビジネスを次のレベルへ導きます。
+              </p>
+
+              <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16">
+                <motion.a
+                  href="/auth/signup"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="group bg-gradient-to-r from-blue-500 to-indigo-600 px-8 py-4 rounded-full font-semibold text-lg shadow-xl hover:shadow-2xl hover:shadow-blue-500/25 transition flex items-center justify-center"
                 >
-                  ログイン
-                </button>
-                <button 
-                  onClick={() => handleAuth('signup')}
-                  className="btn-primary text-sm"
-                >
-                  無料体験
-                </button>
+                  無料会員登録
+                  <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition" />
+                </motion.a>
               </div>
-            )}
-          </div>
-        </div>
-      </header>
 
-      {/* メインコンテンツ */}
-      <main className="max-w-7xl mx-auto px-4 pb-20">
-        {/* ヒーローセクション */}
-        <motion.section 
-          initial={{ opacity: 0, y: 50 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-          className="text-center py-20"
-        >
-          <h1 className="text-6xl md:text-8xl font-bold gradient-text mb-8 animate-gradient-shift">
-            美容業界の
-            <br />
-            未来を創る
-          </h1>
-          <p className="text-xl md:text-2xl text-white/80 mb-12 max-w-3xl mx-auto">
-            AI技術で美容師のスキルアップを革新。個別最適化された学習体験で、
-            あなたの可能性を最大限に引き出します。
-          </p>
-          
-          <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
-            <button className="btn-primary text-lg px-8 py-4">
-              🚀 無料で始める
-            </button>
-            <button className="btn-secondary text-lg px-8 py-4">
-              📹 デモを見る
-            </button>
-          </div>
-        </motion.section>
-
-        {/* 注目動画セクション */}
-        {featuredVideos.length > 0 && (
-          <motion.section 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.4 }}
-            className="pb-16"
-          >
-            <h2 className="text-4xl font-bold text-center mb-12 gradient-text">
-              🔥 注目の動画
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {featuredVideos.map((video, index) => (
-                <motion.div
-                  key={video.id}
-                  initial={{ opacity: 0, y: 50 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.6 + index * 0.1 }}
-                  className="video-card group cursor-pointer"
-                >
-                  <div className="relative mb-4 overflow-hidden rounded-lg">
-                    <div className="aspect-video bg-gradient-to-r from-purple-400/20 to-pink-400/20 flex items-center justify-center">
-                      <div className="text-6xl opacity-50">🎬</div>
-                    </div>
-                    {!user && (
-                      <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
-                        <div className="text-center">
-                          <div className="text-2xl mb-2">🔒</div>
-                          <p className="text-sm">会員限定</p>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                  <h3 className="text-xl font-semibold mb-2 group-hover:gradient-text transition-all">
-                    {video.title}
-                  </h3>
-                  <p className="text-white/60 text-sm mb-4 line-clamp-2">
-                    {video.description || 'プロの技術を学べる実践的なコンテンツです。'}
-                  </p>
-                  <div className="flex items-center justify-between text-sm text-white/40">
-                    <span>{video.category || '技術・テクニック'}</span>
-                    <span>👁 {video.view_count || 0}</span>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-          </motion.section>
-        )}
-
-        {/* 機能紹介セクション */}
-        <motion.section 
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.8 }}
-          className="py-16"
-        >
-          <h2 className="text-4xl font-bold text-center mb-16 gradient-text">
-            🤖 AI搭載の革新機能
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {[
-              {
-                icon: '🎯',
-                title: 'パーソナライゼーション',
-                description: 'あなたの学習スタイルに合わせてAIが最適なコンテンツを提案'
-              },
-              {
-                icon: '📱',
-                title: 'AR美容シミュレーション',
-                description: 'カメラを使って実際にメイクアップを試せるAR機能'
-              },
-              {
-                icon: '🎮',
-                title: '3D インタラクション',
-                description: 'ジェスチャーや音声でコントロールできる直感的なUI'
-              },
-              {
-                icon: '💬',
-                title: 'AIアシスタント',
-                description: '24時間対応のAI美容コンサルタントがサポート'
-              },
-              {
-                icon: '📊',
-                title: 'スキル分析',
-                description: 'AIがあなたの成長を分析し、次のステップを提案'
-              },
-              {
-                icon: '🌐',
-                title: 'グローバルコミュニティ',
-                description: '世界中の美容師とつながり、知識を共有'
-              }
-            ].map((feature, index) => (
+              {/* Screenshot Section */}
               <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 50 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 1 + index * 0.1 }}
-                className="glass-morphism p-8 text-center hover:neon-glow transition-all duration-300 animate-float"
-                style={{ animationDelay: `${index * 0.2}s` }}
+                initial={{ opacity: 0, y: 40 }}
+                animate={{ opacity: isLoaded ? 1 : 0, y: isLoaded ? 0 : 40 }}
+                transition={{ delay: 0.5 }}
+                className="bg-white/5 backdrop-blur-sm rounded-2xl p-8 mb-16"
               >
-                <div className="text-4xl mb-4">{feature.icon}</div>
-                <h3 className="text-xl font-semibold mb-4 gradient-text">
-                  {feature.title}
-                </h3>
-                <p className="text-white/70">
-                  {feature.description}
-                </p>
+                <h2 className="text-2xl font-semibold mb-4">ログイン後のダッシュボード画面</h2>
+                <div className="bg-gradient-to-br from-blue-800/20 to-indigo-800/20 rounded-lg p-4 mb-4 overflow-hidden">
+                  <div className="aspect-video rounded-lg overflow-hidden shadow-2xl">
+                    <Image
+                      src="/images/dashboard-preview.png"
+                      alt="FLEEKSダッシュボード - 動画コンテンツとブログ記事の管理画面"
+                      width={1600}
+                      height={900}
+                      className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
+                      priority
+                    />
+                  </div>
+                </div>
+                <div className="grid md:grid-cols-2 gap-4 text-sm">
+                  <div className="bg-white/5 rounded-lg p-4">
+                    <h3 className="font-semibold text-blue-400 mb-2 flex items-center">
+                      <Target className="w-4 h-4 mr-2" />
+                      動画学習コンテンツ
+                    </h3>
+                    <p className="text-gray-300">
+                      Instagram集客、経営戦略、接客スキルなど実践的な動画コンテンツを体系的に学習
+                    </p>
+                  </div>
+                  <div className="bg-white/5 rounded-lg p-4">
+                    <h3 className="font-semibold text-indigo-400 mb-2 flex items-center">
+                      <BarChart className="w-4 h-4 mr-2" />
+                      ブログ・記事コンテンツ
+                    </h3>
+                    <p className="text-gray-300">
+                      最新のマーケティングトレンドや実践事例を定期更新でお届け
+                    </p>
+                  </div>
+                </div>
               </motion.div>
-            ))}
-          </div>
-        </motion.section>
 
-        {/* CTA セクション */}
-        <motion.section 
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 1.4 }}
-          className="text-center py-20"
-        >
-          <div className="glass-morphism p-12 max-w-4xl mx-auto">
-            <h2 className="text-4xl font-bold mb-6 gradient-text">
-              今すぐ美容業界の未来に参加しよう
-            </h2>
-            <p className="text-xl text-white/80 mb-8">
-              月額7,980円で全ての機能が使い放題。
-              最初の7日間は無料でお試しいただけます。
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <button className="btn-primary text-lg px-8 py-4">
-                💳 無料トライアル開始
-              </button>
-              <button className="btn-secondary text-lg px-8 py-4">
-                📞 詳細を相談する
-              </button>
-            </div>
-          </div>
-        </motion.section>
-      </main>
-
-      {/* フッター */}
-      <footer className="glass-morphism m-4 mt-20 p-8">
-        <div className="max-w-7xl mx-auto text-center">
-          <div className="flex items-center justify-center space-x-4 mb-6">
-            <div className="w-8 h-8 rounded-full bg-gradient-to-r from-purple-400 to-pink-400"></div>
-            <span className="text-xl font-bold gradient-text">Fleeks AI</span>
-          </div>
-          <p className="text-white/60 mb-4">
-            美容業界の未来を創るAI学習プラットフォーム
-          </p>
-          <div className="flex justify-center space-x-8 text-sm text-white/40">
-            <a href="#" className="hover:text-white transition-colors">プライバシーポリシー</a>
-            <a href="#" className="hover:text-white transition-colors">利用規約</a>
-            <a href="#" className="hover:text-white transition-colors">お問い合わせ</a>
+              {/* Content Features */}
+              <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+                {features.map((feature, index) => (
+                  <motion.div
+                    key={feature.title}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: isLoaded ? 1 : 0, y: isLoaded ? 0 : 20 }}
+                    transition={{ delay: 0.2 + index * 0.1 }}
+                    className="bg-white/10 backdrop-blur-sm rounded-xl p-6 hover:bg-white/15 transition text-left"
+                  >
+                    <div className="flex items-start">
+                      <feature.icon className="w-8 h-8 text-blue-400 mr-4 flex-shrink-0" />
+                      <div>
+                        <h3 className="text-lg font-semibold mb-2">{feature.title}</h3>
+                        <p className="text-gray-300 text-sm">{feature.description}</p>
+                      </div>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            </motion.div>
           </div>
         </div>
-      </footer>
+
+        {/* Features Section */}
+        <div className="container mx-auto px-6 py-20">
+          <motion.div
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            transition={{ duration: 0.8 }}
+            className="text-center mb-12"
+          >
+            <h2 className="text-3xl font-bold mb-4">包括的な学習コンテンツ</h2>
+            <p className="text-gray-300 max-w-2xl mx-auto">
+              実践的なスキルから理論まで、ビジネス成長に必要なすべてを網羅
+            </p>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            transition={{ duration: 0.8 }}
+            className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto"
+          >
+            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 hover:bg-white/15 transition">
+              <Target className="w-12 h-12 text-blue-400 mb-4" />
+              <h3 className="text-xl font-semibold mb-3">目標設定と戦略立案</h3>
+              <p className="text-gray-300">SMART目標の設定方法と実行可能な戦略の構築</p>
+            </div>
+            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 hover:bg-white/15 transition">
+              <BarChart className="w-12 h-12 text-indigo-400 mb-4" />
+              <h3 className="text-xl font-semibold mb-3">データ分析と改善</h3>
+              <p className="text-gray-300">KPIの設定、分析、PDCAサイクルの実践</p>
+            </div>
+            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 hover:bg-white/15 transition">
+              <Brain className="w-12 h-12 text-purple-400 mb-4" />
+              <h3 className="text-xl font-semibold mb-3">AI活用術</h3>
+              <p className="text-gray-300">最新のAIツールを活用した業務効率化</p>
+            </div>
+          </motion.div>
+        </div>
+      </div>
     </div>
   )
 }

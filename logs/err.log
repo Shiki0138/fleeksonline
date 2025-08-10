@@ -1,0 +1,12 @@
+2025-08-10T01:04:56: 投稿エラー: {
+2025-08-10T01:04:56:   code: 'PGRST204',
+2025-08-10T01:04:56:   details: null,
+2025-08-10T01:04:56:   hint: null,
+2025-08-10T01:04:56:   message: "Could not find the 'is_premium' column of 'blog_posts' in the schema cache"
+2025-08-10T01:04:56: }
+2025-08-10T01:04:58: 投稿エラー: {
+2025-08-10T01:04:58:   code: 'PGRST204',
+2025-08-10T01:04:58:   details: null,
+2025-08-10T01:04:58:   hint: null,
+2025-08-10T01:04:58:   message: "Could not find the 'is_premium' column of 'blog_posts' in the schema cache"
+2025-08-10T01:04:58: }

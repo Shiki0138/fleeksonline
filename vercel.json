@@ -1,38 +1,13 @@
 {
-  "version": 2,
-  "name": "fleeks-platform",
-  "alias": ["app.fleeks.jp"],
-  "public": false,
-  "github": {
-    "silent": true
-  },
-  "build": {
-    "env": {
-      "NODE_ENV": "production"
-    }
-  },
-  "buildCommand": "cd fleeks-clean && npm ci --legacy-peer-deps && npm run build",
-  "outputDirectory": "fleeks-clean/.next",
-  "installCommand": "cd fleeks-clean && npm ci --legacy-peer-deps",
   "framework": "nextjs",
-  "functions": {
-    "fleeks-clean/src/app/**": {
-      "runtime": "nodejs20.x"
-    }
-  },
+  "buildCommand": "npm run build",
+  "installCommand": "npm install --legacy-peer-deps",
   "env": {
     "NEXT_PUBLIC_SUPABASE_URL": "@supabase_url",
     "NEXT_PUBLIC_SUPABASE_ANON_KEY": "@supabase_anon_key",
     "NEXT_PUBLIC_APP_NAME": "FLEEKS Platform",
-    "NEXT_PUBLIC_APP_URL": "@app_url",
-    "NEXT_PUBLIC_YOUTUBE_API_KEY": "@youtube_api_key"
+    "NEXT_PUBLIC_APP_URL": "@app_url"
   },
-  "rewrites": [
-    {
-      "source": "/api/:path*",
-      "destination": "https://fleeks-backend.herokuapp.com/api/:path*"
-    }
-  ],
   "headers": [
     {
       "source": "/(.*)",
