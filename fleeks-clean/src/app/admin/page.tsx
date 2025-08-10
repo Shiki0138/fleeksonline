@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { Settings, Video, FileText, Users, BarChart3, Target, LogOut } from 'lucide-react'
+import { Settings, Video, FileText, Users, BarChart3, Target, LogOut, BookOpen } from 'lucide-react'
 import { supabase } from '@/lib/supabase-client'
 import type { Profile } from '@/lib/supabase-client'
 
@@ -79,6 +79,13 @@ export default function AdminDashboard() {
       icon: Video,
       href: '/admin/videos/new',
       color: 'from-red-500 to-red-600'
+    },
+    {
+      title: '教育コンテンツ', 
+      description: '美容師向け教育コンテンツの管理',
+      icon: BookOpen,
+      href: '/admin/education',
+      color: 'from-purple-500 to-purple-600'
     },
     {
       title: 'ブログ管理', 

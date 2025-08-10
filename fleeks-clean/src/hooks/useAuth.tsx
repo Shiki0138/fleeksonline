@@ -23,14 +23,21 @@ export function useAuth() {
         setUser(user)
         
         if (user) {
-          // Get membership type from users table
-          const { data: userData } = await supabase
-            .from('users')
-            .select('membership_type')
+          // Get membership type from fleeks_profiles table
+          const { data: profileData } = await supabase
+            .from('fleeks_profiles')
+            .select('role')
             .eq('id', user.id)
             .single()
           
-          setMembershipType(userData?.membership_type || 'free')
+          // roleをmembershipTypeにマッピング
+          if (profileData?.role === 'admin') {
+            setMembershipType('vip')
+          } else if (profileData?.role === 'paid') {
+            setMembershipType('premium')
+          } else {
+            setMembershipType('free')
+          }
         } else {
           setMembershipType(null)
         }
@@ -47,13 +54,20 @@ export function useAuth() {
       setUser(session?.user ?? null)
       
       if (session?.user) {
-        const { data: userData } = await supabase
-          .from('users')
-          .select('membership_type')
+        const { data: profileData } = await supabase
+          .from('fleeks_profiles')
+          .select('role')
           .eq('id', session.user.id)
           .single()
         
-        setMembershipType(userData?.membership_type || 'free')
+        // roleをmembershipTypeにマッピング
+        if (profileData?.role === 'admin') {
+          setMembershipType('vip')
+        } else if (profileData?.role === 'paid') {
+          setMembershipType('premium')
+        } else {
+          setMembershipType('free')
+        }
       } else {
         setMembershipType(null)
       }
