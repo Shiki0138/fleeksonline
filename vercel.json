@@ -1,11 +1,23 @@
 {
-  "buildCommand": "cd fleeks-clean && npm install --legacy-peer-deps && npm run build",
+  "version": 2,
+  "name": "fleeks-platform",
+  "alias": ["app.fleeks.jp"],
+  "public": false,
+  "github": {
+    "silent": true
+  },
+  "build": {
+    "env": {
+      "NODE_ENV": "production"
+    }
+  },
+  "buildCommand": "cd fleeks-clean && npm ci --legacy-peer-deps && npm run build",
   "outputDirectory": "fleeks-clean/.next",
-  "installCommand": "cd fleeks-clean && npm install --legacy-peer-deps",
+  "installCommand": "cd fleeks-clean && npm ci --legacy-peer-deps",
   "framework": "nextjs",
   "functions": {
-    "fleeks-clean/src/app/api/*/route.{ts,js}": {
-      "runtime": "nodejs18.x"
+    "fleeks-clean/src/app/**": {
+      "runtime": "nodejs20.x"
     }
   },
   "env": {
