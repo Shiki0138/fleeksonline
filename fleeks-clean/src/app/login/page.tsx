@@ -10,12 +10,14 @@ export default function LoginPage() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [success, setSuccess] = useState('')
   const router = useRouter()
   const supabase = createClientComponentClient()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
+    setSuccess('')
     setLoading(true)
 
     try {
@@ -25,24 +27,59 @@ export default function LoginPage() {
       })
 
       if (error) {
-        setError(error.message)
+        // Translate common Supabase errors to Japanese
+        let errorMsg = error.message
+        if (error.message.includes('Invalid login credentials')) {
+          errorMsg = 'メールアドレスまたはパスワードが正しくありません'
+        } else if (error.message.includes('Email not confirmed')) {
+          errorMsg = 'メールアドレスが確認されていません。確認メールをご確認ください。'
+        } else if (error.message.includes('Too many requests')) {
+          errorMsg = 'ログイン試行回数が上限に達しました。しばらくお待ちください。'
+        }
+        setError(errorMsg)
         return
       }
 
       if (data?.user) {
-        // Check if user is admin
-        const { data: profile } = await supabase
-          .from('fleeks_profiles')
-          .select('role')
-          .eq('id', data.user.id)
-          .single()
-
-        if (profile?.role === 'admin') {
-          router.push('/admin')
-        } else {
-          router.push('/dashboard')
+        // Check if user is admin - check by email first, then profile
+        const isAdminEmail = data.user.email === 'greenroom51@gmail.com'
+        
+        if (isAdminEmail) {
+          setSuccess('管理者としてログインしています...')
+          setTimeout(() => {
+            router.push('/admin')
+            router.refresh()
+          }, 1000)
+          return
         }
-        router.refresh()
+
+        // Check user role in profile table
+        try {
+          const { data: profile } = await supabase
+            .from('fleeks_profiles')
+            .select('role')
+            .eq('id', data.user.id)
+            .single()
+
+          if (profile?.role === 'admin') {
+            setSuccess('管理者としてログインしています...')
+            setTimeout(() => {
+              router.push('/admin')
+            }, 1000)
+          } else {
+            setSuccess('ログインしています...')
+            setTimeout(() => {
+              router.push('/dashboard')
+            }, 1000)
+          }
+        } catch (profileError) {
+          console.log('Profile check failed, redirecting to dashboard:', profileError)
+          // If profile check fails, still allow login to dashboard
+          setSuccess('ログインしています...')
+          setTimeout(() => {
+            router.push('/dashboard')
+          }, 1000)
+        }
       }
     } catch (err) {
       console.error('Login error:', err)
@@ -112,6 +149,21 @@ export default function LoginPage() {
                   </h3>
                   <div className="mt-2 text-sm text-red-700">
                     <p>{error}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {success && (
+            <div className="rounded-md bg-green-50 p-4">
+              <div className="flex">
+                <div className="ml-3">
+                  <h3 className="text-sm font-medium text-green-800">
+                    ログイン成功
+                  </h3>
+                  <div className="mt-2 text-sm text-green-700">
+                    <p>{success}</p>
                   </div>
                 </div>
               </div>
