@@ -15,7 +15,7 @@ export async function middleware(req: NextRequest) {
   if (pathname.startsWith('/admin')) {
     if (!session) {
       const redirectUrl = req.nextUrl.clone()
-      redirectUrl.pathname = '/auth/login'
+      redirectUrl.pathname = '/login'
       redirectUrl.searchParams.set('redirect', pathname)
       return NextResponse.redirect(redirectUrl)
     }
@@ -41,7 +41,7 @@ export async function middleware(req: NextRequest) {
   if (pathname.startsWith('/dashboard')) {
     if (!session) {
       const redirectUrl = req.nextUrl.clone()
-      redirectUrl.pathname = '/auth/login'
+      redirectUrl.pathname = '/login'
       redirectUrl.searchParams.set('redirect', pathname)
       return NextResponse.redirect(redirectUrl)
     }
