@@ -207,7 +207,7 @@ export default function VideoPage() {
                   </div>
                   <div className="flex items-center space-x-2">
                     <Eye className="w-4 h-4" />
-                    <span>{video.view_count} 回視聴</span>
+                    <span>{video.view_count || 0} 回視聴</span>
                   </div>
                 </div>
 
