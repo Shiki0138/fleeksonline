@@ -93,7 +93,6 @@ export default function LoginPage() {
         
         // ダッシュボードへリダイレクト
         router.push('/dashboard')
-        router.refresh()
       } else {
         setError('ログインに失敗しました。もう一度お試しください。')
       }
