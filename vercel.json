@@ -1,7 +1,13 @@
 {
   "buildCommand": "cd fleeks-clean && npm install --legacy-peer-deps && npm run build",
   "outputDirectory": "fleeks-clean/.next",
+  "installCommand": "cd fleeks-clean && npm install --legacy-peer-deps",
   "framework": "nextjs",
+  "functions": {
+    "fleeks-clean/src/app/api/*/route.{ts,js}": {
+      "runtime": "nodejs18.x"
+    }
+  },
   "env": {
     "NEXT_PUBLIC_SUPABASE_URL": "@supabase_url",
     "NEXT_PUBLIC_SUPABASE_ANON_KEY": "@supabase_anon_key",
