@@ -1,6 +1,7 @@
 import './globals.css'
 import type { Metadata } from 'next'
 import ServiceWorkerProvider from '@/components/ServiceWorkerProvider'
+import { Toaster } from 'react-hot-toast'
 
 export const metadata: Metadata = {
   title: 'FLEEKS Platform',
@@ -46,6 +47,28 @@ export default function RootLayout({
       <body>
         <ServiceWorkerProvider>
           {children}
+          <Toaster 
+            position="top-right"
+            toastOptions={{
+              duration: 4000,
+              style: {
+                background: '#363636',
+                color: '#fff',
+              },
+              success: {
+                iconTheme: {
+                  primary: '#10b981',
+                  secondary: '#fff',
+                },
+              },
+              error: {
+                iconTheme: {
+                  primary: '#ef4444',
+                  secondary: '#fff',
+                },
+              },
+            }}
+          />
         </ServiceWorkerProvider>
       </body>
     </html>

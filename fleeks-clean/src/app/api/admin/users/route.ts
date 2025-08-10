@@ -118,6 +118,7 @@ export async function GET(request: NextRequest) {
         membership_type: profile?.membership_type || 'free',
         membership_expires_at: profile?.membership_expires_at || null,
         role: profile?.role || 'user',
+        status: profile?.status || 'active',
         created_at: user.created_at,
         updated_at: profile?.updated_at || user.updated_at
       }
@@ -267,6 +268,57 @@ export async function POST(request: NextRequest) {
 
         if (passwordError) throw passwordError
         return NextResponse.json({ success: true })
+
+      case 'updateStatus':
+        // Update user status
+        const { error: statusError } = await supabaseAdmin
+          .from('fleeks_profiles')
+          .update({ 
+            status: data.status,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', userId)
+
+        if (statusError) throw statusError
+        return NextResponse.json({ success: true })
+
+      case 'createUser':
+        // Create new user
+        const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
+          email: data.email,
+          password: data.password,
+          email_confirm: true,
+          user_metadata: {
+            full_name: data.full_name || data.email.split('@')[0],
+            username: data.username || data.email.split('@')[0]
+          }
+        })
+
+        if (createError) throw createError
+
+        if (newUser.user) {
+          // Create profile for the new user
+          const { error: profileError } = await supabaseAdmin
+            .from('fleeks_profiles')
+            .insert({
+              id: newUser.user.id,
+              email: data.email,
+              username: data.username || data.email.split('@')[0],
+              full_name: data.full_name || data.email.split('@')[0],
+              membership_type: data.membership_type || 'free',
+              membership_expires_at: data.membership_type === 'free' 
+                ? null 
+                : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+              role: data.role || 'user',
+              status: 'active',
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
+            })
+
+          if (profileError) throw profileError
+        }
+
+        return NextResponse.json({ success: true, user: newUser.user })
 
       default:
         return NextResponse.json({ error: 'Invalid action' }, { status: 400 })

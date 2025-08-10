@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { ArrowLeft, Users, Crown, Shield, Calendar, Mail, Search, Key, RefreshCw } from 'lucide-react'
+import { ArrowLeft, Users, Crown, Shield, Calendar, Mail, Search, Key, RefreshCw, Plus, Ban, CheckCircle } from 'lucide-react'
 import { supabase } from '@/lib/supabase-client'
 import toast from 'react-hot-toast'
 
@@ -15,6 +15,7 @@ interface User {
   membership_type: 'free' | 'premium' | 'vip'
   membership_expires_at?: string
   role: 'user' | 'admin'
+  status?: 'active' | 'suspended'
   created_at: string
   updated_at: string
 }
@@ -29,6 +30,16 @@ export default function UserManagementPage() {
   const [selectedUser, setSelectedUser] = useState<User | null>(null)
   const [newPassword, setNewPassword] = useState('')
   const [isUpdatingPassword, setIsUpdatingPassword] = useState(false)
+  const [showCreateModal, setShowCreateModal] = useState(false)
+  const [newUserForm, setNewUserForm] = useState({
+    email: '',
+    password: '',
+    full_name: '',
+    username: '',
+    membership_type: 'free' as 'free' | 'premium' | 'vip',
+    role: 'user' as 'user' | 'admin'
+  })
+  const [isCreatingUser, setIsCreatingUser] = useState(false)
 
   useEffect(() => {
     fetchUsers()
@@ -63,6 +74,7 @@ export default function UserManagementPage() {
         membership_type: profile.membership_type,
         membership_expires_at: profile.membership_expires_at,
         role: profile.role,
+        status: profile.status || 'active',
         created_at: userMap.get(profile.id)?.created_at || profile.created_at,
         updated_at: profile.updated_at
       })) || []
@@ -78,15 +90,32 @@ export default function UserManagementPage() {
 
   const handleUpdateMembership = async (userId: string, newType: string) => {
     try {
-      const { error } = await supabase
-        .from('fleeks_profiles')
-        .update({ 
-          membership_type: newType,
-          membership_expires_at: newType === 'free' ? null : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
-        })
-        .eq('id', userId)
+      // Get current user session for auth
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) {
+        toast.error('認証エラー: 再度ログインしてください')
+        return
+      }
 
-      if (error) throw error
+      // Call API to update membership
+      const response = await fetch('/api/admin/users', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`
+        },
+        body: JSON.stringify({
+          action: 'updateMembership',
+          userId,
+          data: { membershipType: newType }
+        })
+      })
+
+      const result = await response.json()
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to update membership')
+      }
 
       toast.success('メンバーシップを更新しました')
       fetchUsers()
@@ -98,12 +127,32 @@ export default function UserManagementPage() {
 
   const handleUpdateRole = async (userId: string, newRole: string) => {
     try {
-      const { error } = await supabase
-        .from('fleeks_profiles')
-        .update({ role: newRole })
-        .eq('id', userId)
+      // Get current user session for auth
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) {
+        toast.error('認証エラー: 再度ログインしてください')
+        return
+      }
 
-      if (error) throw error
+      // Call API to update role
+      const response = await fetch('/api/admin/users', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`
+        },
+        body: JSON.stringify({
+          action: 'updateRole',
+          userId,
+          data: { role: newRole }
+        })
+      })
+
+      const result = await response.json()
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to update role')
+      }
 
       toast.success('ロールを更新しました')
       fetchUsers()
@@ -174,6 +223,107 @@ export default function UserManagementPage() {
     }
   }
 
+  const handleUpdateStatus = async (userId: string, newStatus: 'active' | 'suspended') => {
+    try {
+      // Get current user session for auth
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) {
+        toast.error('認証エラー: 再度ログインしてください')
+        return
+      }
+
+      // Call API to update status
+      const response = await fetch('/api/admin/users', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`
+        },
+        body: JSON.stringify({
+          action: 'updateStatus',
+          userId,
+          data: { status: newStatus }
+        })
+      })
+
+      const result = await response.json()
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to update status')
+      }
+
+      toast.success(`アカウントを${newStatus === 'suspended' ? '停止' : '有効化'}しました`)
+      fetchUsers()
+    } catch (error) {
+      console.error('Error updating status:', error)
+      toast.error('ステータスの更新に失敗しました')
+    }
+  }
+
+  const handleCreateUser = async () => {
+    if (!newUserForm.email || !newUserForm.password) {
+      toast.error('メールアドレスとパスワードは必須です')
+      return
+    }
+
+    setIsCreatingUser(true)
+    try {
+      // Get current user session for auth
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) {
+        toast.error('認証エラー: 再度ログインしてください')
+        return
+      }
+
+      // Call API to create user
+      const response = await fetch('/api/admin/users', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`
+        },
+        body: JSON.stringify({
+          action: 'createUser',
+          data: {
+            email: newUserForm.email,
+            password: newUserForm.password,
+            full_name: newUserForm.full_name || newUserForm.email.split('@')[0],
+            username: newUserForm.username || newUserForm.email.split('@')[0],
+            membership_type: newUserForm.membership_type,
+            role: newUserForm.role
+          }
+        })
+      })
+
+      const result = await response.json()
+
+      if (!response.ok) {
+        throw new Error(result.error || result.details || 'Failed to create user')
+      }
+
+      toast.success('ユーザーを作成しました')
+      setShowCreateModal(false)
+      setNewUserForm({
+        email: '',
+        password: '',
+        full_name: '',
+        username: '',
+        membership_type: 'free',
+        role: 'user'
+      })
+      fetchUsers()
+    } catch (error: any) {
+      console.error('Error creating user:', error)
+      if (error.message?.includes('already registered') || error.message?.includes('already exists')) {
+        toast.error('このメールアドレスは既に登録されています')
+      } else {
+        toast.error('ユーザーの作成に失敗しました: ' + error.message)
+      }
+    } finally {
+      setIsCreatingUser(false)
+    }
+  }
+
   const filteredUsers = users.filter(user => {
     const matchesSearch = user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          user.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -205,6 +355,17 @@ export default function UserManagementPage() {
             <Users className="w-8 h-8 mr-3 text-green-500" />
             ユーザー管理
           </h1>
+
+          {/* アクションボタン */}
+          <div className="mb-6 flex justify-end">
+            <button
+              onClick={() => setShowCreateModal(true)}
+              className="flex items-center space-x-2 bg-green-600 hover:bg-green-700 px-4 py-2 rounded-lg font-medium transition"
+            >
+              <Plus className="w-5 h-5" />
+              <span>新規ユーザー作成</span>
+            </button>
+          </div>
 
           {/* 検索とフィルター */}
           <div className="mb-6 space-y-4">
@@ -302,6 +463,7 @@ export default function UserManagementPage() {
                       <th className="text-left px-6 py-4 text-sm font-medium text-gray-400">ユーザー</th>
                       <th className="text-left px-6 py-4 text-sm font-medium text-gray-400">メンバーシップ</th>
                       <th className="text-left px-6 py-4 text-sm font-medium text-gray-400">ロール</th>
+                      <th className="text-left px-6 py-4 text-sm font-medium text-gray-400">ステータス</th>
                       <th className="text-left px-6 py-4 text-sm font-medium text-gray-400">登録日</th>
                       <th className="text-left px-6 py-4 text-sm font-medium text-gray-400">アクション</th>
                     </tr>
@@ -334,6 +496,19 @@ export default function UserManagementPage() {
                             </span>
                           ) : (
                             <span className="text-gray-400">一般ユーザー</span>
+                          )}
+                        </td>
+                        <td className="px-6 py-4">
+                          {user.status === 'suspended' ? (
+                            <span className="flex items-center text-red-400">
+                              <Ban className="w-4 h-4 mr-1" />
+                              停止中
+                            </span>
+                          ) : (
+                            <span className="flex items-center text-green-400">
+                              <CheckCircle className="w-4 h-4 mr-1" />
+                              有効
+                            </span>
                           )}
                         </td>
                         <td className="px-6 py-4">
@@ -379,6 +554,17 @@ export default function UserManagementPage() {
                               title="パスワードリセット"
                             >
                               <RefreshCw className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={() => handleUpdateStatus(user.id, user.status === 'active' ? 'suspended' : 'active')}
+                              className={`p-2 rounded transition ${
+                                user.status === 'active' 
+                                  ? 'bg-red-500/20 hover:bg-red-500/30 text-red-400' 
+                                  : 'bg-green-500/20 hover:bg-green-500/30 text-green-400'
+                              }`}
+                              title={user.status === 'active' ? 'アカウント停止' : 'アカウント有効化'}
+                            >
+                              {user.status === 'active' ? <Ban className="w-4 h-4" /> : <CheckCircle className="w-4 h-4" />}
                             </button>
                           </div>
                         </td>
@@ -426,6 +612,118 @@ export default function UserManagementPage() {
                       setShowPasswordModal(false)
                       setNewPassword('')
                       setSelectedUser(null)
+                    }}
+                    className="px-4 py-2 border border-white/20 rounded-lg hover:bg-white/10 transition"
+                  >
+                    キャンセル
+                  </button>
+                </div>
+              </motion.div>
+            </div>
+          )}
+
+          {/* ユーザー作成モーダル */}
+          {showCreateModal && (
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="bg-slate-800 rounded-xl p-6 max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto"
+              >
+                <h3 className="text-xl font-semibold mb-4">新規ユーザー作成</h3>
+                
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-400 mb-1">メールアドレス *</label>
+                    <input
+                      type="email"
+                      value={newUserForm.email}
+                      onChange={(e) => setNewUserForm({...newUserForm, email: e.target.value})}
+                      placeholder="user@example.com"
+                      className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:border-blue-400"
+                      required
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-400 mb-1">パスワード *</label>
+                    <input
+                      type="password"
+                      value={newUserForm.password}
+                      onChange={(e) => setNewUserForm({...newUserForm, password: e.target.value})}
+                      placeholder="8文字以上"
+                      className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:border-blue-400"
+                      required
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-400 mb-1">氏名</label>
+                    <input
+                      type="text"
+                      value={newUserForm.full_name}
+                      onChange={(e) => setNewUserForm({...newUserForm, full_name: e.target.value})}
+                      placeholder="山田 太郎"
+                      className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:border-blue-400"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-400 mb-1">ユーザー名</label>
+                    <input
+                      type="text"
+                      value={newUserForm.username}
+                      onChange={(e) => setNewUserForm({...newUserForm, username: e.target.value})}
+                      placeholder="yamada_taro"
+                      className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:border-blue-400"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-400 mb-1">メンバーシップ</label>
+                    <select
+                      value={newUserForm.membership_type}
+                      onChange={(e) => setNewUserForm({...newUserForm, membership_type: e.target.value as any})}
+                      className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:border-blue-400"
+                    >
+                      <option value="free" className="bg-gray-800">無料会員</option>
+                      <option value="premium" className="bg-gray-800">プレミアム会員</option>
+                      <option value="vip" className="bg-gray-800">VIP会員</option>
+                    </select>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-400 mb-1">ロール</label>
+                    <select
+                      value={newUserForm.role}
+                      onChange={(e) => setNewUserForm({...newUserForm, role: e.target.value as any})}
+                      className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:border-blue-400"
+                    >
+                      <option value="user" className="bg-gray-800">一般ユーザー</option>
+                      <option value="admin" className="bg-gray-800">管理者</option>
+                    </select>
+                  </div>
+                </div>
+                
+                <div className="flex space-x-3 mt-6">
+                  <button
+                    onClick={handleCreateUser}
+                    disabled={!newUserForm.email || !newUserForm.password || newUserForm.password.length < 8 || isCreatingUser}
+                    className="flex-1 bg-green-600 hover:bg-green-700 px-4 py-2 rounded-lg font-medium transition disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isCreatingUser ? '作成中...' : 'ユーザーを作成'}
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowCreateModal(false)
+                      setNewUserForm({
+                        email: '',
+                        password: '',
+                        full_name: '',
+                        username: '',
+                        membership_type: 'free',
+                        role: 'user'
+                      })
                     }}
                     className="px-4 py-2 border border-white/20 rounded-lg hover:bg-white/10 transition"
                   >
