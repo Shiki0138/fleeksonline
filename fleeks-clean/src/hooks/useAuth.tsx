@@ -72,7 +72,8 @@ export function useAuth() {
         setMembershipType(null)
       }
       
-      router.refresh()
+      // Removed router.refresh() to prevent infinite loops
+      // The component will re-render automatically when auth state changes
     })
 
     return () => {

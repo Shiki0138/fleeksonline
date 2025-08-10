@@ -6,7 +6,7 @@ import { motion } from 'framer-motion'
 import { Target, Play, Clock, Star, LogOut, User, Crown, Edit, Plus, FileText, Youtube, Settings, CheckCircle } from 'lucide-react'
 import { supabase } from '@/lib/supabase-client'
 import type { Profile, Video } from '@/lib/supabase-client'
-import PasswordChangePrompt from '@/components/PasswordChangePrompt'
+// import PasswordChangePrompt from '@/components/PasswordChangePrompt' // Temporarily removed
 
 // ブログ記事の型定義
 interface BlogPost {
@@ -473,8 +473,8 @@ export default function DashboardPage() {
         </motion.div>
       </main>
       
-      {/* Password Change Prompt */}
-      {showPasswordPrompt && (
+      {/* Password Change Prompt - Temporarily disabled */}
+      {/* showPasswordPrompt && (
         <PasswordChangePrompt 
           onPasswordChanged={() => {
             setShowPasswordPrompt(false)
@@ -482,7 +482,7 @@ export default function DashboardPage() {
             checkUser()
           }}
         />
-      )}
+      ) */}
     </div>
   )
 }
