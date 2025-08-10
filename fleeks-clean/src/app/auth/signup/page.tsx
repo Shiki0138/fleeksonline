@@ -1,10 +1,11 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { Mail, Lock, User, Target, Eye, EyeOff, AlertCircle, CheckCircle } from 'lucide-react'
-import { supabase } from '@/lib/supabase-client'
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import { checkSupabaseConnection } from '@/lib/supabase-browser'
 
 export default function SignupPage() {
   const router = useRouter()
@@ -16,11 +17,32 @@ export default function SignupPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
+  const [connectionStatus, setConnectionStatus] = useState<'checking' | 'connected' | 'failed'>('checking')
+  const supabase = createClientComponentClient()
+
+  useEffect(() => {
+    // Supabase接続確認
+    const checkConnection = async () => {
+      const isConnected = await checkSupabaseConnection()
+      setConnectionStatus(isConnected ? 'connected' : 'failed')
+      if (!isConnected) {
+        setError('Supabaseへの接続に失敗しました。しばらくしてからもう一度お試しください。')
+      }
+    }
+    checkConnection()
+  }, [])
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
     setError(null)
+
+    // 接続確認
+    if (connectionStatus === 'failed') {
+      setError('データベースへの接続に問題があります。しばらくしてからもう一度お試しください。')
+      setIsLoading(false)
+      return
+    }
 
     // パスワード確認
     if (password !== confirmPassword) {
@@ -36,7 +58,9 @@ export default function SignupPage() {
     }
 
     try {
-      const { data, error } = await supabase.auth.signUp({
+      console.log('新規登録試行:', { email, fullName })
+      
+      const { data, error: signUpError } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -46,38 +70,72 @@ export default function SignupPage() {
         }
       })
 
-      if (error) {
-        setError(error.message)
+      console.log('Supabase応答:', { data, error: signUpError })
+
+      if (signUpError) {
+        console.error('SignUp error:', signUpError)
+        
+        // エラーメッセージの詳細化
+        if (signUpError.message.includes('already registered') || 
+            signUpError.message.includes('User already registered') ||
+            signUpError.message.includes('already exists')) {
+          setError('このメールアドレスは既に登録されています。ログインしてください。')
+          setTimeout(() => {
+            router.push('/auth/login')
+          }, 3000)
+        } else if (signUpError.message.includes('rate limit')) {
+          setError('一時的に登録を制限しています。しばらくしてからもう一度お試しください。')
+        } else if (signUpError.message.includes('Invalid email')) {
+          setError('有効なメールアドレスを入力してください。')
+        } else if (signUpError.message.includes('fetch')) {
+          setError('ネットワークエラーが発生しました。接続を確認してください。')
+        } else {
+          setError(`登録エラー: ${signUpError.message}`)
+        }
         return
       }
 
-      if (data.user) {
-        // FLEEKSプロファイルを作成（重要：FLEEKSユーザーとして識別）
-        const { error: profileError } = await supabase
-          .from('fleeks_profiles')
-          .insert({
-            id: data.user.id,
-            username: email.split('@')[0],
-            full_name: fullName || email.split('@')[0],
-            membership_type: 'free',
-            role: 'user',
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          })
+      // ユーザーが作成された場合の処理
+      if (data?.user) {
+        console.log('ユーザー作成成功:', data.user)
+        
+        // FLEEKSプロファイルを作成
+        try {
+          const { error: profileError } = await supabase
+            .from('fleeks_profiles')
+            .insert({
+              id: data.user.id,
+              username: email.split('@')[0],
+              full_name: fullName || email.split('@')[0],
+              membership_type: 'free',
+              role: 'user',
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
+            })
 
-        if (profileError) {
-          console.error('Profile creation error:', profileError)
-          // プロファイル作成に失敗してもユーザー作成は成功しているので続行
+          if (profileError) {
+            console.error('Profile creation error:', profileError)
+            // プロファイル作成に失敗してもユーザー作成は成功しているので続行
+          }
+        } catch (profileErr) {
+          console.error('Profile creation exception:', profileErr)
         }
 
         setSuccess(true)
-        // 確認メールが送信された場合のメッセージ表示
+        // 3秒後にログインページへリダイレクト
+        setTimeout(() => {
+          router.push('/auth/login')
+        }, 3000)
+      } else if (data === null && !signUpError) {
+        // Supabaseが既存ユーザーの場合にnullを返すケース
+        setError('このメールアドレスは既に登録されています。ログインしてください。')
         setTimeout(() => {
           router.push('/auth/login')
         }, 3000)
       }
-    } catch (err) {
-      setError('登録に失敗しました')
+    } catch (err: any) {
+      console.error('予期しないエラー:', err)
+      setError(`登録に失敗しました: ${err.message || '不明なエラー'}`)
     } finally {
       setIsLoading(false)
     }
@@ -107,6 +165,19 @@ export default function SignupPage() {
             FLEEKSへようこそ
           </h1>
           <p className="text-gray-300 mt-2">アカウントを作成</p>
+          
+          {/* 接続状態インジケーター */}
+          <div className="mt-2">
+            {connectionStatus === 'checking' && (
+              <span className="text-sm text-gray-400">接続確認中...</span>
+            )}
+            {connectionStatus === 'connected' && (
+              <span className="text-sm text-green-400">✓ 接続済み</span>
+            )}
+            {connectionStatus === 'failed' && (
+              <span className="text-sm text-red-400">✗ 接続エラー</span>
+            )}
+          </div>
         </div>
 
         {/* Signup Form */}
@@ -131,7 +202,7 @@ export default function SignupPage() {
                   animate={{ opacity: 1, scale: 1 }}
                   className="bg-red-500/20 border border-red-500/50 rounded-lg p-3 flex items-center gap-2"
                 >
-                  <AlertCircle className="w-5 h-5 text-red-400" />
+                  <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0" />
                   <span className="text-sm text-red-300">{error}</span>
                 </motion.div>
               )}
@@ -150,6 +221,7 @@ export default function SignupPage() {
                     className="w-full bg-white/10 border border-white/20 rounded-lg pl-10 pr-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400 transition"
                     placeholder="山田 太郎"
                     required
+                    disabled={isLoading || connectionStatus === 'failed'}
                   />
                 </div>
               </div>
@@ -168,6 +240,7 @@ export default function SignupPage() {
                     className="w-full bg-white/10 border border-white/20 rounded-lg pl-10 pr-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400 transition"
                     placeholder="your@email.com"
                     required
+                    disabled={isLoading || connectionStatus === 'failed'}
                   />
                 </div>
               </div>
@@ -186,6 +259,7 @@ export default function SignupPage() {
                     className="w-full bg-white/10 border border-white/20 rounded-lg pl-10 pr-12 py-3 text-white placeholder-gray-400 focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400 transition"
                     placeholder="6文字以上"
                     required
+                    disabled={isLoading || connectionStatus === 'failed'}
                   />
                   <button
                     type="button"
@@ -215,6 +289,7 @@ export default function SignupPage() {
                     className="w-full bg-white/10 border border-white/20 rounded-lg pl-10 pr-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400 transition"
                     placeholder="パスワードを再入力"
                     required
+                    disabled={isLoading || connectionStatus === 'failed'}
                   />
                 </div>
               </div>
@@ -224,6 +299,7 @@ export default function SignupPage() {
                 <input
                   type="checkbox"
                   required
+                  disabled={isLoading || connectionStatus === 'failed'}
                   className="w-4 h-4 mt-1 bg-white/10 border-white/20 rounded text-blue-500 focus:ring-blue-400"
                 />
                 <label className="ml-2 text-sm text-gray-300">
@@ -236,7 +312,7 @@ export default function SignupPage() {
               {/* Submit Button */}
               <motion.button
                 type="submit"
-                disabled={isLoading}
+                disabled={isLoading || connectionStatus === 'failed'}
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 py-3 rounded-lg font-semibold shadow-lg hover:shadow-xl hover:shadow-blue-500/25 transition disabled:opacity-50 disabled:cursor-not-allowed"
@@ -277,6 +353,13 @@ export default function SignupPage() {
                 </p>
               </div>
             </>
+          )}
+
+          {/* Debug info in development */}
+          {process.env.NODE_ENV === 'development' && (
+            <div className="mt-4 p-2 bg-black/20 rounded text-xs text-gray-400">
+              <p>開発者コンソール（F12）でより詳細なログを確認できます</p>
+            </div>
           )}
         </div>
       </motion.div>
