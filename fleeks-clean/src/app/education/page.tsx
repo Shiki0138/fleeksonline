@@ -21,7 +21,13 @@ interface EducationContent {
   is_premium: boolean
   reading_time: number
   featured_image?: string
-  education_chapters: Chapter
+  chapter_id: string
+  education_chapters?: {
+    id: string
+    chapter_number: number
+    title: string
+    description: string
+  }[]
 }
 
 export default function EducationPage() {
