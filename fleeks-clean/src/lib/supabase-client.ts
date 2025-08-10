@@ -96,3 +96,38 @@ export type Favorite = {
   video_id: string
   created_at: string
 }
+
+export type EducationChapter = {
+  id: string
+  chapter_number: number
+  title: string
+  description: string | null
+  slug: string
+  sort_order: number
+  is_published: boolean
+  created_at: string
+  updated_at: string
+}
+
+export type EducationContent = {
+  id: string
+  chapter_id: string
+  title: string
+  slug: string
+  content: string
+  preview_content: string | null
+  excerpt: string | null
+  featured_image: string | null
+  is_premium: boolean
+  category: 'beginner' | 'management' | 'dx' | 'general'
+  reading_time: number
+  view_count: number
+  sort_order: number
+  status: 'draft' | 'published' | 'archived'
+  meta_title: string | null
+  meta_description: string | null
+  created_at: string
+  updated_at: string
+  published_at: string | null
+  chapter?: EducationChapter
+}

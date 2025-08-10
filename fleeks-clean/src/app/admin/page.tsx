@@ -11,10 +11,22 @@ export default function AdminDashboard() {
   const router = useRouter()
   const [profile, setProfile] = useState<Profile | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [stats, setStats] = useState({
+    totalVideos: 0,
+    totalBlogs: 0,
+    totalUsers: 0,
+    monthlyViews: 0
+  })
 
   useEffect(() => {
     checkAdminAccess()
   }, [])
+
+  useEffect(() => {
+    if (profile && profile.role === 'admin') {
+      fetchStats()
+    }
+  }, [profile])
 
   const checkAdminAccess = async () => {
     try {
@@ -56,6 +68,43 @@ export default function AdminDashboard() {
       router.push('/dashboard')
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  const fetchStats = async () => {
+    try {
+      // 総動画数を取得
+      const { count: videoCount } = await supabase
+        .from('fleeks_videos')
+        .select('*', { count: 'exact', head: true })
+
+      // 総ブログ記事数を取得（今は仮の値）
+      const blogCount = 2 // TODO: 実際のブログテーブルから取得
+
+      // 総ユーザー数を取得
+      const { count: userCount } = await supabase
+        .from('fleeks_profiles')
+        .select('*', { count: 'exact', head: true })
+
+      // 月間視聴数を計算（過去30日間）
+      const thirtyDaysAgo = new Date()
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
+      
+      const { data: watchHistory } = await supabase
+        .from('fleeks_watch_history')
+        .select('id')
+        .gte('last_watched_at', thirtyDaysAgo.toISOString())
+      
+      const monthlyViews = watchHistory?.length || 0
+
+      setStats({
+        totalVideos: videoCount || 0,
+        totalBlogs: blogCount,
+        totalUsers: userCount || 0,
+        monthlyViews: monthlyViews
+      })
+    } catch (error) {
+      console.error('Error fetching stats:', error)
     }
   }
 
@@ -169,22 +218,42 @@ export default function AdminDashboard() {
 
           {/* Quick Stats */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
-            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6">
+            <motion.div 
+              className="bg-white/10 backdrop-blur-sm rounded-xl p-6"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.1 }}
+            >
               <h3 className="text-sm text-gray-400 mb-2">総動画数</h3>
-              <p className="text-3xl font-bold">--</p>
-            </div>
-            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6">
+              <p className="text-3xl font-bold">{stats.totalVideos}</p>
+            </motion.div>
+            <motion.div 
+              className="bg-white/10 backdrop-blur-sm rounded-xl p-6"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.2 }}
+            >
               <h3 className="text-sm text-gray-400 mb-2">総ブログ記事</h3>
-              <p className="text-3xl font-bold">--</p>
-            </div>
-            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6">
+              <p className="text-3xl font-bold">{stats.totalBlogs}</p>
+            </motion.div>
+            <motion.div 
+              className="bg-white/10 backdrop-blur-sm rounded-xl p-6"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.3 }}
+            >
               <h3 className="text-sm text-gray-400 mb-2">登録ユーザー</h3>
-              <p className="text-3xl font-bold">--</p>
-            </div>
-            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6">
+              <p className="text-3xl font-bold">{stats.totalUsers}</p>
+            </motion.div>
+            <motion.div 
+              className="bg-white/10 backdrop-blur-sm rounded-xl p-6"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.4 }}
+            >
               <h3 className="text-sm text-gray-400 mb-2">月間視聴数</h3>
-              <p className="text-3xl font-bold">--</p>
-            </div>
+              <p className="text-3xl font-bold">{stats.monthlyViews}</p>
+            </motion.div>
           </div>
 
           {/* Admin Menu */}
