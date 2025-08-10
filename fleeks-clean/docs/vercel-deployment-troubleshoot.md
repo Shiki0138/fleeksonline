@@ -3,6 +3,8 @@
 ## 現在の状況
 - GitHubへのプッシュ: ✅ 成功
 - Vercel自動デプロイ: ❌ 動作していない
+- Deploy Hook（手動トリガー）: ✅ 動作確認済み（201 Created）
+- ビルドエラー: ✅ 修正済み（react-quillインストール済み）
 
 ## 確認項目
 
@@ -137,9 +139,93 @@ https://api.vercel.com/v1/integrations/deploy/prj_aYJGlhNBZwbVppg5yD0DIjKUV2L3/a
 curl -X POST https://api.vercel.com/v1/integrations/deploy/prj_aYJGlhNBZwbVppg5yD0DIjKUV2L3/amcwVjy8uE
 ```
 
+## 診断結果
+
+### 確認済み事項
+1. **Deploy Hook**: ✅ 正常動作（201レスポンス）
+2. **ローカルビルド**: ✅ 成功
+3. **GitHubプッシュ**: ✅ 成功
+4. **自動デプロイトリガー**: ❌ 動作せず
+
+### 問題の原因
+GitHubからVercelへの自動デプロイが動作していません。これは以下の原因が考えられます：
+
+1. **GitHub連携が切断されている**
+2. **Vercelプロジェクトの設定が不適切**
+3. **GitHubのwebhookが削除または無効化されている**
+
+## 解決方法
+
+### 方法1: Vercelダッシュボードで再連携（推奨）
+
+1. https://vercel.com/dashboard にログイン
+2. `fleeks-clean`プロジェクトを選択
+3. **Settings** → **Git** タブへ移動
+4. 現在の設定を確認：
+   - Connected Git Repository: `Shiki0138/fleeksonline`
+   - Production Branch: `main`
+   - Root Directory: 空欄または`fleeks-clean`
+
+5. もし連携が切れている場合：
+   - **Disconnect** をクリック
+   - **Connect Git Repository** から再連携
+   - リポジトリ `Shiki0138/fleeksonline` を選択
+   - Import設定：
+     - Root Directory: `fleeks-clean`を入力
+     - Framework Preset: Next.js
+     - Build Settings: デフォルトのまま
+
+### 方法2: Vercel CLIで新規プロジェクトとして再設定
+
+```bash
+# 現在のプロジェクトを削除
+vercel remove fleeks-clean
+
+# 新規プロジェクトとして再設定
+cd fleeks-clean
+vercel --prod
+
+# プロンプトで以下を選択:
+# - Set up and deploy: Y
+# - Which scope: 既存のスコープを選択
+# - Link to existing project?: N
+# - Project name: fleeks-clean
+# - Directory: ./
+# - Build Command: デフォルト
+# - Output Directory: デフォルト
+# - Development Command: デフォルト
+
+# GitHub連携を促すメッセージが表示されたら、ブラウザで連携を完了
+```
+
+### 方法3: Deploy Hookを使った代替案（暫定対応）
+
+自動デプロイが復旧するまでの間、以下の方法で対応：
+
+1. **GitHub Actionsを使用**
+   `.github/workflows/deploy.yml`を作成：
+   ```yaml
+   name: Deploy to Vercel
+   on:
+     push:
+       branches: [main]
+   jobs:
+     deploy:
+       runs-on: ubuntu-latest
+       steps:
+         - name: Trigger Vercel Deploy
+           run: |
+             curl -X POST ${{ secrets.VERCEL_DEPLOY_HOOK }}
+   ```
+
+2. **GitHubのSecrets設定**
+   - リポジトリの Settings → Secrets → Actions
+   - `VERCEL_DEPLOY_HOOK`を追加
+   - 値: `https://api.vercel.com/v1/integrations/deploy/prj_aYJGlhNBZwbVppg5yD0DIjKUV2L3/amcwVjy8uE`
+
 ## 推奨アクション
 
-1. **まずVercelダッシュボードでGit連携を確認**
-2. **Webhookの配信履歴を確認**
-3. **必要に応じて再連携**
-4. **手動デプロイでテスト**
+1. **まずVercelダッシュボードでGit連携状態を確認**
+2. **連携が切れていれば再連携（方法1）**
+3. **それでも動作しない場合は、新規プロジェクトとして再設定（方法2）**
+4. **急ぎの場合は、Deploy HookとGitHub Actionsで代替（方法3）**
