@@ -1,13 +1,14 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { Lock, Eye, EyeOff, Target, AlertCircle, CheckCircle, ArrowLeft } from 'lucide-react'
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import { createClient } from '@supabase/supabase-js'
 
 export default function UpdatePasswordPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -18,113 +19,81 @@ export default function UpdatePasswordPage() {
   const [isValidSession, setIsValidSession] = useState(false)
   const [isCheckingAuth, setIsCheckingAuth] = useState(true)
   
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
+  
   useEffect(() => {
     const verifyRecoveryToken = async () => {
       console.log('[UpdatePassword] Starting recovery token verification...')
       
       try {
-        // Create a single instance of Supabase client
-        const supabase = createClientComponentClient()
+        // Check URL parameters
+        const verified = searchParams.get('verified')
+        const errorParam = searchParams.get('error')
         
-        // Method 1: Check if Supabase already processed the hash
-        const { data: { session: existingSession } } = await supabase.auth.getSession()
-        if (existingSession) {
-          console.log('[UpdatePassword] Existing session found')
+        console.log('[UpdatePassword] URL params:', {
+          verified,
+          error: errorParam,
+          fullURL: window.location.href
+        })
+        
+        // Handle errors from the reset route
+        if (errorParam) {
+          setIsValidSession(false)
+          setIsCheckingAuth(false)
+          if (errorParam === 'invalid_recovery_link' || errorParam === 'invalid_token') {
+            setError('リカバリートークンの検証に失敗しました。リンクの有効期限が切れている可能性があります。')
+          } else {
+            setError('パスワードリセットに失敗しました。もう一度お試しください。')
+          }
+          return
+        }
+        
+        // Check existing session
+        const { data: { session } } = await supabase.auth.getSession()
+        console.log('[UpdatePassword] Current session:', !!session, session?.user?.email)
+        
+        if (session || verified === 'true') {
           setIsValidSession(true)
           setIsCheckingAuth(false)
           window.history.replaceState({}, document.title, '/auth/update-password')
           return
         }
         
-        // Method 2: Manual hash processing
-        if (window.location.hash) {
-          console.log('[UpdatePassword] Processing hash fragment:', window.location.hash)
+        // Try to restore session from cookies
+        const accessToken = document.cookie
+          .split('; ')
+          .find(row => row.startsWith('sb-access-token='))
+          ?.split('=')[1]
+        
+        const refreshToken = document.cookie
+          .split('; ')
+          .find(row => row.startsWith('sb-refresh-token='))
+          ?.split('=')[1]
+        
+        if (accessToken && refreshToken) {
+          console.log('[UpdatePassword] Restoring session from cookies')
+          const { data, error } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken
+          })
           
-          // Parse hash parameters
-          const hashParams = new URLSearchParams(window.location.hash.substring(1))
-          const accessToken = hashParams.get('access_token')
-          const refreshToken = hashParams.get('refresh_token')
-          const type = hashParams.get('type')
-          
-          if (accessToken && type === 'recovery') {
-            console.log('[UpdatePassword] Found recovery tokens in hash')
-            
-            // Try to set session manually
-            try {
-              // Option 1: If we have both tokens
-              if (refreshToken) {
-                console.log('[UpdatePassword] Setting session with both tokens')
-                const { data, error } = await supabase.auth.setSession({
-                  access_token: accessToken,
-                  refresh_token: refreshToken
-                })
-                
-                if (!error && data.session) {
-                  console.log('[UpdatePassword] Session set successfully with both tokens')
-                  setIsValidSession(true)
-                  setIsCheckingAuth(false)
-                  window.history.replaceState({}, document.title, '/auth/update-password')
-                  return
-                }
-              }
-              
-              // Option 2: Try with access token only (for password recovery)
-              console.log('[UpdatePassword] Attempting to use access token for password recovery')
-              // For password recovery, the access token itself might be the session
-              const { data: sessionData, error: sessionError } = await supabase.auth.getSession()
-              
-              // Give Supabase one more chance to auto-process
-              if (!sessionData?.session) {
-                console.log('[UpdatePassword] Waiting for Supabase auto-processing...')
-                await new Promise(resolve => setTimeout(resolve, 1000))
-                
-                const { data: { session: delayedSession } } = await supabase.auth.getSession()
-                if (delayedSession) {
-                  console.log('[UpdatePassword] Session found after delay')
-                  setIsValidSession(true)
-                  setIsCheckingAuth(false)
-                  window.history.replaceState({}, document.title, '/auth/update-password')
-                  return
-                }
-              }
-              
-              // Option 3: Try to refresh the session
-              console.log('[UpdatePassword] Attempting to refresh session')
-              const { data: { session: refreshedSession }, error: refreshError } = await supabase.auth.refreshSession()
-              
-              if (refreshedSession) {
-                console.log('[UpdatePassword] Session refreshed successfully')
-                setIsValidSession(true)
-                setIsCheckingAuth(false)
-                window.history.replaceState({}, document.title, '/auth/update-password')
-                return
-              }
-              
-              console.error('[UpdatePassword] All session establishment methods failed')
-              setError('リカバリートークンの検証に失敗しました。リンクの有効期限が切れている可能性があります。')
-              setIsCheckingAuth(false)
-              
-            } catch (err) {
-              console.error('[UpdatePassword] Error during session setup:', err)
-              setError('セッションの確立中にエラーが発生しました。')
-              setIsCheckingAuth(false)
-            }
-          } else {
-            console.log('[UpdatePassword] No valid recovery tokens in hash')
-            setError('有効なリカバリートークンが見つかりません。')
-            setIsCheckingAuth(false)
-          }
-        } else {
-          console.log('[UpdatePassword] No hash fragment found')
-          // Check if user has a valid session anyway
-          const { data: { session } } = await supabase.auth.getSession()
-          if (session) {
+          if (!error && data.session) {
+            console.log('[UpdatePassword] Session restored successfully')
             setIsValidSession(true)
+            setIsCheckingAuth(false)
+            return
           } else {
-            setError('パスワードリセットリンクが無効です。')
+            console.error('[UpdatePassword] Failed to restore session:', error)
           }
-          setIsCheckingAuth(false)
         }
+        
+        // No valid session found
+        setError('セッションが見つかりません。パスワードリセットをもう一度お試しください。')
+        setIsCheckingAuth(false)
+        
       } catch (error) {
         console.error('[UpdatePassword] Unexpected error:', error)
         setError('予期しないエラーが発生しました。')
@@ -133,7 +102,7 @@ export default function UpdatePasswordPage() {
     }
     
     verifyRecoveryToken()
-  }, [])
+  }, [searchParams, supabase])
 
   const handleUpdatePassword = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -153,8 +122,6 @@ export default function UpdatePasswordPage() {
     }
 
     try {
-      const supabase = createClientComponentClient()
-      
       // Double-check session before updating
       const { data: { session } } = await supabase.auth.getSession()
       
@@ -182,6 +149,10 @@ export default function UpdatePasswordPage() {
         }
         return
       }
+
+      // Clear the cookies after successful password update
+      document.cookie = 'sb-access-token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT'
+      document.cookie = 'sb-refresh-token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT'
 
       setSuccess(true)
       setTimeout(() => {
