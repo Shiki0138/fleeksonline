@@ -33,6 +33,8 @@ export default function FreePage() {
   const [watchedVideos, setWatchedVideos] = useState<Set<string>>(new Set())
 
   useEffect(() => {
+    console.log('[Free Page] Component mounted')
+    console.log('[Free Page] Current pathname:', window.location.pathname)
     checkUser()
     fetchVideos()
     fetchBlogPosts()
@@ -46,12 +48,16 @@ export default function FreePage() {
   }, [profile])
 
   const checkUser = async () => {
+    console.log('[Free Page] Checking user...')
     const { data: { user } } = await supabase.auth.getUser()
     
     if (!user) {
+      console.log('[Free Page] No user found, redirecting to login')
       router.push('/login')
       return
     }
+
+    console.log('[Free Page] User found:', user.email)
 
     // プロファイル取得
     const { data: profileData, error: profileError } = await supabase
@@ -60,6 +66,9 @@ export default function FreePage() {
       .eq('id', user.id)
       .single()
 
+    console.log('[Free Page] Profile data:', profileData)
+    console.log('[Free Page] Profile error:', profileError)
+
     // 管理者権限チェック
     const isAdminEmail = user.email === 'greenroom51@gmail.com'
     
@@ -67,6 +76,7 @@ export default function FreePage() {
       setProfile(profileData)
       const isAdminUser = profileData.role === 'admin' || isAdminEmail
       setIsAdmin(isAdminUser)
+      console.log('[Free Page] Is admin:', isAdminUser)
     } else {
       if (isAdminEmail) {
         setIsAdmin(true)
@@ -81,9 +91,11 @@ export default function FreePage() {
           created_at: user.created_at,
           updated_at: new Date().toISOString()
         })
+        console.log('[Free Page] Admin profile set')
       }
     }
     setIsLoading(false)
+    console.log('[Free Page] User check complete, no redirect triggered')
   }
 
   const fetchVideos = async () => {

@@ -211,6 +211,10 @@ export default function AdminDashboard() {
               </div>
               <a
                 href="/premium"
+                onClick={(e) => {
+                  console.log('[Admin] Navigating to /premium')
+                  // Let the browser handle the navigation naturally
+                }}
                 className="flex items-center space-x-2 bg-gradient-to-r from-purple-500 to-pink-500 px-4 py-2 rounded-lg hover:from-purple-600 hover:to-pink-600 transition"
               >
                 <Crown className="w-5 h-5" />
@@ -218,6 +222,10 @@ export default function AdminDashboard() {
               </a>
               <a
                 href="/free"
+                onClick={(e) => {
+                  console.log('[Admin] Navigating to /free')
+                  // Let the browser handle the navigation naturally
+                }}
                 className="flex items-center space-x-2 bg-gray-600 hover:bg-gray-700 px-4 py-2 rounded-lg transition"
               >
                 <Lock className="w-5 h-5" />

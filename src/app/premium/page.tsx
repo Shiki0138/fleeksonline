@@ -33,6 +33,8 @@ export default function PremiumPage() {
   const [watchedVideos, setWatchedVideos] = useState<Set<string>>(new Set())
 
   useEffect(() => {
+    console.log('[Premium Page] Component mounted')
+    console.log('[Premium Page] Current pathname:', window.location.pathname)
     checkUser()
     fetchVideos()
     fetchBlogPosts()
@@ -46,12 +48,16 @@ export default function PremiumPage() {
   }, [profile])
 
   const checkUser = async () => {
+    console.log('[Premium Page] Checking user...')
     const { data: { user } } = await supabase.auth.getUser()
     
     if (!user) {
+      console.log('[Premium Page] No user found, redirecting to login')
       router.push('/login')
       return
     }
+
+    console.log('[Premium Page] User found:', user.email)
 
     // プロファイル取得
     const { data: profileData, error: profileError } = await supabase
@@ -60,6 +66,9 @@ export default function PremiumPage() {
       .eq('id', user.id)
       .single()
 
+    console.log('[Premium Page] Profile data:', profileData)
+    console.log('[Premium Page] Profile error:', profileError)
+
     // 管理者権限チェック
     const isAdminEmail = user.email === 'greenroom51@gmail.com'
     
@@ -67,6 +76,7 @@ export default function PremiumPage() {
       setProfile(profileData)
       const isAdminUser = profileData.role === 'admin' || isAdminEmail
       setIsAdmin(isAdminUser)
+      console.log('[Premium Page] Is admin:', isAdminUser)
     } else {
       if (isAdminEmail) {
         setIsAdmin(true)
@@ -81,9 +91,11 @@ export default function PremiumPage() {
           created_at: user.created_at,
           updated_at: new Date().toISOString()
         })
+        console.log('[Premium Page] Admin profile set')
       }
     }
     setIsLoading(false)
+    console.log('[Premium Page] User check complete, no redirect triggered')
   }
 
   const fetchVideos = async () => {
