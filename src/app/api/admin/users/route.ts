@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
+import { cookies } from 'next/headers'
 
 // Create admin client with service role key
 const supabaseAdmin = createClient(
@@ -13,29 +15,21 @@ const supabaseAdmin = createClient(
   }
 )
 
-// Create regular client for session validation
-const supabaseClient = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-)
-
 export async function GET(request: NextRequest) {
   try {
-    // Validate admin access
-    const authHeader = request.headers.get('authorization')
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json({ error: 'Unauthorized - No token provided' }, { status: 401 })
-    }
-
-    const token = authHeader.replace('Bearer ', '')
+    // Create client with cookies for proper session handling
+    const supabase = createServerComponentClient({ cookies })
     
-    // Verify the user session
-    const { data: { user }, error: userError } = await supabaseClient.auth.getUser(token)
+    // Get the current session
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession()
     
-    if (userError || !user) {
-      return NextResponse.json({ error: 'Unauthorized - Invalid token' }, { status: 401 })
+    if (sessionError || !session) {
+      console.error('Session error:', sessionError)
+      return NextResponse.json({ error: 'Unauthorized - No valid session' }, { status: 401 })
     }
-
+    
+    const user = session.user
+    
     // Check admin permissions
     const isAdminEmail = user.email === 'greenroom51@gmail.com'
     
@@ -145,20 +139,20 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const { action, userId, data } = body
 
-    // Validate admin access (same as GET)
-    const authHeader = request.headers.get('authorization')
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    const token = authHeader.replace('Bearer ', '')
-    const { data: { user }, error: userError } = await supabaseClient.auth.getUser(token)
+    // Create client with cookies for proper session handling
+    const supabase = createServerComponentClient({ cookies })
     
-    if (userError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    // Get the current session
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+    
+    if (sessionError || !session) {
+      console.error('Session error:', sessionError)
+      return NextResponse.json({ error: 'Unauthorized - No valid session' }, { status: 401 })
     }
-
+    
+    const user = session.user
     const isAdminEmail = user.email === 'greenroom51@gmail.com'
+    
     if (!isAdminEmail) {
       const { data: profile } = await supabaseAdmin
         .from('fleeks_profiles')
@@ -167,7 +161,7 @@ export async function POST(request: NextRequest) {
         .maybeSingle()
       
       if (profile?.role !== 'admin') {
-        return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+        return NextResponse.json({ error: 'Forbidden - Admin access required' }, { status: 403 })
       }
     }
 

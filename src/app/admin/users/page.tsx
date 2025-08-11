@@ -47,24 +47,21 @@ export default function UserManagementPage() {
 
   const fetchUsers = async () => {
     try {
-      // Get current user session for auth
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session) {
-        toast.error('認証エラー: 再度ログインしてください')
-        return
-      }
-
-      // Call API to get users with email addresses
+      // Call API to get users - session is handled by cookies
       const response = await fetch('/api/admin/users', {
         method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${session.access_token}`
-        }
+        credentials: 'include' // Important: include cookies
       })
 
       const result = await response.json()
 
       if (!response.ok) {
+        console.error('API Error:', result)
+        if (response.status === 401) {
+          toast.error('認証エラー: 再度ログインしてください')
+          router.push('/login')
+          return
+        }
         throw new Error(result.error || 'Failed to fetch users')
       }
 
@@ -88,21 +85,13 @@ export default function UserManagementPage() {
         )
       )
 
-      // Get current user session for auth
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session) {
-        toast.error('認証エラー: 再度ログインしてください')
-        fetchUsers() // Revert on error
-        return
-      }
-
       // Call API to update membership
       const response = await fetch('/api/admin/users', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`
+          'Content-Type': 'application/json'
         },
+        credentials: 'include', // Include cookies
         body: JSON.stringify({
           action: 'updateMembership',
           userId,
@@ -131,20 +120,13 @@ export default function UserManagementPage() {
 
   const handleUpdateRole = async (userId: string, newRole: string) => {
     try {
-      // Get current user session for auth
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session) {
-        toast.error('認証エラー: 再度ログインしてください')
-        return
-      }
-
       // Call API to update role
       const response = await fetch('/api/admin/users', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`
+          'Content-Type': 'application/json'
         },
+        credentials: 'include', // Include cookies
         body: JSON.stringify({
           action: 'updateRole',
           userId,
@@ -171,20 +153,13 @@ export default function UserManagementPage() {
     
     setIsUpdatingPassword(true)
     try {
-      // Get current user session for auth
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session) {
-        toast.error('認証エラー: 再度ログインしてください')
-        return
-      }
-
       // Call API to update password
       const response = await fetch('/api/admin/users', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`
+          'Content-Type': 'application/json'
         },
+        credentials: 'include', // Include cookies
         body: JSON.stringify({
           action: 'updatePassword',
           userId: selectedUser.id,
@@ -248,20 +223,13 @@ export default function UserManagementPage() {
 
   const handleUpdateStatus = async (userId: string, newStatus: 'active' | 'suspended') => {
     try {
-      // Get current user session for auth
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session) {
-        toast.error('認証エラー: 再度ログインしてください')
-        return
-      }
-
       // Call API to update status
       const response = await fetch('/api/admin/users', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`
+          'Content-Type': 'application/json'
         },
+        credentials: 'include', // Include cookies
         body: JSON.stringify({
           action: 'updateStatus',
           userId,
@@ -291,20 +259,13 @@ export default function UserManagementPage() {
 
     setIsCreatingUser(true)
     try {
-      // Get current user session for auth
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session) {
-        toast.error('認証エラー: 再度ログインしてください')
-        return
-      }
-
       // Call API to create user
       const response = await fetch('/api/admin/users', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`
+          'Content-Type': 'application/json'
         },
+        credentials: 'include', // Include cookies
         body: JSON.stringify({
           action: 'createUser',
           data: {
