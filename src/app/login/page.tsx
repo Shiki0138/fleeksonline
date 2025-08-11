@@ -20,12 +20,42 @@ export default function LoginPage() {
 
   // Check for recovery token and redirect to password update page
   useEffect(() => {
+    // Check URL parameters first
     const token = searchParams.get('token')
     const type = searchParams.get('type')
+    const redirect = searchParams.get('redirect')
     
+    // Also check hash fragments (Supabase format)
+    const hashParams = new URLSearchParams(window.location.hash.substring(1))
+    const hashAccessToken = hashParams.get('access_token')
+    const hashRefreshToken = hashParams.get('refresh_token')
+    const hashType = hashParams.get('type')
+    
+    console.log('Recovery check - URL params:', { token, type, redirect })
+    console.log('Recovery check - Hash params:', { 
+      access_token: hashAccessToken, 
+      refresh_token: hashRefreshToken, 
+      type: hashType 
+    })
+    
+    // If we have hash parameters with recovery type, redirect with the hash
+    if (hashAccessToken && hashType === 'recovery') {
+      console.log('Hash recovery tokens detected, redirecting to update password page')
+      // Preserve the entire hash fragment for the update-password page
+      window.location.href = `/auth/update-password${window.location.hash}`
+      return
+    }
+    
+    // If we have a redirect parameter and hash, combine them
+    if (redirect === '/auth/update-password' && window.location.hash) {
+      console.log('Redirect with hash detected, forwarding to update password page')
+      window.location.href = `/auth/update-password${window.location.hash}`
+      return
+    }
+    
+    // Legacy URL parameter support
     if (token && type === 'recovery') {
-      console.log('Recovery token detected, redirecting to update password page')
-      // Redirect to the password update page with the token
+      console.log('URL recovery token detected, redirecting to update password page')
       window.location.href = `/auth/update-password?token=${token}&type=recovery`
     }
   }, [searchParams])

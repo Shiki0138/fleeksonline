@@ -1,7 +1,12 @@
 # Supabase メールテンプレート修正ガイド
 
 ## 問題
-パスワードリセットメールのリンクが `/login` ページに遷移してしまい、パスワード更新ページ (`/auth/update-password`) に直接遷移しない。
+パスワードリセットメールのリンクが `/login?redirect=%2Fauth%2Fupdate-password` にリダイレクトされてしまい、パスワード更新ページ (`/auth/update-password`) に直接遷移しない。
+
+## 根本原因
+1. middleware.ts で `/auth/update-password` が publicPaths に含まれていなかった
+2. Supabaseのメールテンプレートが正しくてもmiddlewareでブロックされていた
+3. ハッシュフラグメント形式のトークンがURLパラメータとして処理されていなかった
 
 ## 解決方法
 
@@ -43,15 +48,28 @@
 
 ### 4. コード側の対応（実装済み）
 
+#### /src/middleware.ts
+```typescript
+// Public paths に /auth/update-password を追加
+const publicPaths = ['/', '/login', '/auth/signup', '/auth/reset-password', '/auth/update-password', '/privacy', '/terms']
+```
+
 #### /src/app/login/page.tsx
 ```typescript
-// リカバリートークンを検出してリダイレクト
+// ハッシュフラグメントとURLパラメータの両方を処理
 useEffect(() => {
-  const token = searchParams.get('token')
-  const type = searchParams.get('type')
+  // ハッシュフラグメントをチェック
+  const hashParams = new URLSearchParams(window.location.hash.substring(1))
+  const hashAccessToken = hashParams.get('access_token')
+  const hashType = hashParams.get('type')
   
-  if (token && type === 'recovery') {
-    window.location.href = `/auth/update-password?token=${token}&type=recovery`
+  // リダイレクトパラメータもチェック
+  const redirect = searchParams.get('redirect')
+  
+  if (hashAccessToken && hashType === 'recovery') {
+    window.location.href = `/auth/update-password${window.location.hash}`
+  } else if (redirect === '/auth/update-password' && window.location.hash) {
+    window.location.href = `/auth/update-password${window.location.hash}`
   }
 }, [searchParams])
 ```
@@ -74,9 +92,11 @@ const urlParams = new URLSearchParams(window.location.search)
 ### 6. トラブルシューティング
 
 #### リンクがまだ /login に行く場合:
-1. Supabaseのメールテンプレートが正しく保存されているか確認
-2. ブラウザのキャッシュをクリア
-3. Supabaseの設定変更後、数分待つ（反映に時間がかかる場合がある）
+1. **middleware.ts を確認** - `/auth/update-password` が publicPaths に含まれているか
+2. Supabaseのメールテンプレートが正しく保存されているか確認
+3. ブラウザのキャッシュをクリア（特にServiceWorkerのキャッシュ）
+4. Supabaseの設定変更後、数分待つ（反映に時間がかかる場合がある）
+5. ブラウザのコンソールでリダイレクトのログを確認
 
 #### セッションエラーが発生する場合:
 1. Redirect URLsに `/auth/update-password` が含まれているか確認

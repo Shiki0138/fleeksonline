@@ -19,7 +19,7 @@ export async function middleware(req: NextRequest) {
   console.log('[Middleware] =================================')
   
   // Public paths that don't require authentication
-  const publicPaths = ['/', '/login', '/auth/signup', '/auth/reset-password', '/privacy', '/terms']
+  const publicPaths = ['/', '/login', '/auth/signup', '/auth/reset-password', '/auth/update-password', '/privacy', '/terms']
   const isPublicPath = publicPaths.includes(pathname) || pathname.startsWith('/api/auth/')
   
   // If user is logged in and trying to access login page, redirect them
