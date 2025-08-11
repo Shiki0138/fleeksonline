@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { Settings, Video, FileText, Users, BarChart3, Target, LogOut, BookOpen } from 'lucide-react'
+import { Settings, Video, FileText, Users, BarChart3, Target, LogOut, BookOpen, Crown, Lock } from 'lucide-react'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import type { Profile } from '@/lib/supabase-client'
 
@@ -209,6 +209,20 @@ export default function AdminDashboard() {
                 <p className="text-sm font-medium">{profile?.full_name || profile?.username}</p>
                 <p className="text-xs text-red-400">管理者</p>
               </div>
+              <button
+                onClick={() => router.push('/premium')}
+                className="flex items-center space-x-2 bg-gradient-to-r from-purple-500 to-pink-500 px-4 py-2 rounded-lg hover:from-purple-600 hover:to-pink-600 transition"
+              >
+                <Crown className="w-5 h-5" />
+                <span>有料会員ページ</span>
+              </button>
+              <button
+                onClick={() => router.push('/free')}
+                className="flex items-center space-x-2 bg-gray-600 hover:bg-gray-700 px-4 py-2 rounded-lg transition"
+              >
+                <Lock className="w-5 h-5" />
+                <span>無料会員ページ</span>
+              </button>
               <button
                 onClick={() => {
                   console.log('ダッシュボードへ遷移します')

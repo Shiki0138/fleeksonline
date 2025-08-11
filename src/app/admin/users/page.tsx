@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { ArrowLeft, Users, Crown, Shield, Calendar, Mail, Search, Key, RefreshCw, Plus, Ban, CheckCircle } from 'lucide-react'
 import { supabase } from '@/lib/supabase-client'
-import toast from 'react-hot-toast'
+import toast, { Toaster } from 'react-hot-toast'
 
 interface User {
   id: string
@@ -47,39 +47,28 @@ export default function UserManagementPage() {
 
   const fetchUsers = async () => {
     try {
-      // fleeks_profilesを取得
-      const { data: profiles, error: profileError } = await supabase
-        .from('fleeks_profiles')
-        .select('*')
-        .order('created_at', { ascending: false })
+      // Get current user session for auth
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) {
+        toast.error('認証エラー: 再度ログインしてください')
+        return
+      }
 
-      if (profileError) throw profileError
+      // Call API to get users with email addresses
+      const response = await fetch('/api/admin/users', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`
+        }
+      })
 
-      // beauty_usersからメールアドレスを取得
-      const userIds = profiles?.map(p => p.id) || []
-      const { data: beautyUsers, error: userError } = await supabase
-        .from('beauty_users')
-        .select('id, email, created_at')
-        .in('id', userIds)
+      const result = await response.json()
 
-      if (userError) throw userError
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to fetch users')
+      }
 
-      // データを結合
-      const userMap = new Map(beautyUsers?.map(u => [u.id, u]) || [])
-      const formattedUsers = profiles?.map(profile => ({
-        id: profile.id,
-        email: userMap.get(profile.id)?.email || 'Unknown',
-        username: profile.username,
-        full_name: profile.full_name,
-        membership_type: profile.membership_type,
-        membership_expires_at: profile.membership_expires_at,
-        role: profile.role,
-        status: profile.status || 'active',
-        created_at: userMap.get(profile.id)?.created_at || profile.created_at,
-        updated_at: profile.updated_at
-      })) || []
-
-      setUsers(formattedUsers)
+      setUsers(result.users || [])
     } catch (error) {
       console.error('Error fetching users:', error)
       toast.error('ユーザー情報の取得に失敗しました')
@@ -90,10 +79,20 @@ export default function UserManagementPage() {
 
   const handleUpdateMembership = async (userId: string, newType: string) => {
     try {
+      // Update local state immediately for better UX
+      setUsers(prevUsers => 
+        prevUsers.map(user => 
+          user.id === userId 
+            ? { ...user, membership_type: newType as 'free' | 'premium' | 'vip' }
+            : user
+        )
+      )
+
       // Get current user session for auth
       const { data: { session } } = await supabase.auth.getSession()
       if (!session) {
         toast.error('認証エラー: 再度ログインしてください')
+        fetchUsers() // Revert on error
         return
       }
 
@@ -118,10 +117,15 @@ export default function UserManagementPage() {
       }
 
       toast.success('メンバーシップを更新しました')
-      fetchUsers()
+      
+      // Only refresh if required (which it shouldn't be anymore)
+      if (result.requiresRefresh) {
+        fetchUsers()
+      }
     } catch (error) {
       console.error('Error updating membership:', error)
       toast.error('メンバーシップの更新に失敗しました')
+      fetchUsers() // Revert on error
     }
   }
 
@@ -167,13 +171,32 @@ export default function UserManagementPage() {
     
     setIsUpdatingPassword(true)
     try {
-      // Supabase Admin APIを使用してパスワードを更新
-      const { error } = await supabase.auth.admin.updateUserById(
-        selectedUser.id,
-        { password: newPassword }
-      )
+      // Get current user session for auth
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) {
+        toast.error('認証エラー: 再度ログインしてください')
+        return
+      }
 
-      if (error) throw error
+      // Call API to update password
+      const response = await fetch('/api/admin/users', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`
+        },
+        body: JSON.stringify({
+          action: 'updatePassword',
+          userId: selectedUser.id,
+          data: { password: newPassword }
+        })
+      })
+
+      const result = await response.json()
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to update password')
+      }
 
       toast.success('パスワードを更新しました')
       setShowPasswordModal(false)
@@ -338,6 +361,7 @@ export default function UserManagementPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 text-white">
+      <Toaster position="top-right" />
       <div className="container mx-auto px-6 py-12">
         <motion.div
           initial={{ opacity: 0, y: 20 }}

@@ -178,7 +178,7 @@ export async function POST(request: NextRequest) {
           .from('fleeks_profiles')
           .select('id')
           .eq('id', userId)
-          .single()
+          .maybeSingle()
         
         if (!existingProfile) {
           // Create profile if it doesn't exist
@@ -202,20 +202,31 @@ export async function POST(request: NextRequest) {
             throw new Error('User not found in auth system')
           }
         } else {
-          // Update existing profile
+          // Update existing profile without requiring session refresh
+          const updateData: any = { 
+            membership_type: data.membershipType,
+            updated_at: new Date().toISOString()
+          }
+          
+          // Only set membership_expires_at for non-free plans
+          if (data.membershipType !== 'free') {
+            updateData.membership_expires_at = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+          } else {
+            updateData.membership_expires_at = null
+          }
+          
           const { error: membershipError } = await supabaseAdmin
             .from('fleeks_profiles')
-            .update({ 
-              membership_type: data.membershipType,
-              membership_expires_at: data.membershipType === 'free' ? null : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-              updated_at: new Date().toISOString()
-            })
+            .update(updateData)
             .eq('id', userId)
 
           if (membershipError) throw membershipError
         }
         
-        return NextResponse.json({ success: true })
+        return NextResponse.json({ 
+          success: true,
+          requiresRefresh: false // Don't require session refresh
+        })
 
       case 'updateRole':
         // First check if profile exists
@@ -223,7 +234,7 @@ export async function POST(request: NextRequest) {
           .from('fleeks_profiles')
           .select('id')
           .eq('id', userId)
-          .single()
+          .maybeSingle()
         
         if (!existingRoleProfile) {
           // Create profile if it doesn't exist
@@ -258,7 +269,7 @@ export async function POST(request: NextRequest) {
           if (roleError) throw roleError
         }
         
-        return NextResponse.json({ success: true })
+        return NextResponse.json({ success: true, message: 'Role updated successfully' })
 
       case 'updatePassword':
         const { error: passwordError } = await supabaseAdmin.auth.admin.updateUserById(
