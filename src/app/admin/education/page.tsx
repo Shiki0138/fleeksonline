@@ -102,11 +102,27 @@ export default function EducationManagementPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-7xl">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">教育コンテンツ管理</h1>
-        <p className="text-gray-600">美容師向け教育コンテンツの管理</p>
-      </div>
+    <div className="min-h-screen bg-gray-50">
+      <div className="container mx-auto px-6 py-8">
+        <div className="mb-8">
+          <Link
+            href="/admin"
+            className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 mb-4 transition"
+          >
+            <ChevronRight className="w-5 h-5 rotate-180" />
+            <span>管理画面に戻る</span>
+          </Link>
+          
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-800 flex items-center">
+                <BookOpen className="w-8 h-8 mr-3 text-indigo-600" />
+                教育コンテンツ管理
+              </h1>
+              <p className="text-gray-600 mt-2">美容師向け教育コンテンツの管理</p>
+            </div>
+          </div>
+        </div>
 
       {/* 章フィルター */}
       <div className="mb-6 flex flex-wrap gap-2">
@@ -159,17 +175,17 @@ export default function EducationManagementPage() {
         </Link>
       </div>
 
-      {/* コンテンツリスト */}
-      {loading ? (
-        <div className="text-center py-8">読み込み中...</div>
-      ) : contents.length === 0 ? (
-        <div className="text-center py-8 bg-gray-50 rounded-lg">
-          <BookOpen className="w-16 h-16 mx-auto mb-4 text-gray-400" />
-          <p className="text-gray-600">コンテンツがまだありません</p>
-        </div>
-      ) : (
-        <div className="bg-white rounded-lg shadow-sm overflow-hidden">
-          <table className="w-full">
+        {/* コンテンツリスト */}
+        {loading ? (
+          <div className="text-center py-8">読み込み中...</div>
+        ) : contents.length === 0 ? (
+          <div className="text-center py-8 bg-white rounded-lg shadow-sm">
+            <BookOpen className="w-16 h-16 mx-auto mb-4 text-gray-400" />
+            <p className="text-gray-600">コンテンツがまだありません</p>
+          </div>
+        ) : (
+          <div className="bg-white rounded-lg shadow-sm overflow-hidden">
+            <table className="w-full">
             <thead className="bg-gray-50 border-b">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -264,7 +280,8 @@ export default function EducationManagementPage() {
             </tbody>
           </table>
         </div>
-      )}
+        )}
+      </div>
     </div>
   )
 }

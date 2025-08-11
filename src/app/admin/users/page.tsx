@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { ArrowLeft, Users, Crown, Shield, Calendar, Mail, Search, Key, RefreshCw, Plus, Ban, CheckCircle } from 'lucide-react'
-import { supabase } from '@/lib/supabase-client'
+import { supabase } from '@/lib/supabase-browser'
 import toast, { Toaster } from 'react-hot-toast'
 
 interface User {
@@ -187,16 +187,26 @@ export default function UserManagementPage() {
 
   const handlePasswordReset = async (email: string) => {
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/auth/reset-password`,
+      // APIを通じてパスワードリセットメールを送信
+      const response = await fetch('/api/admin/users/reset-password', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        credentials: 'include',
+        body: JSON.stringify({ email })
       })
 
-      if (error) throw error
+      const result = await response.json()
+
+      if (!response.ok) {
+        throw new Error(result.error || 'パスワードリセットに失敗しました')
+      }
 
       toast.success('パスワードリセットメールを送信しました')
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error sending reset email:', error)
-      toast.error('リセットメールの送信に失敗しました')
+      toast.error(error.message || 'リセットメールの送信に失敗しました')
     }
   }
 

@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { Mail, ArrowLeft, Target, AlertCircle, CheckCircle } from 'lucide-react'
-import { supabase } from '@/lib/supabase-client'
+import { supabase } from '@/lib/supabase-browser'
 
 export default function ResetPasswordPage() {
   const router = useRouter()

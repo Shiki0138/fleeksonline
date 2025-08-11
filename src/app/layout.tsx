@@ -1,6 +1,9 @@
 import './globals.css'
 import type { Metadata } from 'next'
 import { Toaster } from 'react-hot-toast'
+import { cookies } from 'next/headers'
+import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
+import SupabaseProvider from './supabase-provider'
 
 export const metadata: Metadata = {
   title: 'FLEEKS Platform',
@@ -28,15 +31,22 @@ export const metadata: Metadata = {
   }
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
+  const supabase = createServerComponentClient({ cookies })
+  const {
+    data: { session },
+  } = await supabase.auth.getSession()
+
   return (
     <html lang="ja">
       <body>
-        {children}
+        <SupabaseProvider session={session}>
+          {children}
+        </SupabaseProvider>
         <Toaster 
           position="top-center"
           toastOptions={{

@@ -31,10 +31,12 @@ export async function middleware(req: NextRequest) {
     return NextResponse.redirect(redirectUrl)
   }
   
-  // Allow access to premium and free pages for authenticated users
-  if (session && (pathname === '/premium' || pathname === '/free')) {
-    console.log('[Middleware] ✅ ALLOWING access to:', pathname)
-    console.log('[Middleware] Returning response without redirect')
+  // Allow access to protected pages for authenticated users
+  const protectedPaths = ['/dashboard', '/premium', '/free', '/videos', '/education', '/blog']
+  const isProtectedPath = protectedPaths.some(path => pathname.startsWith(path))
+  
+  if (session && isProtectedPath) {
+    console.log('[Middleware] ✅ ALLOWING authenticated access to:', pathname)
     return res
   }
   

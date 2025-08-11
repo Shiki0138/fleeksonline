@@ -4,9 +4,9 @@ import { useEffect, useState } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { Target, ArrowLeft, Calendar, Clock, Eye } from 'lucide-react'
-import { supabase } from '@/lib/supabase-client'
+import { supabase } from '@/lib/supabase-browser'
 import SimpleVideoPlayer from '@/components/SimpleVideoPlayer'
-import type { Profile, Video } from '@/lib/supabase-client'
+import type { Profile, Video } from '@/lib/supabase-browser'
 
 export default function VideoPage() {
   const router = useRouter()
@@ -27,7 +27,7 @@ export default function VideoPage() {
     const { data: { user } } = await supabase.auth.getUser()
     
     if (!user) {
-      router.push('/auth/login')
+      router.push('/login')
       return
     }
 

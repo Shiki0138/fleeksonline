@@ -4,8 +4,8 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { Target, Play, Clock, Star, LogOut, User, Crown, Lock, FileText, Youtube, Settings, CheckCircle, GraduationCap, BookOpen, ArrowLeft, Shield } from 'lucide-react'
-import { supabase } from '@/lib/supabase-client'
-import type { Profile, Video, EducationContent, EducationChapter } from '@/lib/supabase-client'
+import { supabase } from '@/lib/supabase-browser'
+import type { Profile, Video, EducationContent, EducationChapter } from '@/lib/supabase-browser'
 
 // ブログ記事の型定義
 interface BlogPost {

@@ -4,8 +4,8 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { Target, Play, Clock, Star, LogOut, User, Crown, Edit, Plus, FileText, Youtube, Settings, CheckCircle, GraduationCap, BookOpen } from 'lucide-react'
-import { supabase } from '@/lib/supabase-client'
-import type { Profile, Video, EducationContent, EducationChapter } from '@/lib/supabase-client'
+import { supabase } from '@/lib/supabase-browser'
+import type { Profile, Video, EducationContent, EducationChapter } from '@/lib/supabase-browser'
 // import PasswordChangePrompt from '@/components/PasswordChangePrompt' // Temporarily removed
 
 // ブログ記事の型定義
@@ -365,8 +365,7 @@ export default function DashboardPage() {
                     <motion.div
                       key={video.id}
                       whileHover={{ scale: 1.02 }}
-                      onClick={() => router.push(`/videos/${video.id}`)}
-                      className="bg-white/10 backdrop-blur-sm rounded-xl overflow-hidden hover:bg-white/15 transition cursor-pointer relative group"
+                      className="bg-white/10 backdrop-blur-sm rounded-xl overflow-hidden hover:bg-white/15 transition relative group"
                     >
                       {/* Admin Edit Button */}
                       {isAdmin && (
@@ -415,7 +414,10 @@ export default function DashboardPage() {
                       </div>
                       
                       {/* Video Info */}
-                      <div className="p-4">
+                      <div 
+                        className="p-4 cursor-pointer"
+                        onClick={() => router.push(`/videos/${video.id}`)}
+                      >
                         <h3 className="font-semibold text-lg mb-2 line-clamp-2">
                           {video.title}
                         </h3>
