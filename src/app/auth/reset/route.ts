@@ -1,4 +1,4 @@
-import { createClient } from '@supabase/supabase-js'
+import { supabase } from '@/lib/supabase'
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
 
@@ -29,18 +29,6 @@ export async function GET(request: Request) {
     return NextResponse.redirect(`${requestUrl.origin}/login?error=${error || error_code}`)
   }
 
-  // Supabaseクライアントを作成
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      auth: {
-        flowType: 'pkce',
-        persistSession: true,
-        autoRefreshToken: true
-      }
-    }
-  )
 
   if (type === 'recovery') {
     try {

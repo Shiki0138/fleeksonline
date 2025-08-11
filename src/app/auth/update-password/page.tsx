@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { Lock, Eye, EyeOff, Target, AlertCircle, CheckCircle, ArrowLeft } from 'lucide-react'
-import { createClient } from '@supabase/supabase-js'
+import { supabase } from '@/lib/supabase'
 
 export default function UpdatePasswordPage() {
   const router = useRouter()
@@ -19,10 +19,6 @@ export default function UpdatePasswordPage() {
   const [isValidSession, setIsValidSession] = useState(false)
   const [isCheckingAuth, setIsCheckingAuth] = useState(true)
   
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  )
   
   useEffect(() => {
     const verifyRecoveryToken = async () => {
