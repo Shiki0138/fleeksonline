@@ -209,26 +209,20 @@ export default function AdminDashboard() {
                 <p className="text-sm font-medium">{profile?.full_name || profile?.username}</p>
                 <p className="text-xs text-red-400">管理者</p>
               </div>
-              <button
-                onClick={() => {
-                  console.log('Navigating to premium page...')
-                  window.location.href = '/premium'
-                }}
+              <a
+                href="/premium"
                 className="flex items-center space-x-2 bg-gradient-to-r from-purple-500 to-pink-500 px-4 py-2 rounded-lg hover:from-purple-600 hover:to-pink-600 transition"
               >
                 <Crown className="w-5 h-5" />
                 <span>有料会員ページ</span>
-              </button>
-              <button
-                onClick={() => {
-                  console.log('Navigating to free page...')
-                  window.location.href = '/free'
-                }}
+              </a>
+              <a
+                href="/free"
                 className="flex items-center space-x-2 bg-gray-600 hover:bg-gray-700 px-4 py-2 rounded-lg transition"
               >
                 <Lock className="w-5 h-5" />
                 <span>無料会員ページ</span>
-              </button>
+              </a>
               <button
                 onClick={() => {
                   console.log('ダッシュボードへ遷移します')

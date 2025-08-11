@@ -11,7 +11,7 @@ export async function middleware(req: NextRequest) {
   // Get session
   const { data: { session } } = await supabase.auth.getSession()
   
-  console.log('[Middleware] Path:', pathname, 'Session:', !!session)
+  console.log('[Middleware] Path:', pathname, 'Session:', !!session, 'Email:', session?.user?.email)
   
   // Public paths that don't require authentication
   const publicPaths = ['/', '/login', '/auth/signup', '/auth/reset-password', '/privacy', '/terms']
@@ -24,6 +24,12 @@ export async function middleware(req: NextRequest) {
     const redirectUrl = req.nextUrl.clone()
     redirectUrl.pathname = isAdmin ? '/admin' : '/dashboard'
     return NextResponse.redirect(redirectUrl)
+  }
+  
+  // Allow access to premium and free pages for authenticated users
+  if (session && (pathname === '/premium' || pathname === '/free')) {
+    console.log('[Middleware] Allowing access to:', pathname)
+    return res
   }
   
   // If user is not logged in and trying to access protected route
