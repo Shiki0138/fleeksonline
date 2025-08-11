@@ -275,16 +275,74 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ success: true })
 
       case 'updateStatus':
-        // Update user status
-        const { error: statusError } = await supabaseAdmin
+        // First check if profile exists
+        const { data: existingStatusProfile } = await supabaseAdmin
           .from('fleeks_profiles')
-          .update({ 
-            status: data.status,
-            updated_at: new Date().toISOString()
-          })
+          .select('id')
+          .eq('id', userId)
+          .maybeSingle()
+        
+        if (!existingStatusProfile) {
+          // Create profile if it doesn't exist
+          const { data: { user: authUser } } = await supabaseAdmin.auth.admin.getUserById(userId)
+          if (authUser) {
+            const { error: createError } = await supabaseAdmin
+              .from('fleeks_profiles')
+              .insert({
+                id: userId,
+                username: authUser.email?.split('@')[0] || 'user',
+                full_name: authUser.user_metadata?.full_name || authUser.email?.split('@')[0] || 'User',
+                membership_type: 'free',
+                role: 'user',
+                status: data.status,
+                created_at: authUser.created_at,
+                updated_at: new Date().toISOString()
+              })
+            
+            if (createError) throw createError
+          } else {
+            throw new Error('User not found in auth system')
+          }
+        } else {
+          // Update existing profile
+          const { error: statusError } = await supabaseAdmin
+            .from('fleeks_profiles')
+            .update({ 
+              status: data.status,
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', userId)
+
+          if (statusError) throw statusError
+        }
+        
+        // If suspending user, also revoke their sessions
+        if (data.status === 'suspended') {
+          const { error: signOutError } = await supabaseAdmin.auth.admin.signOut(userId)
+          if (signOutError) {
+            console.error('Error signing out suspended user:', signOutError)
+          }
+        }
+        
+        return NextResponse.json({ success: true })
+
+      case 'deleteUser':
+        // Delete user account completely
+        // First delete profile
+        const { error: profileDeleteError } = await supabaseAdmin
+          .from('fleeks_profiles')
+          .delete()
           .eq('id', userId)
 
-        if (statusError) throw statusError
+        if (profileDeleteError) {
+          console.error('Error deleting profile:', profileDeleteError)
+        }
+
+        // Then delete auth user
+        const { error: authDeleteError } = await supabaseAdmin.auth.admin.deleteUser(userId)
+
+        if (authDeleteError) throw authDeleteError
+        
         return NextResponse.json({ success: true })
 
       case 'createUser':

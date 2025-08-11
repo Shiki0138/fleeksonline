@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { ArrowLeft, Users, Crown, Shield, Calendar, Mail, Search, Key, RefreshCw, Plus, Ban, CheckCircle } from 'lucide-react'
+import { ArrowLeft, Users, Crown, Shield, Calendar, Mail, Search, Key, RefreshCw, Plus, Ban, CheckCircle, Trash2 } from 'lucide-react'
 import { supabase } from '@/lib/supabase-browser'
 import toast, { Toaster } from 'react-hot-toast'
 
@@ -31,6 +31,9 @@ export default function UserManagementPage() {
   const [newPassword, setNewPassword] = useState('')
   const [isUpdatingPassword, setIsUpdatingPassword] = useState(false)
   const [showCreateModal, setShowCreateModal] = useState(false)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [userToDelete, setUserToDelete] = useState<User | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
   const [newUserForm, setNewUserForm] = useState({
     email: '',
     password: '',
@@ -233,6 +236,15 @@ export default function UserManagementPage() {
 
   const handleUpdateStatus = async (userId: string, newStatus: 'active' | 'suspended') => {
     try {
+      // Optimistically update UI
+      setUsers(prevUsers => 
+        prevUsers.map(user => 
+          user.id === userId 
+            ? { ...user, status: newStatus }
+            : user
+        )
+      )
+
       // Call API to update status
       const response = await fetch('/api/admin/users', {
         method: 'POST',
@@ -254,10 +266,45 @@ export default function UserManagementPage() {
       }
 
       toast.success(`アカウントを${newStatus === 'suspended' ? '停止' : '有効化'}しました`)
-      fetchUsers()
     } catch (error) {
       console.error('Error updating status:', error)
       toast.error('ステータスの更新に失敗しました')
+      fetchUsers() // Revert on error
+    }
+  }
+
+  const handleDeleteUser = async () => {
+    if (!userToDelete) return
+    
+    setIsDeleting(true)
+    try {
+      const response = await fetch('/api/admin/users', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          action: 'deleteUser',
+          userId: userToDelete.id
+        })
+      })
+
+      const result = await response.json()
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to delete user')
+      }
+
+      toast.success('アカウントを削除しました')
+      setShowDeleteModal(false)
+      setUserToDelete(null)
+      fetchUsers()
+    } catch (error) {
+      console.error('Error deleting user:', error)
+      toast.error('アカウントの削除に失敗しました')
+    } finally {
+      setIsDeleting(false)
     }
   }
 
@@ -551,16 +598,34 @@ export default function UserManagementPage() {
                               <RefreshCw className="w-4 h-4" />
                             </button>
                             <button
-                              onClick={() => handleUpdateStatus(user.id, user.status === 'active' ? 'suspended' : 'active')}
+                              onClick={(e) => {
+                                e.preventDefault()
+                                e.stopPropagation()
+                                handleUpdateStatus(user.id, user.status === 'suspended' ? 'active' : 'suspended')
+                              }}
                               className={`p-2 rounded transition ${
-                                user.status === 'active' 
-                                  ? 'bg-red-500/20 hover:bg-red-500/30 text-red-400' 
-                                  : 'bg-green-500/20 hover:bg-green-500/30 text-green-400'
+                                user.status === 'suspended' 
+                                  ? 'bg-green-500/20 hover:bg-green-500/30 text-green-400' 
+                                  : 'bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-400'
                               }`}
-                              title={user.status === 'active' ? 'アカウント停止' : 'アカウント有効化'}
+                              title={user.status === 'suspended' ? 'アカウント有効化' : 'アカウント停止'}
                             >
-                              {user.status === 'active' ? <Ban className="w-4 h-4" /> : <CheckCircle className="w-4 h-4" />}
+                              {user.status === 'suspended' ? <CheckCircle className="w-4 h-4" /> : <Ban className="w-4 h-4" />}
                             </button>
+                            {user.email !== 'greenroom51@gmail.com' && (
+                              <button
+                                onClick={(e) => {
+                                  e.preventDefault()
+                                  e.stopPropagation()
+                                  setUserToDelete(user)
+                                  setShowDeleteModal(true)
+                                }}
+                                className="p-2 rounded bg-red-500/20 hover:bg-red-500/30 text-red-400 transition"
+                                title="アカウント削除"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            )}
                           </div>
                         </td>
                       </tr>
@@ -609,6 +674,49 @@ export default function UserManagementPage() {
                       setSelectedUser(null)
                     }}
                     className="px-4 py-2 border border-white/20 rounded-lg hover:bg-white/10 transition"
+                  >
+                    キャンセル
+                  </button>
+                </div>
+              </motion.div>
+            </div>
+          )}
+
+          {/* 削除確認モーダル */}
+          {showDeleteModal && userToDelete && (
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="bg-slate-800 rounded-xl p-6 max-w-md w-full mx-4"
+              >
+                <h3 className="text-xl font-semibold mb-4 text-red-400">アカウント削除の確認</h3>
+                <p className="text-gray-300 mb-2">
+                  以下のユーザーアカウントを完全に削除しますか？
+                </p>
+                <div className="bg-red-900/20 border border-red-500/30 rounded-lg p-4 mb-4">
+                  <p className="font-medium">{userToDelete.full_name || userToDelete.username || 'ユーザー'}</p>
+                  <p className="text-sm text-gray-400">{userToDelete.email}</p>
+                </div>
+                <p className="text-red-400 text-sm mb-6">
+                  ⚠️ この操作は取り消すことができません。
+                  ユーザーのすべてのデータが永久に削除されます。
+                </p>
+                <div className="flex space-x-3">
+                  <button
+                    onClick={handleDeleteUser}
+                    disabled={isDeleting}
+                    className="flex-1 bg-red-600 hover:bg-red-700 px-4 py-2 rounded-lg font-medium transition disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isDeleting ? '削除中...' : '削除する'}
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowDeleteModal(false)
+                      setUserToDelete(null)
+                    }}
+                    disabled={isDeleting}
+                    className="px-4 py-2 border border-white/20 rounded-lg hover:bg-white/10 transition disabled:opacity-50"
                   >
                     キャンセル
                   </button>
