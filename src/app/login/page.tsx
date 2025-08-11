@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { Mail, Lock, Eye, EyeOff, Target, AlertCircle, CheckCircle } from 'lucide-react'
@@ -15,7 +15,20 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState('')
   const router = useRouter()
+  const searchParams = useSearchParams()
   const supabase = createClientComponentClient()
+
+  // Check for recovery token and redirect to password update page
+  useEffect(() => {
+    const token = searchParams.get('token')
+    const type = searchParams.get('type')
+    
+    if (token && type === 'recovery') {
+      console.log('Recovery token detected, redirecting to update password page')
+      // Redirect to the password update page with the token
+      window.location.href = `/auth/update-password?token=${token}&type=recovery`
+    }
+  }, [searchParams])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
