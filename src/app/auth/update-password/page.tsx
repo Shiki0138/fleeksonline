@@ -17,13 +17,91 @@ export default function UpdatePasswordPage() {
   const [success, setSuccess] = useState(false)
 
   useEffect(() => {
-    // Check if user has a valid session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session) {
-        router.push('/auth/login')
+    const handleAuthStateChange = async () => {
+      // Check for hash fragments (Supabase password reset format)
+      const hashParams = new URLSearchParams(window.location.hash.substring(1))
+      const accessToken = hashParams.get('access_token')
+      const refreshToken = hashParams.get('refresh_token')
+      const type = hashParams.get('type')
+      
+      // Also check query params for old format
+      const urlParams = new URLSearchParams(window.location.search)
+      const queryToken = urlParams.get('token')
+      const queryType = urlParams.get('type')
+
+      console.log('Hash params:', { accessToken: !!accessToken, refreshToken: !!refreshToken, type })
+      console.log('Query params:', { token: queryToken, type: queryType })
+
+      if (accessToken && refreshToken && type === 'recovery') {
+        console.log('Processing recovery hash tokens')
+        try {
+          const { data, error } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken
+          })
+          
+          if (error) {
+            console.error('Session establishment failed:', error)
+            router.push('/auth/login?error=session_error')
+            return
+          }
+
+          if (data.session) {
+            console.log('Recovery session established successfully')
+            // Clear the hash from URL
+            window.history.replaceState({}, document.title, '/auth/update-password')
+            return
+          }
+        } catch (err) {
+          console.error('Session setup error:', err)
+          router.push('/auth/login?error=session_exception')
+          return
+        }
       }
-    })
-  }, [router])
+      
+      // Handle old-style query params (numeric token)
+      if (queryToken && queryType === 'recovery') {
+        console.log('Processing legacy recovery token:', queryToken)
+        try {
+          // For numeric tokens, try different approaches
+          const results = await Promise.allSettled([
+            supabase.auth.verifyOtp({ token: queryToken, type: 'recovery' }),
+            supabase.auth.verifyOtp({ token_hash: queryToken, type: 'recovery' }),
+            supabase.auth.exchangeCodeForSession(queryToken)
+          ])
+          
+          const successResult = results.find(result => 
+            result.status === 'fulfilled' && result.value.data?.session
+          )
+          
+          if (successResult && successResult.status === 'fulfilled') {
+            console.log('Legacy token verification successful')
+            window.history.replaceState({}, document.title, '/auth/update-password')
+            return
+          }
+          
+          console.error('All token verification methods failed')
+          router.push('/auth/login?error=invalid_recovery_token')
+          return
+        } catch (err) {
+          console.error('Legacy token verification error:', err)
+          router.push('/auth/login?error=recovery_exception')
+          return
+        }
+      }
+
+      // Check if user already has a valid session
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) {
+        console.log('No session found and no recovery tokens, redirecting to login')
+        router.push('/auth/login')
+      } else {
+        console.log('Valid session found for password update')
+      }
+    }
+
+    handleAuthStateChange()
+  }, [router, supabase.auth])
 
   const handleUpdatePassword = async (e: React.FormEvent) => {
     e.preventDefault()

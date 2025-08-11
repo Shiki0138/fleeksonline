@@ -1,6 +1,4 @@
-# Ignore everything except fleeks-clean
-*
-!fleeks-clean/
-!fleeks-clean/**
-!vercel.json
-!README.md
+# Deployment specific ignores
+node_modules
+.DS_Store
+*.log
