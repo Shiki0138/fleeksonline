@@ -365,7 +365,11 @@ export default function DashboardPage() {
                     <motion.div
                       key={video.id}
                       whileHover={{ scale: 1.02 }}
-                      className="bg-white/10 backdrop-blur-sm rounded-xl overflow-hidden hover:bg-white/15 transition relative group"
+                      onClick={() => {
+                        console.log('[Dashboard] Video card clicked:', video.id, video.title);
+                        router.push(`/videos/${video.id}`);
+                      }}
+                      className="bg-white/10 backdrop-blur-sm rounded-xl overflow-hidden hover:bg-white/15 transition relative group cursor-pointer"
                     >
                       {/* Admin Edit Button */}
                       {isAdmin && (
@@ -415,8 +419,7 @@ export default function DashboardPage() {
                       
                       {/* Video Info */}
                       <div 
-                        className="p-4 cursor-pointer"
-                        onClick={() => router.push(`/videos/${video.id}`)}
+                        className="p-4"
                       >
                         <h3 className="font-semibold text-lg mb-2 line-clamp-2">
                           {video.title}
