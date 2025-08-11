@@ -15,75 +15,124 @@ export default function UpdatePasswordPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
+  const [isValidSession, setIsValidSession] = useState(false)
   const [isCheckingAuth, setIsCheckingAuth] = useState(true)
-  const supabase = createClientComponentClient()
-
+  
   useEffect(() => {
-    // Set up auth state change listener
-    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log('[UpdatePassword] Auth state changed:', event, 'Session:', !!session)
+    const verifyRecoveryToken = async () => {
+      console.log('[UpdatePassword] Starting recovery token verification...')
       
-      if (event === 'PASSWORD_RECOVERY' && session) {
-        console.log('[UpdatePassword] Password recovery session detected')
-        setIsCheckingAuth(false)
-        // Clear the URL hash
-        window.history.replaceState({}, document.title, '/auth/update-password')
-      } else if (event === 'SIGNED_IN' && session) {
-        console.log('[UpdatePassword] User signed in')
-        setIsCheckingAuth(false)
-      }
-    })
-
-    // Initial check
-    const checkInitialAuth = async () => {
-      console.log('[UpdatePassword] Checking initial auth state...')
-      console.log('[UpdatePassword] Current URL:', window.location.href)
-      
-      // First, let Supabase process the hash fragment
-      // This happens automatically when the client is created
-      const { data: { session }, error } = await supabase.auth.getSession()
-      
-      if (session) {
-        console.log('[UpdatePassword] Session found on initial check')
-        setIsCheckingAuth(false)
-        window.history.replaceState({}, document.title, '/auth/update-password')
-        return
-      }
-      
-      // If no session yet, check if we have hash parameters
-      const hashParams = new URLSearchParams(window.location.hash.substring(1))
-      const accessToken = hashParams.get('access_token')
-      const type = hashParams.get('type')
-      
-      if (accessToken && type === 'recovery') {
-        console.log('[UpdatePassword] Recovery hash params found, waiting for Supabase to process...')
-        // Give Supabase more time to process the hash
-        setTimeout(async () => {
-          const { data: { session: delayedSession } } = await supabase.auth.getSession()
-          if (delayedSession) {
-            console.log('[UpdatePassword] Session established after delay')
-            setIsCheckingAuth(false)
+      try {
+        // Create a single instance of Supabase client
+        const supabase = createClientComponentClient()
+        
+        // Method 1: Check if Supabase already processed the hash
+        const { data: { session: existingSession } } = await supabase.auth.getSession()
+        if (existingSession) {
+          console.log('[UpdatePassword] Existing session found')
+          setIsValidSession(true)
+          setIsCheckingAuth(false)
+          window.history.replaceState({}, document.title, '/auth/update-password')
+          return
+        }
+        
+        // Method 2: Manual hash processing
+        if (window.location.hash) {
+          console.log('[UpdatePassword] Processing hash fragment:', window.location.hash)
+          
+          // Parse hash parameters
+          const hashParams = new URLSearchParams(window.location.hash.substring(1))
+          const accessToken = hashParams.get('access_token')
+          const refreshToken = hashParams.get('refresh_token')
+          const type = hashParams.get('type')
+          
+          if (accessToken && type === 'recovery') {
+            console.log('[UpdatePassword] Found recovery tokens in hash')
+            
+            // Try to set session manually
+            try {
+              // Option 1: If we have both tokens
+              if (refreshToken) {
+                console.log('[UpdatePassword] Setting session with both tokens')
+                const { data, error } = await supabase.auth.setSession({
+                  access_token: accessToken,
+                  refresh_token: refreshToken
+                })
+                
+                if (!error && data.session) {
+                  console.log('[UpdatePassword] Session set successfully with both tokens')
+                  setIsValidSession(true)
+                  setIsCheckingAuth(false)
+                  window.history.replaceState({}, document.title, '/auth/update-password')
+                  return
+                }
+              }
+              
+              // Option 2: Try with access token only (for password recovery)
+              console.log('[UpdatePassword] Attempting to use access token for password recovery')
+              // For password recovery, the access token itself might be the session
+              const { data: sessionData, error: sessionError } = await supabase.auth.getSession()
+              
+              // Give Supabase one more chance to auto-process
+              if (!sessionData?.session) {
+                console.log('[UpdatePassword] Waiting for Supabase auto-processing...')
+                await new Promise(resolve => setTimeout(resolve, 1000))
+                
+                const { data: { session: delayedSession } } = await supabase.auth.getSession()
+                if (delayedSession) {
+                  console.log('[UpdatePassword] Session found after delay')
+                  setIsValidSession(true)
+                  setIsCheckingAuth(false)
+                  window.history.replaceState({}, document.title, '/auth/update-password')
+                  return
+                }
+              }
+              
+              // Option 3: Try to refresh the session
+              console.log('[UpdatePassword] Attempting to refresh session')
+              const { data: { session: refreshedSession }, error: refreshError } = await supabase.auth.refreshSession()
+              
+              if (refreshedSession) {
+                console.log('[UpdatePassword] Session refreshed successfully')
+                setIsValidSession(true)
+                setIsCheckingAuth(false)
+                window.history.replaceState({}, document.title, '/auth/update-password')
+                return
+              }
+              
+              console.error('[UpdatePassword] All session establishment methods failed')
+              setError('リカバリートークンの検証に失敗しました。リンクの有効期限が切れている可能性があります。')
+              setIsCheckingAuth(false)
+              
+            } catch (err) {
+              console.error('[UpdatePassword] Error during session setup:', err)
+              setError('セッションの確立中にエラーが発生しました。')
+              setIsCheckingAuth(false)
+            }
           } else {
-            console.error('[UpdatePassword] No session after waiting')
-            setError('リカバリートークンの検証に失敗しました。パスワードリセットを再度お試しください。')
+            console.log('[UpdatePassword] No valid recovery tokens in hash')
+            setError('有効なリカバリートークンが見つかりません。')
             setIsCheckingAuth(false)
           }
-        }, 2000)
-      } else {
-        console.log('[UpdatePassword] No recovery tokens found')
+        } else {
+          console.log('[UpdatePassword] No hash fragment found')
+          // Check if user has a valid session anyway
+          const { data: { session } } = await supabase.auth.getSession()
+          if (session) {
+            setIsValidSession(true)
+          } else {
+            setError('パスワードリセットリンクが無効です。')
+          }
+          setIsCheckingAuth(false)
+        }
+      } catch (error) {
+        console.error('[UpdatePassword] Unexpected error:', error)
+        setError('予期しないエラーが発生しました。')
         setIsCheckingAuth(false)
-        // Don't redirect if we're on the update-password page
-        // User might have a valid session already
       }
-      
     }
     
-    checkInitialAuth()
-    
-    // Cleanup
-    return () => {
-      authListener?.subscription.unsubscribe()
-    }
+    verifyRecoveryToken()
   }, [])
 
   const handleUpdatePassword = async (e: React.FormEvent) => {
@@ -104,11 +153,15 @@ export default function UpdatePasswordPage() {
     }
 
     try {
-      // First check if we have a session
+      const supabase = createClientComponentClient()
+      
+      // Double-check session before updating
       const { data: { session } } = await supabase.auth.getSession()
       
       if (!session) {
-        setError('セッションが見つかりません。パスワードリセットをもう一度お試しください。')
+        console.error('[UpdatePassword] No session when trying to update password')
+        setError('セッションが無効です。ページを再読み込みしてください。')
+        setIsLoading(false)
         return
       }
       
@@ -122,8 +175,10 @@ export default function UpdatePasswordPage() {
         console.error('[UpdatePassword] Password update error:', error)
         if (error.message === 'Auth session missing!') {
           setError('認証セッションが無効です。パスワードリセットをもう一度お試しください。')
+        } else if (error.message.includes('expired')) {
+          setError('リンクの有効期限が切れています。パスワードリセットをもう一度お試しください。')
         } else {
-          setError(error.message)
+          setError(`エラー: ${error.message}`)
         }
         return
       }
@@ -133,7 +188,8 @@ export default function UpdatePasswordPage() {
         router.push('/dashboard')
       }, 2000)
     } catch (err) {
-      setError('パスワードの更新に失敗しました')
+      console.error('[UpdatePassword] Unexpected error during password update:', err)
+      setError('パスワードの更新中にエラーが発生しました。')
     } finally {
       setIsLoading(false)
     }
@@ -164,7 +220,7 @@ export default function UpdatePasswordPage() {
             新しいパスワードを設定
           </h1>
           <p className="text-gray-300 mt-2">
-            {success ? 'パスワードを更新しました' : '新しいパスワードを入力してください'}
+            {success ? 'パスワードを更新しました' : isCheckingAuth ? '認証情報を確認中...' : isValidSession ? '新しいパスワードを入力してください' : ''}
           </p>
         </div>
 
@@ -200,91 +256,95 @@ export default function UpdatePasswordPage() {
                   animate={{ opacity: 1, scale: 1 }}
                   className="bg-red-500/20 border border-red-500/50 rounded-lg p-3 flex items-center gap-2"
                 >
-                  <AlertCircle className="w-5 h-5 text-red-400" />
+                  <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0" />
                   <span className="text-sm text-red-300">{error}</span>
                 </motion.div>
               )}
 
-              {/* New Password Field */}
-              <div>
-                <label className="block text-sm font-medium mb-2">
-                  新しいパスワード
-                </label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                  <input
-                    type={showPassword ? 'text' : 'password'}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="w-full bg-white/10 border border-white/20 rounded-lg pl-10 pr-12 py-3 text-white placeholder-gray-400 focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400 transition"
-                    placeholder="••••••••"
-                    required
-                    minLength={6}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition"
-                  >
-                    {showPassword ? (
-                      <EyeOff className="w-5 h-5" />
-                    ) : (
-                      <Eye className="w-5 h-5" />
-                    )}
-                  </button>
-                </div>
-              </div>
+              {isValidSession ? (
+                <>
+                  {/* New Password Field */}
+                  <div>
+                    <label className="block text-sm font-medium mb-2">
+                      新しいパスワード
+                    </label>
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                      <input
+                        type={showPassword ? 'text' : 'password'}
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        className="w-full bg-white/10 border border-white/20 rounded-lg pl-10 pr-12 py-3 text-white placeholder-gray-400 focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400 transition"
+                        placeholder="••••••••"
+                        required
+                        minLength={6}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition"
+                      >
+                        {showPassword ? (
+                          <EyeOff className="w-5 h-5" />
+                        ) : (
+                          <Eye className="w-5 h-5" />
+                        )}
+                      </button>
+                    </div>
+                  </div>
 
-              {/* Confirm Password Field */}
-              <div>
-                <label className="block text-sm font-medium mb-2">
-                  パスワードを確認
-                </label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                  <input
-                    type={showConfirmPassword ? 'text' : 'password'}
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="w-full bg-white/10 border border-white/20 rounded-lg pl-10 pr-12 py-3 text-white placeholder-gray-400 focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400 transition"
-                    placeholder="••••••••"
-                    required
-                    minLength={6}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition"
-                  >
-                    {showConfirmPassword ? (
-                      <EyeOff className="w-5 h-5" />
-                    ) : (
-                      <Eye className="w-5 h-5" />
-                    )}
-                  </button>
-                </div>
-              </div>
+                  {/* Confirm Password Field */}
+                  <div>
+                    <label className="block text-sm font-medium mb-2">
+                      パスワードを確認
+                    </label>
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                      <input
+                        type={showConfirmPassword ? 'text' : 'password'}
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        className="w-full bg-white/10 border border-white/20 rounded-lg pl-10 pr-12 py-3 text-white placeholder-gray-400 focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400 transition"
+                        placeholder="••••••••"
+                        required
+                        minLength={6}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition"
+                      >
+                        {showConfirmPassword ? (
+                          <EyeOff className="w-5 h-5" />
+                        ) : (
+                          <Eye className="w-5 h-5" />
+                        )}
+                      </button>
+                    </div>
+                  </div>
 
-              {/* Submit Button */}
-              <motion.button
-                type="submit"
-                disabled={isLoading}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 py-3 rounded-lg font-semibold shadow-lg hover:shadow-xl hover:shadow-blue-500/25 transition disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isLoading ? (
-                  <span className="flex items-center justify-center">
-                    <svg className="animate-spin h-5 w-5 mr-2" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                    </svg>
-                    更新中...
-                  </span>
-                ) : (
-                  'パスワードを更新'
-                )}
-              </motion.button>
+                  {/* Submit Button */}
+                  <motion.button
+                    type="submit"
+                    disabled={isLoading}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 py-3 rounded-lg font-semibold shadow-lg hover:shadow-xl hover:shadow-blue-500/25 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isLoading ? (
+                      <span className="flex items-center justify-center">
+                        <svg className="animate-spin h-5 w-5 mr-2" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                        </svg>
+                        更新中...
+                      </span>
+                    ) : (
+                      'パスワードを更新'
+                    )}
+                  </motion.button>
+                </>
+              ) : null}
 
               {/* Links */}
               <div className="text-center space-y-2 mt-4">
