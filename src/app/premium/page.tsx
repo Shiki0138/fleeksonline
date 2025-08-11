@@ -35,18 +35,41 @@ export default function PremiumPage() {
   useEffect(() => {
     console.log('[Premium Page] Component mounted')
     console.log('[Premium Page] Current pathname:', window.location.pathname)
+    
+    // リダイレクトを監視
+    const originalPushState = window.history.pushState
+    const originalReplaceState = window.history.replaceState
+    
+    window.history.pushState = function(...args) {
+      console.log('[Premium Page] pushState called:', args)
+      return originalPushState.apply(window.history, args)
+    }
+    
+    window.history.replaceState = function(...args) {
+      console.log('[Premium Page] replaceState called:', args)
+      return originalReplaceState.apply(window.history, args)
+    }
+    
     const initializePage = async () => {
-      await checkUser()
-      // ユーザーチェック後にデータを取得
-      Promise.all([
-        fetchVideos(),
-        fetchBlogPosts(),
-        fetchEducationContents()
-      ]).catch(error => {
-        console.error('[Premium Page] Error initializing page:', error)
-      })
+      try {
+        await checkUser()
+        // ユーザーチェック後にデータを取得
+        await fetchVideos()
+        await fetchBlogPosts()
+        // 教育コンテンツの取得を一時的に無効化
+        // await fetchEducationContents()
+        console.log('[Premium Page] Skipping education contents fetch')
+      } catch (error) {
+        console.error('[Premium Page] Error in initializePage:', error)
+      }
     }
     initializePage()
+    
+    return () => {
+      // クリーンアップ
+      window.history.pushState = originalPushState
+      window.history.replaceState = originalReplaceState
+    }
   }, [])
 
   useEffect(() => {
@@ -285,6 +308,7 @@ export default function PremiumPage() {
             <Youtube className="w-5 h-5 inline-block mr-2" />
             動画
           </button>
+          {/* 教育コンテンツタブを一時的に非表示
           <button
             onClick={() => setActiveTab('education')}
             className={`flex-1 py-3 px-6 rounded-md font-medium transition ${
@@ -296,6 +320,7 @@ export default function PremiumPage() {
             <GraduationCap className="w-5 h-5 inline-block mr-2" />
             教育コンテンツ
           </button>
+          */}
           <button
             onClick={() => setActiveTab('blog')}
             className={`flex-1 py-3 px-6 rounded-md font-medium transition ${

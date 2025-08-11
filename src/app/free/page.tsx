@@ -38,13 +38,11 @@ export default function FreePage() {
     const initializePage = async () => {
       await checkUser()
       // ユーザーチェック後にデータを取得
-      Promise.all([
-        fetchVideos(),
-        fetchBlogPosts(),
-        fetchEducationContents()
-      ]).catch(error => {
-        console.error('[Free Page] Error initializing page:', error)
-      })
+      await fetchVideos()
+      await fetchBlogPosts()
+      // 教育コンテンツの取得を一時的に無効化
+      // await fetchEducationContents()
+      console.log('[Free Page] Skipping education contents fetch')
     }
     initializePage()
   }, [])
@@ -308,6 +306,7 @@ export default function FreePage() {
             <Youtube className="w-5 h-5 inline-block mr-2" />
             動画
           </button>
+          {/* 教育コンテンツタブを一時的に非表示
           <button
             onClick={() => setActiveTab('education')}
             className={`flex-1 py-3 px-6 rounded-md font-medium transition ${
@@ -319,6 +318,7 @@ export default function FreePage() {
             <GraduationCap className="w-5 h-5 inline-block mr-2" />
             教育コンテンツ
           </button>
+          */}
           <button
             onClick={() => setActiveTab('blog')}
             className={`flex-1 py-3 px-6 rounded-md font-medium transition ${
