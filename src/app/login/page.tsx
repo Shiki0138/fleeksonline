@@ -68,19 +68,22 @@ export default function LoginPage() {
         const isAdminEmail = data.user.email === 'greenroom51@gmail.com'
         
         if (isAdminEmail) {
+          console.log('[Login] Admin user detected, redirecting to /admin')
           setSuccess('管理者としてログインしています...')
           setLoading(false)
-          // Immediately redirect without waiting
-          router.push('/admin')
-          router.refresh()
+          // Use window.location for hard redirect to ensure session is set
+          console.log('[Login] Using window.location.href = "/admin"')
+          window.location.href = '/admin'
           return
         }
 
         // For other users, redirect to dashboard without profile check
+        console.log('[Login] Regular user detected, redirecting to /dashboard')
         setSuccess('ログインしています...')
         setLoading(false)
-        router.push('/dashboard')
-        router.refresh()
+        // Use window.location for hard redirect to ensure session is set
+        console.log('[Login] Using window.location.href = "/dashboard"')
+        window.location.href = '/dashboard'
       } else {
         console.error('No user data returned')
         setError('ログインに失敗しました')
