@@ -35,10 +35,18 @@ export default function FreePage() {
   useEffect(() => {
     console.log('[Free Page] Component mounted')
     console.log('[Free Page] Current pathname:', window.location.pathname)
-    checkUser()
-    fetchVideos()
-    fetchBlogPosts()
-    fetchEducationContents()
+    const initializePage = async () => {
+      await checkUser()
+      // ユーザーチェック後にデータを取得
+      Promise.all([
+        fetchVideos(),
+        fetchBlogPosts(),
+        fetchEducationContents()
+      ]).catch(error => {
+        console.error('[Free Page] Error initializing page:', error)
+      })
+    }
+    initializePage()
   }, [])
 
   useEffect(() => {
@@ -125,27 +133,44 @@ export default function FreePage() {
   }
 
   const fetchEducationContents = async () => {
-    // 無料会員は基礎レベルのコンテンツのみ
-    const { data: contents, error: contentsError } = await supabase
-      .from('fleeks_education_contents')
-      .select('*')
-      .eq('is_published', true)
-      .eq('difficulty', '基礎')
-      .order('display_order', { ascending: true })
-
-    if (!contentsError && contents) {
-      setEducationContents(contents)
-
-      const contentIds = contents.map(c => c.id)
-      const { data: chapters } = await supabase
-        .from('fleeks_education_chapters')
+    try {
+      // 無料会員は基礎レベルのコンテンツのみ
+      const { data: contents, error: contentsError } = await supabase
+        .from('fleeks_education_contents')
         .select('*')
-        .in('content_id', contentIds)
-        .order('order_index', { ascending: true })
+        .eq('is_published', true)
+        .eq('difficulty', '基礎')
+        .order('display_order', { ascending: true })
 
-      if (chapters) {
-        setEducationChapters(chapters)
+      if (contentsError) {
+        console.log('[Free Page] Education contents error:', contentsError)
+        // テーブルが存在しない場合は空配列を設定
+        setEducationContents([])
+        setEducationChapters([])
+        return
       }
+
+      if (contents && contents.length > 0) {
+        setEducationContents(contents)
+
+        const contentIds = contents.map(c => c.id)
+        const { data: chapters } = await supabase
+          .from('fleeks_education_chapters')
+          .select('*')
+          .in('content_id', contentIds)
+          .order('order_index', { ascending: true })
+
+        if (chapters) {
+          setEducationChapters(chapters)
+        }
+      } else {
+        setEducationContents([])
+        setEducationChapters([])
+      }
+    } catch (error) {
+      console.error('[Free Page] Error fetching education contents:', error)
+      setEducationContents([])
+      setEducationChapters([])
     }
   }
 

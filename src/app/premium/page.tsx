@@ -35,10 +35,18 @@ export default function PremiumPage() {
   useEffect(() => {
     console.log('[Premium Page] Component mounted')
     console.log('[Premium Page] Current pathname:', window.location.pathname)
-    checkUser()
-    fetchVideos()
-    fetchBlogPosts()
-    fetchEducationContents()
+    const initializePage = async () => {
+      await checkUser()
+      // ユーザーチェック後にデータを取得
+      Promise.all([
+        fetchVideos(),
+        fetchBlogPosts(),
+        fetchEducationContents()
+      ]).catch(error => {
+        console.error('[Premium Page] Error initializing page:', error)
+      })
+    }
+    initializePage()
   }, [])
 
   useEffect(() => {
@@ -123,25 +131,42 @@ export default function PremiumPage() {
   }
 
   const fetchEducationContents = async () => {
-    const { data: contents, error: contentsError } = await supabase
-      .from('fleeks_education_contents')
-      .select('*')
-      .eq('is_published', true)
-      .order('display_order', { ascending: true })
-
-    if (!contentsError && contents) {
-      setEducationContents(contents)
-
-      const contentIds = contents.map(c => c.id)
-      const { data: chapters } = await supabase
-        .from('fleeks_education_chapters')
+    try {
+      const { data: contents, error: contentsError } = await supabase
+        .from('fleeks_education_contents')
         .select('*')
-        .in('content_id', contentIds)
-        .order('order_index', { ascending: true })
+        .eq('is_published', true)
+        .order('display_order', { ascending: true })
 
-      if (chapters) {
-        setEducationChapters(chapters)
+      if (contentsError) {
+        console.log('[Premium Page] Education contents error:', contentsError)
+        // テーブルが存在しない場合は空配列を設定
+        setEducationContents([])
+        setEducationChapters([])
+        return
       }
+
+      if (contents && contents.length > 0) {
+        setEducationContents(contents)
+
+        const contentIds = contents.map(c => c.id)
+        const { data: chapters } = await supabase
+          .from('fleeks_education_chapters')
+          .select('*')
+          .in('content_id', contentIds)
+          .order('order_index', { ascending: true })
+
+        if (chapters) {
+          setEducationChapters(chapters)
+        }
+      } else {
+        setEducationContents([])
+        setEducationChapters([])
+      }
+    } catch (error) {
+      console.error('[Premium Page] Error fetching education contents:', error)
+      setEducationContents([])
+      setEducationChapters([])
     }
   }
 
