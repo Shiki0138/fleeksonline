@@ -210,14 +210,20 @@ export default function AdminDashboard() {
                 <p className="text-xs text-red-400">管理者</p>
               </div>
               <button
-                onClick={() => router.push('/premium')}
+                onClick={() => {
+                  console.log('Navigating to premium page...')
+                  window.location.href = '/premium'
+                }}
                 className="flex items-center space-x-2 bg-gradient-to-r from-purple-500 to-pink-500 px-4 py-2 rounded-lg hover:from-purple-600 hover:to-pink-600 transition"
               >
                 <Crown className="w-5 h-5" />
                 <span>有料会員ページ</span>
               </button>
               <button
-                onClick={() => router.push('/free')}
+                onClick={() => {
+                  console.log('Navigating to free page...')
+                  window.location.href = '/free'
+                }}
                 className="flex items-center space-x-2 bg-gray-600 hover:bg-gray-700 px-4 py-2 rounded-lg transition"
               >
                 <Lock className="w-5 h-5" />
