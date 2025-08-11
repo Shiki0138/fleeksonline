@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
@@ -23,13 +23,28 @@ export default function LoginPage() {
     setSuccess('')
     setLoading(true)
 
+    console.log('Login attempt started for:', email)
+
+    // Set a timeout for the login process
+    const timeoutId = setTimeout(() => {
+      if (loading) {
+        console.error('Login timeout - request took too long')
+        setError('ログイン処理がタイムアウトしました。ネットワーク接続を確認してください。')
+        setLoading(false)
+      }
+    }, 15000) // 15 seconds timeout
+
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       })
 
+      clearTimeout(timeoutId)
+      console.log('Auth response:', { data, error })
+
       if (error) {
+        console.error('Auth error:', error)
         // Translate common Supabase errors to Japanese
         let errorMsg = error.message
         if (error.message.includes('Invalid login credentials')) {
@@ -38,59 +53,59 @@ export default function LoginPage() {
           errorMsg = 'メールアドレスが確認されていません。確認メールをご確認ください。'
         } else if (error.message.includes('Too many requests')) {
           errorMsg = 'ログイン試行回数が上限に達しました。しばらくお待ちください。'
+        } else if (error.message.includes('Failed to fetch')) {
+          errorMsg = 'ネットワークエラーが発生しました。インターネット接続を確認してください。'
         }
         setError(errorMsg)
+        setLoading(false)
         return
       }
 
       if (data?.user) {
-        // Check if user is admin - check by email first, then profile
+        console.log('Login successful, user:', data.user.email)
+        
+        // Skip profile check for admin email to speed up login
         const isAdminEmail = data.user.email === 'greenroom51@gmail.com'
         
         if (isAdminEmail) {
           setSuccess('管理者としてログインしています...')
-          setTimeout(() => {
-            router.push('/admin')
-            router.refresh()
-          }, 1000)
+          setLoading(false)
+          // Immediately redirect without waiting
+          router.push('/admin')
+          router.refresh()
           return
         }
 
-        // Check user role in profile table
-        try {
-          const { data: profile } = await supabase
-            .from('fleeks_profiles')
-            .select('role')
-            .eq('id', data.user.id)
-            .single()
-
-          if (profile?.role === 'admin') {
-            setSuccess('管理者としてログインしています...')
-            setTimeout(() => {
-              router.push('/admin')
-            }, 1000)
-          } else {
-            setSuccess('ログインしています...')
-            setTimeout(() => {
-              router.push('/dashboard')
-            }, 1000)
-          }
-        } catch (profileError) {
-          console.log('Profile check failed, redirecting to dashboard:', profileError)
-          // If profile check fails, still allow login to dashboard
-          setSuccess('ログインしています...')
-          setTimeout(() => {
-            router.push('/dashboard')
-          }, 1000)
-        }
+        // For other users, redirect to dashboard without profile check
+        setSuccess('ログインしています...')
+        setLoading(false)
+        router.push('/dashboard')
+        router.refresh()
+      } else {
+        console.error('No user data returned')
+        setError('ログインに失敗しました')
+        setLoading(false)
       }
     } catch (err) {
+      clearTimeout(timeoutId)
       console.error('Login error:', err)
-      setError('ログイン中にエラーが発生しました')
-    } finally {
+      
+      // Check if it's a network error
+      if (err instanceof Error && err.message.includes('fetch')) {
+        setError('ネットワークエラーが発生しました。インターネット接続を確認してください。')
+      } else {
+        setError('ログイン中にエラーが発生しました')
+      }
       setLoading(false)
     }
   }
+
+  // Clean up on unmount
+  useEffect(() => {
+    return () => {
+      setLoading(false)
+    }
+  }, [])
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 text-white flex items-center justify-center px-4">
@@ -142,7 +157,7 @@ export default function LoginPage() {
                   animate={{ opacity: 1, scale: 1 }}
                   className="bg-red-500/20 border border-red-500/50 rounded-lg p-3 flex items-center gap-2"
                 >
-                  <AlertCircle className="w-5 h-5 text-red-400" />
+                  <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0" />
                   <span className="text-sm text-red-300">{error}</span>
                 </motion.div>
               )}
@@ -161,6 +176,7 @@ export default function LoginPage() {
                     className="w-full bg-white/10 border border-white/20 rounded-lg pl-10 pr-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400 transition"
                     placeholder="your@email.com"
                     required
+                    disabled={loading}
                   />
                 </div>
               </div>
@@ -179,11 +195,13 @@ export default function LoginPage() {
                     className="w-full bg-white/10 border border-white/20 rounded-lg pl-10 pr-12 py-3 text-white placeholder-gray-400 focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400 transition"
                     placeholder="••••••••"
                     required
+                    disabled={loading}
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition"
+                    disabled={loading}
                   >
                     {showPassword ? (
                       <EyeOff className="w-5 h-5" />
