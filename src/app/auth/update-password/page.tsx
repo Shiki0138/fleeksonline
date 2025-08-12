@@ -24,6 +24,9 @@ export default function UpdatePasswordPage() {
     const verifyRecoveryToken = async () => {
       console.log('[UpdatePassword] Starting recovery token verification...')
       
+      // Small delay to ensure cookies are set after redirect
+      await new Promise(resolve => setTimeout(resolve, 100))
+      
       try {
         // Check URL parameters
         const verified = searchParams.get('verified')
@@ -47,6 +50,43 @@ export default function UpdatePasswordPage() {
           return
         }
         
+        // Check for hash fragment parameters (Supabase default format)
+        const hashParams = new URLSearchParams(window.location.hash.substring(1))
+        const hashAccessToken = hashParams.get('access_token')
+        const hashRefreshToken = hashParams.get('refresh_token')
+        const hashType = hashParams.get('type')
+        
+        console.log('[UpdatePassword] Hash params:', {
+          access_token: !!hashAccessToken,
+          refresh_token: !!hashRefreshToken,
+          type: hashType,
+          fullHash: window.location.hash
+        })
+        
+        // If we have hash parameters, try to set session
+        if (hashAccessToken && hashType === 'recovery') {
+          try {
+            console.log('[UpdatePassword] Setting session from hash params...')
+            const { data, error } = await supabase.auth.setSession({
+              access_token: hashAccessToken,
+              refresh_token: hashRefreshToken || ''
+            })
+            
+            if (!error && data.session) {
+              console.log('[UpdatePassword] Session set successfully from hash params')
+              setIsValidSession(true)
+              setIsCheckingAuth(false)
+              // Clear the hash from URL for security
+              window.history.replaceState({}, document.title, '/auth/update-password')
+              return
+            } else {
+              console.error('[UpdatePassword] Error setting session from hash:', error)
+            }
+          } catch (err) {
+            console.error('[UpdatePassword] Exception setting session from hash:', err)
+          }
+        }
+        
         // Check existing session
         const { data: { session } } = await supabase.auth.getSession()
         console.log('[UpdatePassword] Current session:', !!session, session?.user?.email)
@@ -59,6 +99,9 @@ export default function UpdatePasswordPage() {
         }
         
         // Try to restore session from cookies
+        console.log('[UpdatePassword] Cookie check:')
+        console.log('[UpdatePassword] All cookies:', document.cookie)
+        
         const accessToken = document.cookie
           .split('; ')
           .find(row => row.startsWith('sb-access-token='))
@@ -68,6 +111,9 @@ export default function UpdatePasswordPage() {
           .split('; ')
           .find(row => row.startsWith('sb-refresh-token='))
           ?.split('=')[1]
+        
+        console.log('[UpdatePassword] Access token found:', !!accessToken)
+        console.log('[UpdatePassword] Refresh token found:', !!refreshToken)
         
         if (accessToken && refreshToken) {
           console.log('[UpdatePassword] Restoring session from cookies')
