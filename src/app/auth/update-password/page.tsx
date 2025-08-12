@@ -14,7 +14,7 @@ export default function UpdatePasswordPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [error, setError] = useState<string | React.ReactNode | null>(null)
   const [success, setSuccess] = useState(false)
   const [isValidSession, setIsValidSession] = useState(false)
   const [isCheckingAuth, setIsCheckingAuth] = useState(true)
@@ -133,7 +133,18 @@ export default function UpdatePasswordPage() {
         }
         
         // No valid session found
-        setError('セッションが見つかりません。パスワードリセットをもう一度お試しください。')
+        setError(
+          <div className="space-y-3">
+            <p>セッションが見つかりません。</p>
+            <p className="text-sm">メールのリンクが機能しない場合は、以下の緊急用リセットをお試しください：</p>
+            <a 
+              href="/auth/emergency-reset" 
+              className="inline-block bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition text-sm font-medium"
+            >
+              緊急用パスワードリセット（確認コード方式）
+            </a>
+          </div>
+        )
         setIsCheckingAuth(false)
         
       } catch (error) {
