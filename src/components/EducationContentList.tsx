@@ -247,7 +247,7 @@ export default function EducationContentList() {
                         <div className="flex items-center gap-3 mb-2">
                           {article.isPublished ? (
                             <Link
-                              href={`/education/${article.id}`}
+                              href={`/education/${article.id.replace('article_', '')}`}
                               className="font-semibold text-gray-900 hover:text-purple-600 transition"
                             >
                               {article.title}
@@ -283,7 +283,7 @@ export default function EducationContentList() {
                       
                       {article.isPublished && (
                         <Link
-                          href={`/education/${article.id}`}
+                          href={`/education/${article.id.replace('article_', '')}`}
                           className="text-purple-600 hover:text-purple-700 font-medium text-sm"
                         >
                           読む →
