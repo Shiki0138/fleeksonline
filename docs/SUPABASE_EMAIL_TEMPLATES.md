@@ -1,118 +1,161 @@
-# Supabase メールテンプレート設定
+# Supabase Email Templates - 最適化されたテンプレート
 
-## 📧 メールアドレス確認（Confirm signup）
+## 1. Confirm Signup (新規登録確認)
 
+### 日本語版
 ```html
-<h2>メールアドレスの確認</h2>
-
-<p>こんにちは、</p>
-<p>Fleeksへの登録ありがとうございます。メールアドレスを確認するには、下記のリンクをクリックしてください：</p>
+<h2>FLEEKS へようこそ！</h2>
+<p>この度は FLEEKS にご登録いただき、ありがとうございます。</p>
+<p>以下のボタンをクリックして、メールアドレスを確認してください：</p>
 <p><a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=signup">メールアドレスを確認</a></p>
 <p>このリンクは24時間有効です。</p>
-
-<p>このメールに心当たりがない場合は、無視してください。</p>
+<p>心当たりのない場合は、このメールを無視してください。</p>
 ```
 
-## 🔑 パスワードリセット（Reset Password）
+### 英語版
+```html
+<h2>Welcome to FLEEKS!</h2>
+<p>Thank you for signing up for FLEEKS.</p>
+<p>Please click the button below to confirm your email address:</p>
+<p><a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=signup">Confirm Email</a></p>
+<p>This link will expire in 24 hours.</p>
+<p>If you didn't request this, please ignore this email.</p>
+```
 
+## 2. Reset Password (パスワードリセット)
+
+### 日本語版（推奨）
 ```html
 <h2>パスワードリセット</h2>
-
-<p>こんにちは、</p>
-<p>パスワードをリセットするには、下記のリンクをクリックしてください：</p>
-<p><a href="{{ .SiteURL }}/auth/update-password#access_token={{ .Token }}&type=recovery">パスワードをリセット</a></p>
+<p>パスワードをリセットするリクエストを受け付けました。</p>
+<p>以下のリンクをクリックして、新しいパスワードを設定してください：</p>
+<p><a href="{{ .SiteURL }}/auth/update-password?access_token={{ .Token }}&type=recovery">パスワードをリセット</a></p>
 <p>このリンクは1時間有効です。</p>
-
 <p>パスワードリセットをリクエストしていない場合は、このメールを無視してください。</p>
 ```
 
-## 🎯 招待メール（Invite user）
-
+### 英語版
 ```html
-<h2>Fleeksへの招待</h2>
+<h2>Reset Password</h2>
+<p>We received a request to reset your password.</p>
+<p>Click the link below to set a new password:</p>
+<p><a href="{{ .SiteURL }}/auth/update-password?access_token={{ .Token }}&type=recovery">Reset Password</a></p>
+<p>This link will expire in 1 hour.</p>
+<p>If you didn't request a password reset, please ignore this email.</p>
+```
 
-<p>こんにちは、</p>
-<p>Fleeksに招待されました。下記のリンクをクリックしてアカウントを作成してください：</p>
-<p><a href="{{ .SiteURL }}/auth/accept-invite?token_hash={{ .TokenHash }}&type=invite">招待を受ける</a></p>
+## 3. Invite User (ユーザー招待)
+
+### 日本語版
+```html
+<h2>FLEEKS への招待</h2>
+<p>FLEEKS へ招待されました。</p>
+<p>以下のリンクをクリックして、アカウントを作成してください：</p>
+<p><a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=invite">招待を受ける</a></p>
 <p>このリンクは7日間有効です。</p>
 ```
 
-## ✨ マジックリンク（Magic Link）
+### 英語版
+```html
+<h2>You've been invited to FLEEKS</h2>
+<p>You have been invited to join FLEEKS.</p>
+<p>Click the link below to create your account:</p>
+<p><a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=invite">Accept Invitation</a></p>
+<p>This link will expire in 7 days.</p>
+```
 
+## 4. Magic Link (マジックリンクログイン)
+
+### 日本語版
 ```html
 <h2>ログインリンク</h2>
-
-<p>こんにちは、</p>
-<p>下記のリンクをクリックしてログインしてください：</p>
+<p>以下のリンクをクリックして、FLEEKS にログインしてください：</p>
 <p><a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=magiclink">ログイン</a></p>
 <p>このリンクは1時間有効です。</p>
-
-<p>このログインリクエストに心当たりがない場合は、このメールを無視してください。</p>
+<p>このログインをリクエストしていない場合は、このメールを無視してください。</p>
 ```
 
-## 📝 メールアドレス変更（Change Email Address）
+### 英語版
+```html
+<h2>Login Link</h2>
+<p>Click the link below to log in to FLEEKS:</p>
+<p><a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=magiclink">Log In</a></p>
+<p>This link will expire in 1 hour.</p>
+<p>If you didn't request this login, please ignore this email.</p>
+```
 
+## 5. Change Email Address (メールアドレス変更)
+
+### 日本語版
 ```html
 <h2>メールアドレスの変更確認</h2>
-
-<p>こんにちは、</p>
-<p>メールアドレスの変更を確認するには、下記のリンクをクリックしてください：</p>
-<p><a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=email_change">メールアドレス変更を確認</a></p>
+<p>メールアドレスの変更をリクエストされました。</p>
+<p>以下のリンクをクリックして、新しいメールアドレスを確認してください：</p>
+<p><a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=email_change">メールアドレスを確認</a></p>
 <p>このリンクは24時間有効です。</p>
-
-<p>メールアドレスの変更をリクエストしていない場合は、このメールを無視してください。</p>
+<p>心当たりのない場合は、このメールを無視してください。</p>
 ```
 
-## ⚙️ 重要な変数
+### 英語版
+```html
+<h2>Confirm Email Change</h2>
+<p>You requested to change your email address.</p>
+<p>Click the link below to confirm your new email address:</p>
+<p><a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=email_change">Confirm Email</a></p>
+<p>This link will expire in 24 hours.</p>
+<p>If you didn't request this change, please ignore this email.</p>
+```
 
-### 利用可能な変数：
-- `{{ .SiteURL }}` - サイトのURL（例: https://app.fleeks.jp）
+## 重要な注意事項
+
+### 1. URL パラメータについて
+- **Confirm Signup, Invite, Magic Link, Email Change**: `token_hash` を使用
+- **Reset Password**: `access_token` を使用（Supabaseの仕様）
+
+### 2. トークン変数
+- `{{ .SiteURL }}` - サイトのベースURL（例: https://app.fleeks.jp）
+- `{{ .TokenHash }}` - 確認用トークンハッシュ
 - `{{ .Token }}` - アクセストークン（パスワードリセット用）
-- `{{ .TokenHash }}` - トークンハッシュ（確認リンク用）
-- `{{ .Email }}` - ユーザーのメールアドレス
-- `{{ .NewEmail }}` - 新しいメールアドレス（メール変更時）
 
-### 注意点：
-1. **メール確認には `{{ .TokenHash }}` を使用**
-2. **パスワードリセットには `{{ .Token }}` を使用**
-3. **`{{ .TokenHashDuration }}` は使用しない**（エラーの原因）
+### 3. Supabase設定の重要ポイント
+1. **Authentication > URL Configuration** で以下を設定：
+   - Site URL: `https://app.fleeks.jp`
+   - Redirect URLs: 
+     ```
+     https://app.fleeks.jp/**
+     https://app.fleeks.jp/auth/confirm
+     https://app.fleeks.jp/auth/update-password
+     ```
 
-## 🔧 設定手順
+2. **Email Templates** で各テンプレートを更新
 
-1. Supabaseダッシュボードにログイン
-2. **Authentication** → **Email Templates** を開く
-3. 各テンプレートタイプを選択
-4. 上記のテンプレートをコピー＆ペースト
-5. **Save** をクリック
+3. **SMTP設定**（有料プランの場合）:
+   - カスタムSMTPを有効化
+   - SendGrid等のSMTPサービスを設定
 
-## 🚨 よくある間違い
+### 4. トラブルシューティング
 
-### ❌ 間違った例：
+#### パスワードリセットが機能しない場合
+1. URLに `#` が含まれている場合は `?` に手動で変更
+2. 例: `/auth/update-password#access_token=xxx` → `/auth/update-password?access_token=xxx`
+
+#### メールが届かない場合
+1. 迷惑メールフォルダを確認
+2. Supabaseの無料プランの場合、1時間に3通までの制限あり
+3. Rate Limitsを確認（Project Settings > Auth > Rate Limits）
+
+### 5. カスタムスタイリング（オプション）
 ```html
-<!-- TokenHashを最後に表示してしまっている -->
-<p>このリンクは {{ .TokenHashDuration }} 時間有効です。</p>{{ .TokenHash }}
-
-<!-- 間違ったパラメータ名 -->
-<a href="{{ .SiteURL }}/auth/callback?token={{ .Token }}&type=signup">
-
-<!-- 存在しない変数 -->
-{{ .TokenHashDuration }}
+<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+  <div style="background-color: #f8f9fa; border-radius: 8px; padding: 30px;">
+    <h2 style="color: #1a73e8; margin-bottom: 20px;">タイトル</h2>
+    <p style="color: #333; line-height: 1.6;">本文</p>
+    <p style="margin: 30px 0;">
+      <a href="{{ .SiteURL }}/..." 
+         style="background-color: #1a73e8; color: white; padding: 12px 30px; text-decoration: none; border-radius: 4px; display: inline-block;">
+        ボタンテキスト
+      </a>
+    </p>
+  </div>
+</div>
 ```
-
-### ✅ 正しい例：
-```html
-<!-- 正しいパラメータ名とハッシュの使用 -->
-<a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=signup">
-
-<!-- 固定の有効期限を表示 -->
-<p>このリンクは24時間有効です。</p>
-```
-
-## 🔍 デバッグ
-
-メールが正しく動作しない場合：
-
-1. **Supabase Logs** でエラーを確認
-2. **Authentication** → **Settings** でメール設定を確認
-3. **URL Configuration** で Site URL が正しいか確認
-4. テスト用メールアドレスで動作確認

@@ -1,112 +1,160 @@
 'use client'
 
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import toast from 'react-hot-toast'
 import Link from 'next/link'
-import { CheckCircle, AlertCircle, Info } from 'lucide-react'
+import { motion } from 'framer-motion'
+import { Mail, ArrowLeft, CheckCircle } from 'lucide-react'
 
 export default function ResetGuidePage() {
-  return (
-    <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-3xl mx-auto">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">
-            パスワードリセット方法
-          </h1>
-          <p className="mt-2 text-lg text-gray-600">
-            お客様の状況に合わせて、最適な方法をお選びください
-          </p>
-        </div>
+  const [email, setEmail] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [emailSent, setEmailSent] = useState(false)
+  const router = useRouter()
+  const supabase = createClientComponentClient()
 
-        {/* Option 1: Simple Reset */}
-        <div className="bg-white shadow rounded-lg p-6 mb-6">
-          <div className="flex items-start">
-            <CheckCircle className="flex-shrink-0 h-6 w-6 text-green-500 mt-1" />
-            <div className="ml-3 flex-1">
-              <h2 className="text-lg font-medium text-gray-900">
-                方法1: シンプルリセット（推奨）
-              </h2>
-              <p className="mt-2 text-sm text-gray-600">
-                最も簡単な方法です。メールアドレスを入力すると、パスワードリセット用のリンクが送信されます。
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setLoading(true)
+
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/auth/update-password`,
+      })
+
+      if (error) throw error
+
+      setEmailSent(true)
+      toast.success('パスワードリセットメールを送信しました')
+    } catch (error: any) {
+      console.error('Error:', error)
+      toast.error(error.message || 'エラーが発生しました')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  if (emailSent) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="max-w-md w-full bg-white p-8 rounded-lg shadow"
+        >
+          <div className="text-center">
+            <CheckCircle className="mx-auto h-12 w-12 text-green-500 mb-4" />
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">
+              メールを送信しました
+            </h2>
+            <p className="text-gray-600 mb-6">
+              {email} 宛にパスワードリセットメールを送信しました。
+            </p>
+            <div className="bg-blue-50 border border-blue-200 rounded-md p-4 text-left mb-6">
+              <p className="text-sm text-blue-800 mb-2">
+                <strong>次のステップ:</strong>
               </p>
-              <div className="mt-3 bg-blue-50 border border-blue-200 rounded-md p-3">
-                <p className="text-sm text-blue-800">
-                  <strong>注意:</strong> メールに記載されているリンクが機能しない場合は、URLの「#」を「?」に手動で変更してください。
-                </p>
-                <p className="text-xs text-blue-700 mt-1">
-                  例: /auth/update-password#access_token=xxx → /auth/update-password?access_token=xxx
-                </p>
-              </div>
-              <Link
-                href="/auth/simple-reset"
-                className="mt-4 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
+              <ol className="text-sm text-blue-700 list-decimal list-inside space-y-1">
+                <li>メールを確認してください（迷惑メールフォルダも確認）</li>
+                <li>メール内のリンクをクリック</li>
+                <li>新しいパスワードを設定</li>
+              </ol>
+            </div>
+            <div className="space-y-3">
+              <button
+                onClick={() => {
+                  setEmailSent(false)
+                  setEmail('')
+                }}
+                className="w-full py-2 px-4 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
               >
-                シンプルリセットを試す
+                別のメールアドレスで試す
+              </button>
+              <Link
+                href="/auth/login"
+                className="block w-full py-2 px-4 border border-transparent rounded-md text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 text-center"
+              >
+                ログインページに戻る
               </Link>
             </div>
           </div>
-        </div>
-
-        {/* Option 2: Emergency Reset */}
-        <div className="bg-white shadow rounded-lg p-6 mb-6">
-          <div className="flex items-start">
-            <AlertCircle className="flex-shrink-0 h-6 w-6 text-yellow-500 mt-1" />
-            <div className="ml-3 flex-1">
-              <h2 className="text-lg font-medium text-gray-900">
-                方法2: 緊急用リセット（OTP方式）
-              </h2>
-              <p className="mt-2 text-sm text-gray-600">
-                6桁の確認コードを使用する方法です。ただし、現在のSupabaseの設定により、6桁のコードではなくリンクが送信される場合があります。
-              </p>
-              <div className="mt-3 bg-yellow-50 border border-yellow-200 rounded-md p-3">
-                <p className="text-sm text-yellow-800">
-                  <strong>重要:</strong> この方法は、Supabaseの管理画面でOTP設定が有効になっている場合のみ機能します。
-                </p>
-              </div>
-              <Link
-                href="/auth/emergency-reset"
-                className="mt-4 inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
-              >
-                緊急用リセットを試す
-              </Link>
-            </div>
-          </div>
-        </div>
-
-        {/* Option 3: Admin Reset */}
-        <div className="bg-white shadow rounded-lg p-6 mb-6">
-          <div className="flex items-start">
-            <Info className="flex-shrink-0 h-6 w-6 text-red-500 mt-1" />
-            <div className="ml-3 flex-1">
-              <h2 className="text-lg font-medium text-gray-900">
-                方法3: 管理者に問い合わせ
-              </h2>
-              <p className="mt-2 text-sm text-gray-600">
-                上記の方法でリセットできない場合は、管理者が直接パスワードをリセットすることができます。
-              </p>
-              <div className="mt-3 bg-red-50 border border-red-200 rounded-md p-3">
-                <p className="text-sm text-red-800">
-                  <strong>注意:</strong> この方法は管理者権限が必要です。一般ユーザーは管理者にお問い合わせください。
-                </p>
-              </div>
-              <Link
-                href="/auth/admin-reset"
-                className="mt-4 inline-flex items-center px-4 py-2 border border-red-300 text-sm font-medium rounded-md text-red-700 bg-white hover:bg-red-50"
-              >
-                管理者用リセット
-              </Link>
-            </div>
-          </div>
-        </div>
-
-        {/* Back to Login */}
-        <div className="text-center mt-8">
-          <Link
-            href="/auth/login"
-            className="text-sm text-indigo-600 hover:text-indigo-500"
-          >
-            ← ログインページに戻る
-          </Link>
-        </div>
+        </motion.div>
       </div>
+    )
+  }
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="max-w-md w-full"
+      >
+        <div className="bg-white p-8 rounded-lg shadow">
+          <div className="text-center mb-8">
+            <h2 className="text-3xl font-bold text-gray-900">
+              パスワードをリセット
+            </h2>
+            <p className="mt-2 text-sm text-gray-600">
+              メールアドレスを入力してください
+            </p>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div>
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+                メールアドレス
+              </label>
+              <div className="mt-1 relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Mail className="h-5 w-5 text-gray-400" />
+                </div>
+                <input
+                  id="email"
+                  name="email"
+                  type="email"
+                  autoComplete="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="appearance-none block w-full pl-10 px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                  placeholder="your@email.com"
+                />
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {loading ? (
+                <span className="flex items-center">
+                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  送信中...
+                </span>
+              ) : (
+                'リセットメールを送信'
+              )}
+            </button>
+          </form>
+
+          <div className="mt-6">
+            <Link
+              href="/auth/login"
+              className="flex items-center justify-center text-sm text-indigo-600 hover:text-indigo-500"
+            >
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              ログインページに戻る
+            </Link>
+          </div>
+        </div>
+      </motion.div>
     </div>
   )
 }
