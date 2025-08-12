@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { Mail, Lock, Eye, EyeOff, Target, AlertCircle, CheckCircle } from 'lucide-react'
+import { signInWithRateLimit, checkExistingSession } from '@/lib/auth-helpers'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -17,6 +18,19 @@ export default function LoginPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const supabase = createClientComponentClient()
+
+  // Check for existing session first
+  useEffect(() => {
+    const checkSession = async () => {
+      const session = await checkExistingSession()
+      if (session?.user) {
+        console.log('Existing session found, redirecting...')
+        const isAdmin = session.user.email === 'greenroom51@gmail.com'
+        window.location.href = isAdmin ? '/admin' : '/dashboard'
+      }
+    }
+    checkSession()
+  }, [])
 
   // Check for recovery token and redirect to password update page
   useEffect(() => {
@@ -78,10 +92,7 @@ export default function LoginPage() {
     }, 15000) // 15 seconds timeout
 
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      })
+      const { data, error } = await signInWithRateLimit(email, password)
 
       clearTimeout(timeoutId)
       console.log('Auth response:', { data, error })

@@ -3,6 +3,7 @@
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { useRouter } from 'next/navigation'
 import { useState, useEffect } from 'react'
+import { setupAuthStateListener } from '@/lib/auth-helpers'
 
 interface User {
   id: string
@@ -50,14 +51,15 @@ export function useAuth() {
 
     getUser()
 
-    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
-      setUser(session?.user ?? null)
+    // 認証状態変更の監視（ループ防止版）
+    const cleanup = setupAuthStateListener(async (user) => {
+      setUser(user)
       
-      if (session?.user) {
+      if (user) {
         const { data: profileData } = await supabase
           .from('fleeks_profiles')
           .select('role')
-          .eq('id', session.user.id)
+          .eq('id', user.id)
           .single()
         
         // roleをmembershipTypeにマッピング
@@ -71,14 +73,9 @@ export function useAuth() {
       } else {
         setMembershipType(null)
       }
-      
-      // Removed router.refresh() to prevent infinite loops
-      // The component will re-render automatically when auth state changes
     })
 
-    return () => {
-      authListener.subscription.unsubscribe()
-    }
+    return cleanup
   }, [supabase, router])
 
   const signOut = async () => {
