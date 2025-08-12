@@ -332,6 +332,9 @@ class AutoPostingWithGemini {
   async postArticle(article) {
     const articleId = `article_${String(this.progress.articlesPosted + 1).padStart(3, '0')}`;
     
+    // アクセスレベルを決定
+    const accessLevel = this.determineAccessLevel(this.progress.articlesPosted + 1);
+    
     // リンクマネージャーに登録
     this.linkManager.registerArticle(articleId, {
       title: article.title,
@@ -350,11 +353,12 @@ class AutoPostingWithGemini {
       this.linkManager.updateExistingArticles(articleId, 3);
     }
 
-    // 記事データを保存
+    // 記事データを保存（アクセスレベル付き）
     const articlePath = path.join(this.articlesPath, `${articleId}.json`);
     const fullArticleData = {
       ...article,
       id: articleId,
+      accessLevel: accessLevel,
       postedAt: new Date().toISOString(),
       internalLinks: this.linkManager.linkMap.articles[articleId]?.outgoingLinks || []
     };
@@ -366,9 +370,30 @@ class AutoPostingWithGemini {
     fs.writeFileSync(mdPath, article.content);
     
     console.log(`✅ 記事を投稿しました: ${article.title}`);
+    console.log(`   アクセスレベル: ${accessLevel}`);
     console.log(`   保存先: ${articlePath}`);
     
     return articleId;
+  }
+
+  // アクセスレベルを決定
+  determineAccessLevel(articleNumber) {
+    // 各章20記事ずつの配分
+    const chapterNumber = Math.ceil(articleNumber / 20);
+    const positionInChapter = ((articleNumber - 1) % 20) + 1;
+    
+    // 各章の最初の5記事は無料
+    if (positionInChapter <= 5) {
+      return 'free';
+    }
+    // 6-15記事目は部分公開
+    else if (positionInChapter <= 15) {
+      return 'partial';
+    }
+    // 16-20記事目は完全有料
+    else {
+      return 'premium';
+    }
   }
 
   // 次の投稿時刻を取得
