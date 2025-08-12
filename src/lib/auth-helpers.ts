@@ -1,9 +1,9 @@
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 
 // レート制限回避のための認証ヘルパー
-const AUTH_RETRY_DELAY = 2000 // 2秒
+const AUTH_RETRY_DELAY = 1000 // 1秒
 const MAX_RETRIES = 3
-const BACKOFF_MULTIPLIER = 2
+const BACKOFF_MULTIPLIER = 1.5 // より穏やかなバックオフ
 
 let lastAuthAttempt = 0
 let retryCount = 0
