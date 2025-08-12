@@ -38,9 +38,9 @@ export default async function EducationPage() {
 
       <EducationContentList />
       
-      {\!isPremiumUser && (
+      {!isPremiumUser && (
         <div className="max-w-7xl mx-auto px-4 pb-16">
-          <ArticleFooterCTA isLoggedIn={\!\!user} isPremiumUser={isPremiumUser} />
+          <ArticleFooterCTA isLoggedIn={!!user} isPremiumUser={isPremiumUser} />
         </div>
       )}
     </div>
