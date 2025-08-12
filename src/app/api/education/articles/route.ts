@@ -1,10 +1,16 @@
-import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
-import { cookies } from 'next/headers'
+import { createClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
+
+// Route Segment Configを追加
+export const dynamic = 'force-dynamic'
 
 export async function GET() {
   try {
-    const supabase = createServerComponentClient({ cookies })
+    // Route HandlerではcreateClientを使用
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    )
     
     // 教育コンテンツを取得
     const { data: contents, error } = await supabase
