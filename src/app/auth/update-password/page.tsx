@@ -4,11 +4,12 @@ import { useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { Lock, Eye, EyeOff, Target, AlertCircle, CheckCircle, ArrowLeft } from 'lucide-react'
-import { supabase } from '@/lib/supabase'
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 
 export default function UpdatePasswordPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
+  const supabase = createClientComponentClient()
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -19,130 +20,126 @@ export default function UpdatePasswordPage() {
   const [isValidSession, setIsValidSession] = useState(false)
   const [isCheckingAuth, setIsCheckingAuth] = useState(true)
   
-  
   useEffect(() => {
-    const verifyRecoveryToken = async () => {
-      console.log('[UpdatePassword] Starting recovery token verification...')
-      
-      // Small delay to ensure cookies are set after redirect
-      await new Promise(resolve => setTimeout(resolve, 100))
+    const handleAuthCode = async () => {
+      console.log('[UpdatePassword] Starting auth code handling...')
       
       try {
-        // Check URL parameters
-        const verified = searchParams.get('verified')
-        const errorParam = searchParams.get('error')
+        // 1. URLからcodeパラメータを取得（?code=xxx形式）
+        const code = searchParams.get('code')
         
-        console.log('[UpdatePassword] URL params:', {
-          verified,
-          error: errorParam,
+        // ハッシュフラグメントからも取得を試みる（#access_token=xxx形式）
+        const hashParams = new URLSearchParams(window.location.hash.substring(1))
+        const hashAccessToken = hashParams.get('access_token')
+        const hashType = hashParams.get('type')
+        
+        console.log('[UpdatePassword] Auth params:', {
+          code: !!code,
+          hashAccessToken: !!hashAccessToken,
+          hashType,
           fullURL: window.location.href
         })
         
-        // Handle errors from the reset route
-        if (errorParam) {
-          setIsValidSession(false)
-          setIsCheckingAuth(false)
-          if (errorParam === 'invalid_recovery_link' || errorParam === 'invalid_token') {
-            setError('リカバリートークンの検証に失敗しました。リンクの有効期限が切れている可能性があります。')
-          } else {
-            setError('パスワードリセットに失敗しました。もう一度お試しください。')
+        // codeがある場合は、exchangeCodeForSessionを使用
+        if (code) {
+          console.log('[UpdatePassword] Exchanging code for session...')
+          const { data, error } = await supabase.auth.exchangeCodeForSession(code)
+          
+          if (error) {
+            console.error('[UpdatePassword] Code exchange error:', error)
+            if (error.message.includes('expired') || error.message.includes('invalid')) {
+              setError(
+                <div className="space-y-3">
+                  <p>リンクの有効期限が切れています。</p>
+                  <p className="text-sm">新しいパスワードリセットメールを送信してください：</p>
+                  <a 
+                    href="/auth/reset-guide" 
+                    className="inline-block bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition text-sm font-medium"
+                  >
+                    パスワードリセットを再度リクエスト
+                  </a>
+                </div>
+              )
+            } else {
+              setError(`エラー: ${error.message}`)
+            }
+            setIsCheckingAuth(false)
+            return
           }
+          
+          if (data.session) {
+            console.log('[UpdatePassword] Session established successfully')
+            setIsValidSession(true)
+            setIsCheckingAuth(false)
+            // URLからcodeパラメータを削除（セキュリティのため）
+            window.history.replaceState({}, document.title, '/auth/update-password')
+            return
+          }
+        }
+        
+        // ハッシュフラグメント形式の場合（Supabaseのデフォルト形式）
+        if (hashAccessToken && hashType === 'recovery') {
+          console.log('[UpdatePassword] Processing hash fragment format...')
+          // ハッシュフラグメントをクエリパラメータに変換してリダイレクト
+          window.location.href = `/auth/update-password?access_token=${hashAccessToken}&type=recovery`
           return
         }
         
-        // Check for hash fragment parameters (Supabase default format)
-        const hashParams = new URLSearchParams(window.location.hash.substring(1))
-        const hashAccessToken = hashParams.get('access_token')
-        const hashRefreshToken = hashParams.get('refresh_token')
-        const hashType = hashParams.get('type')
+        // access_tokenがクエリパラメータにある場合（古い形式）
+        const accessToken = searchParams.get('access_token')
+        const type = searchParams.get('type')
         
-        console.log('[UpdatePassword] Hash params:', {
-          access_token: !!hashAccessToken,
-          refresh_token: !!hashRefreshToken,
-          type: hashType,
-          fullHash: window.location.hash
-        })
-        
-        // If we have hash parameters, try to set session
-        if (hashAccessToken && hashType === 'recovery') {
+        if (accessToken && type === 'recovery') {
+          console.log('[UpdatePassword] Processing access_token format...')
           try {
-            console.log('[UpdatePassword] Setting session from hash params...')
+            // アクセストークンでセッションを設定
             const { data, error } = await supabase.auth.setSession({
-              access_token: hashAccessToken,
-              refresh_token: hashRefreshToken || ''
+              access_token: accessToken,
+              refresh_token: ''
             })
             
             if (!error && data.session) {
-              console.log('[UpdatePassword] Session set successfully from hash params')
+              console.log('[UpdatePassword] Session set from access_token')
               setIsValidSession(true)
               setIsCheckingAuth(false)
-              // Clear the hash from URL for security
+              // URLからトークンを削除
               window.history.replaceState({}, document.title, '/auth/update-password')
               return
-            } else {
-              console.error('[UpdatePassword] Error setting session from hash:', error)
             }
           } catch (err) {
-            console.error('[UpdatePassword] Exception setting session from hash:', err)
+            console.error('[UpdatePassword] Error setting session from access_token:', err)
           }
         }
         
-        // Check existing session
+        // 既存のセッションを確認
         const { data: { session } } = await supabase.auth.getSession()
         console.log('[UpdatePassword] Current session:', !!session, session?.user?.email)
         
-        if (session || verified === 'true') {
+        if (session) {
           setIsValidSession(true)
           setIsCheckingAuth(false)
-          window.history.replaceState({}, document.title, '/auth/update-password')
           return
         }
         
-        // Try to restore session from cookies
-        console.log('[UpdatePassword] Cookie check:')
-        console.log('[UpdatePassword] All cookies:', document.cookie)
-        
-        const accessToken = document.cookie
-          .split('; ')
-          .find(row => row.startsWith('sb-access-token='))
-          ?.split('=')[1]
-        
-        const refreshToken = document.cookie
-          .split('; ')
-          .find(row => row.startsWith('sb-refresh-token='))
-          ?.split('=')[1]
-        
-        console.log('[UpdatePassword] Access token found:', !!accessToken)
-        console.log('[UpdatePassword] Refresh token found:', !!refreshToken)
-        
-        if (accessToken && refreshToken) {
-          console.log('[UpdatePassword] Restoring session from cookies')
-          const { data, error } = await supabase.auth.setSession({
-            access_token: accessToken,
-            refresh_token: refreshToken
-          })
-          
-          if (!error && data.session) {
-            console.log('[UpdatePassword] Session restored successfully')
-            setIsValidSession(true)
-            setIsCheckingAuth(false)
-            return
-          } else {
-            console.error('[UpdatePassword] Failed to restore session:', error)
-          }
-        }
-        
-        // No valid session found
+        // セッションが見つからない場合
         setError(
           <div className="space-y-3">
-            <p>セッションが見つかりません。</p>
-            <p className="text-sm">メールのリンクが機能しない場合は、以下の緊急用リセットをお試しください：</p>
-            <a 
-              href="/auth/emergency-reset" 
-              className="inline-block bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition text-sm font-medium"
-            >
-              緊急用パスワードリセット（確認コード方式）
-            </a>
+            <p>有効なセッションが見つかりません。</p>
+            <p className="text-sm">以下のいずれかの方法でパスワードをリセットしてください：</p>
+            <div className="space-y-2">
+              <a 
+                href="/auth/reset-guide" 
+                className="block bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition text-sm font-medium text-center"
+              >
+                パスワードリセットを再度リクエスト
+              </a>
+              <a 
+                href="/auth/emergency-reset" 
+                className="block bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition text-sm font-medium text-center"
+              >
+                緊急用パスワードリセット（確認コード方式）
+              </a>
+            </div>
           </div>
         )
         setIsCheckingAuth(false)
@@ -154,7 +151,7 @@ export default function UpdatePasswordPage() {
       }
     }
     
-    verifyRecoveryToken()
+    handleAuthCode()
   }, [searchParams, supabase])
 
   const handleUpdatePassword = async (e: React.FormEvent) => {
@@ -175,12 +172,12 @@ export default function UpdatePasswordPage() {
     }
 
     try {
-      // Double-check session before updating
+      // セッションを再確認
       const { data: { session } } = await supabase.auth.getSession()
       
       if (!session) {
         console.error('[UpdatePassword] No session when trying to update password')
-        setError('セッションが無効です。ページを再読み込みしてください。')
+        setError('セッションが無効です。パスワードリセットをもう一度お試しください。')
         setIsLoading(false)
         return
       }
@@ -194,7 +191,17 @@ export default function UpdatePasswordPage() {
       if (error) {
         console.error('[UpdatePassword] Password update error:', error)
         if (error.message === 'Auth session missing!') {
-          setError('認証セッションが無効です。パスワードリセットをもう一度お試しください。')
+          setError(
+            <div className="space-y-3">
+              <p>認証セッションが無効です。</p>
+              <a 
+                href="/auth/reset-guide" 
+                className="inline-block bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition text-sm font-medium"
+              >
+                パスワードリセットを再度リクエスト
+              </a>
+            </div>
+          )
         } else if (error.message.includes('expired')) {
           setError('リンクの有効期限が切れています。パスワードリセットをもう一度お試しください。')
         } else {
@@ -203,13 +210,13 @@ export default function UpdatePasswordPage() {
         return
       }
 
-      // Clear the cookies after successful password update
-      document.cookie = 'sb-access-token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT'
-      document.cookie = 'sb-refresh-token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT'
-
       setSuccess(true)
+      
+      // サインアウトしてログインページへ
+      await supabase.auth.signOut()
+      
       setTimeout(() => {
-        router.push('/dashboard')
+        router.push('/login?message=password_updated')
       }, 2000)
     } catch (err) {
       console.error('[UpdatePassword] Unexpected error during password update:', err)
@@ -268,7 +275,7 @@ export default function UpdatePasswordPage() {
               <CheckCircle className="w-16 h-16 text-green-400 mx-auto mb-4" />
               <h2 className="text-xl font-semibold mb-2">パスワードを更新しました</h2>
               <p className="text-gray-300 mb-6">
-                ダッシュボードにリダイレクトしています...
+                ログインページにリダイレクトしています...
               </p>
             </motion.div>
           ) : (
@@ -278,10 +285,12 @@ export default function UpdatePasswordPage() {
                 <motion.div
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
-                  className="bg-red-500/20 border border-red-500/50 rounded-lg p-3 flex items-center gap-2"
+                  className="bg-red-500/20 border border-red-500/50 rounded-lg p-3"
                 >
-                  <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0" />
-                  <span className="text-sm text-red-300">{error}</span>
+                  <div className="flex items-start gap-2">
+                    <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
+                    <div className="text-sm text-red-300">{error}</div>
+                  </div>
                 </motion.div>
               )}
 
@@ -373,11 +382,11 @@ export default function UpdatePasswordPage() {
               {/* Links */}
               <div className="text-center space-y-2 mt-4">
                 <a
-                  href="/auth/reset-password"
+                  href="/login"
                   className="text-blue-400 hover:text-blue-300 transition flex items-center justify-center gap-2"
                 >
                   <ArrowLeft className="w-4 h-4" />
-                  パスワードリセットを再度リクエスト
+                  ログインページに戻る
                 </a>
               </div>
             </form>

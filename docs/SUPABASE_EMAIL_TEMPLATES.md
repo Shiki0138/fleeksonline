@@ -24,12 +24,22 @@
 
 ## 2. Reset Password (パスワードリセット)
 
-### 日本語版（推奨）
+### 日本語版（推奨） - 新しい形式（code使用）
 ```html
 <h2>パスワードリセット</h2>
 <p>パスワードをリセットするリクエストを受け付けました。</p>
 <p>以下のリンクをクリックして、新しいパスワードを設定してください：</p>
-<p><a href="{{ .SiteURL }}/auth/update-password?access_token={{ .Token }}&type=recovery">パスワードをリセット</a></p>
+<p><a href="{{ .SiteURL }}/auth/update-password?code={{ .Code }}">パスワードをリセット</a></p>
+<p>このリンクは1時間有効です。</p>
+<p>パスワードリセットをリクエストしていない場合は、このメールを無視してください。</p>
+```
+
+### 日本語版（代替） - 古い形式（ConfirmationURL使用）
+```html
+<h2>パスワードリセット</h2>
+<p>パスワードをリセットするリクエストを受け付けました。</p>
+<p>以下のリンクをクリックして、新しいパスワードを設定してください：</p>
+<p><a href="{{ .ConfirmationURL }}">パスワードをリセット</a></p>
 <p>このリンクは1時間有効です。</p>
 <p>パスワードリセットをリクエストしていない場合は、このメールを無視してください。</p>
 ```
@@ -39,7 +49,7 @@
 <h2>Reset Password</h2>
 <p>We received a request to reset your password.</p>
 <p>Click the link below to set a new password:</p>
-<p><a href="{{ .SiteURL }}/auth/update-password?access_token={{ .Token }}&type=recovery">Reset Password</a></p>
+<p><a href="{{ .SiteURL }}/auth/update-password?code={{ .Code }}">Reset Password</a></p>
 <p>This link will expire in 1 hour.</p>
 <p>If you didn't request a password reset, please ignore this email.</p>
 ```
@@ -125,13 +135,21 @@
      https://app.fleeks.jp/**
      https://app.fleeks.jp/auth/confirm
      https://app.fleeks.jp/auth/update-password
+     https://app.fleeks.jp/auth/callback
      ```
 
 2. **Email Templates** で各テンプレートを更新
+   - **Reset Password template** では `{{ .ConfirmationURL }}` を使用するか、
+   - カスタムURLで `{{ .Code }}` を使用（推奨）
 
 3. **SMTP設定**（有料プランの場合）:
    - カスタムSMTPを有効化
    - SendGrid等のSMTPサービスを設定
+
+4. **重要: Password Reset設定**
+   - **Authentication > Email Templates > Reset Password** で
+   - Redirect to: `https://app.fleeks.jp/auth/update-password`
+   - これにより、Supabaseが自動的に `?code=` パラメータを付与します
 
 ### 4. トラブルシューティング
 
