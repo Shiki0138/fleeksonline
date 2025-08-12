@@ -1,0 +1,17 @@
+{
+  "currentDay": 1,
+  "currentChapter": 1,
+  "articlesPosted": 1,
+  "postedArticleIds": [
+    "article_001"
+  ],
+  "lastPostTime": "2025-08-12T09:31:43.331Z",
+  "errors": [],
+  "completed": false,
+  "chapterProgress": {
+    "beginner": 1,
+    "management": 0,
+    "dx": 0,
+    "general": 0
+  }
+}

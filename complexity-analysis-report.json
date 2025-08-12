@@ -1,0 +1,215 @@
+{
+  "timestamp": "2025-08-10T15:18:35.343Z",
+  "summary": {
+    "totalTasks": 14,
+    "averageComplexity": 1.6642857142857141,
+    "distribution": {
+      "trivial": 11,
+      "simple": 2,
+      "moderate": 1
+    }
+  },
+  "tasks": [
+    {
+      "task": "Enterprise application migration with legacy system analysis, database migration from Oracle to PostgreSQL, API modernization from SOAP to GraphQL, frontend rewrite from jQuery to React, microservices decomposition, Docker containerization, Kubernetes orchestration, performance testing, security audit, and staff training",
+      "category": "moderate",
+      "totalScore": 5.4,
+      "confidence": 0.7999999999999999,
+      "estimatedEffort": "1-2 days",
+      "technicalDomains": [
+        "backend",
+        "frontend",
+        "authentication",
+        "infrastructure",
+        "performance",
+        "security",
+        "integration"
+      ],
+      "recommendations": [
+        "Consider pair programming for better quality",
+        "Task requires sequential execution - plan phases carefully",
+        "Multiple domains involved - ensure team has diverse expertise"
+      ]
+    },
+    {
+      "task": "Build complete e-commerce platform with multi-vendor marketplace, inventory management, real-time tracking, payment gateway, mobile app, analytics, multi-language support, performance optimization, security implementation, and automated testing suite",
+      "category": "simple",
+      "totalScore": 3.8,
+      "confidence": 0.8999999999999999,
+      "estimatedEffort": "2-4 hours",
+      "technicalDomains": [
+        "frontend",
+        "authentication",
+        "database",
+        "performance",
+        "security"
+      ],
+      "recommendations": [
+        "Single developer can handle this task",
+        "Task requires sequential execution - plan phases carefully",
+        "Multiple domains involved - ensure team has diverse expertise"
+      ]
+    },
+    {
+      "task": "Integrate payment processing with Stripe API",
+      "category": "simple",
+      "totalScore": 3,
+      "confidence": 0.6,
+      "estimatedEffort": "2-4 hours",
+      "technicalDomains": [
+        "backend",
+        "integration"
+      ],
+      "recommendations": [
+        "Single developer can handle this task",
+        "Task requires sequential execution - plan phases carefully",
+        "High integration complexity - allocate time for integration testing"
+      ]
+    },
+    {
+      "task": "Build user authentication with login and registration",
+      "category": "trivial",
+      "totalScore": 1.8,
+      "confidence": 0.7,
+      "estimatedEffort": "1-2 hours",
+      "technicalDomains": [
+        "authentication"
+      ],
+      "recommendations": [
+        "Single developer can handle this task",
+        "Task requires sequential execution - plan phases carefully"
+      ]
+    },
+    {
+      "task": "Implement basic search functionality",
+      "category": "trivial",
+      "totalScore": 1.6,
+      "confidence": 0.6,
+      "estimatedEffort": "1-2 hours",
+      "technicalDomains": [],
+      "recommendations": [
+        "Single developer can handle this task",
+        "Task requires sequential execution - plan phases carefully"
+      ]
+    },
+    {
+      "task": "Create a REST API for blog posts with CRUD operations",
+      "category": "trivial",
+      "totalScore": 1.6,
+      "confidence": 0.7,
+      "estimatedEffort": "1-2 hours",
+      "technicalDomains": [
+        "backend",
+        "integration"
+      ],
+      "recommendations": [
+        "Single developer can handle this task",
+        "Task requires sequential execution - plan phases carefully"
+      ]
+    },
+    {
+      "task": "Build real-time chat system with WebSocket and notifications",
+      "category": "trivial",
+      "totalScore": 1.4,
+      "confidence": 0.7,
+      "estimatedEffort": "1-2 hours",
+      "technicalDomains": [
+        "realtime"
+      ],
+      "recommendations": [
+        "Single developer can handle this task",
+        "Task requires sequential execution - plan phases carefully"
+      ]
+    },
+    {
+      "task": "Implement advanced search with Elasticsearch and filtering",
+      "category": "trivial",
+      "totalScore": 1.4,
+      "confidence": 0.6,
+      "estimatedEffort": "1-2 hours",
+      "technicalDomains": [],
+      "recommendations": [
+        "Single developer can handle this task",
+        "Task requires sequential execution - plan phases carefully"
+      ]
+    },
+    {
+      "task": "Design microservices architecture with API gateway",
+      "category": "trivial",
+      "totalScore": 1.2,
+      "confidence": 0.7,
+      "estimatedEffort": "1-2 hours",
+      "technicalDomains": [
+        "backend",
+        "frontend",
+        "integration"
+      ],
+      "recommendations": [
+        "Single developer can handle this task",
+        "Task requires sequential execution - plan phases carefully"
+      ]
+    },
+    {
+      "task": "Create a contact form with name and email fields",
+      "category": "trivial",
+      "totalScore": 0.7,
+      "confidence": 0.6,
+      "estimatedEffort": "1-2 hours",
+      "technicalDomains": [],
+      "recommendations": [
+        "Single developer can handle this task",
+        "Task requires sequential execution - plan phases carefully"
+      ]
+    },
+    {
+      "task": "Add a logout button to the header",
+      "category": "trivial",
+      "totalScore": 0.6,
+      "confidence": 0.6,
+      "estimatedEffort": "1-2 hours",
+      "technicalDomains": [
+        "authentication"
+      ],
+      "recommendations": [
+        "Single developer can handle this task",
+        "Task requires sequential execution - plan phases carefully"
+      ]
+    },
+    {
+      "task": "Update the page title",
+      "category": "trivial",
+      "totalScore": 0.4,
+      "confidence": 0.5,
+      "estimatedEffort": "1-2 hours",
+      "technicalDomains": [],
+      "recommendations": [
+        "Single developer can handle this task",
+        "Task requires sequential execution - plan phases carefully"
+      ]
+    },
+    {
+      "task": "Add pagination to the product list",
+      "category": "trivial",
+      "totalScore": 0.4,
+      "confidence": 0.5,
+      "estimatedEffort": "1-2 hours",
+      "technicalDomains": [],
+      "recommendations": [
+        "Single developer can handle this task",
+        "Task requires sequential execution - plan phases carefully"
+      ]
+    },
+    {
+      "task": "Change button color to blue",
+      "category": "trivial",
+      "totalScore": 0,
+      "confidence": 0.5,
+      "estimatedEffort": "1-2 hours",
+      "technicalDomains": [],
+      "recommendations": [
+        "Single developer can handle this task",
+        "Task requires sequential execution - plan phases carefully"
+      ]
+    }
+  ]
+}

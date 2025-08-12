@@ -38,14 +38,22 @@ export default function SignupPage() {
 
       if (signUpError) {
         // Translate common Supabase errors to Japanese
+        console.error('Signup error details:', signUpError)
         let errorMsg = signUpError.message
+        
         if (signUpError.message.includes('Password should be at least 6 characters')) {
           errorMsg = 'パスワードは6文字以上で入力してください'
-        } else if (signUpError.message.includes('User already registered')) {
-          errorMsg = 'このメールアドレスは既に登録されています'
+        } else if (signUpError.message.includes('User already registered') || 
+                   signUpError.message.includes('already exists')) {
+          errorMsg = 'このメールアドレスは既に登録されています。ログインするか、パスワードをリセットしてください。'
         } else if (signUpError.message.includes('Invalid email')) {
           errorMsg = '有効なメールアドレスを入力してください'
+        } else if (signUpError.message.includes('Email signups are disabled')) {
+          errorMsg = '現在、新規登録を受け付けていません。管理者にお問い合わせください。'
+        } else if (signUpError.message.includes('Database error')) {
+          errorMsg = 'データベースエラーが発生しました。時間をおいて再度お試しください。'
         }
+        
         setError(errorMsg)
         return
       }

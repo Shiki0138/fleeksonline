@@ -1,0 +1,31 @@
+{
+  "name": "agent-selection-optimizer",
+  "version": "1.0.0",
+  "description": "Intelligent agent selection system for Claude Flow",
+  "main": "AgentOptimizationOrchestrator.js",
+  "scripts": {
+    "demo": "node demo.js",
+    "examples": "node examples/UsageExamples.js",
+    "test": "jest ../tests/agent-optimization/",
+    "start": "node demo.js"
+  },
+  "keywords": [
+    "ai",
+    "agent",
+    "optimization",
+    "selection",
+    "coordination",
+    "claude-flow",
+    "swarm",
+    "orchestration"
+  ],
+  "author": "Claude Flow Team",
+  "license": "MIT",
+  "dependencies": {},
+  "devDependencies": {
+    "jest": "^29.0.0"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}

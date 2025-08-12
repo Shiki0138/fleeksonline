@@ -11,6 +11,7 @@
     "test:complexity": "jest tests/taskComplexityEstimator.test.ts"
   },
   "dependencies": {
+    "@google/generative-ai": "^0.24.1",
     "@mui/icons-material": "^5.14.0",
     "@mui/material": "^5.14.0",
     "@supabase/auth-helpers-nextjs": "^0.10.0",
@@ -40,5 +41,8 @@
     "ts-jest": "^29.1.1",
     "tsx": "^4.20.3",
     "typescript": "^5.3.3"
+  },
+  "engines": {
+    "node": ">=18.17.0"
   }
 }

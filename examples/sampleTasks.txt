@@ -1,0 +1,27 @@
+# Sample Tasks for Complexity Analysis
+# Use this file with: npm run analyze:task file ./examples/sampleTasks.txt
+
+# Trivial Tasks
+Add a logout button to the header
+Update the page title
+Change button color to blue
+
+# Simple Tasks
+Create a contact form with name and email fields
+Add pagination to the product list
+Implement basic search functionality
+
+# Moderate Tasks
+Build user authentication with login and registration
+Integrate payment processing with Stripe API
+Create a REST API for blog posts with CRUD operations
+
+# Complex Tasks
+Design microservices architecture with API gateway
+Build real-time chat system with WebSocket and notifications
+Implement advanced search with Elasticsearch and filtering
+
+# Very Complex Tasks
+Build complete e-commerce platform with multi-vendor marketplace, inventory management, real-time tracking, payment gateway, mobile app, analytics, multi-language support, performance optimization, security implementation, and automated testing suite
+
+Enterprise application migration with legacy system analysis, database migration from Oracle to PostgreSQL, API modernization from SOAP to GraphQL, frontend rewrite from jQuery to React, microservices decomposition, Docker containerization, Kubernetes orchestration, performance testing, security audit, and staff training

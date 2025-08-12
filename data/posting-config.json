@@ -1,0 +1,14 @@
+{
+  "enabled": true,
+  "startDate": "2025-08-12T09:31:43.331Z",
+  "postTimes": [
+    "10:00",
+    "15:00"
+  ],
+  "totalDays": 40,
+  "articlesPerDay": 2,
+  "totalArticles": 80,
+  "retryAttempts": 3,
+  "retryDelay": 300000,
+  "apiDelay": 5000
+}

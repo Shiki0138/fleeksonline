@@ -1,0 +1,29 @@
+{
+  "articles": {
+    "article_001": {
+      "id": "article_001",
+      "title": "美容師のための効果的な挨拶とその心理学的効果",
+      "category": "beginner",
+      "keywords": [
+        "美容師",
+        "美容室",
+        "接客",
+        "売上",
+        "顧客満足度"
+      ],
+      "outgoingLinks": [],
+      "incomingLinks": [],
+      "createdAt": "2025-08-12T09:31:43.330Z",
+      "updatedAt": "2025-08-12T09:31:43.330Z"
+    }
+  },
+  "categories": {
+    "beginner": [
+      "article_001",
+      "article_001"
+    ],
+    "management": [],
+    "dx": [],
+    "general": []
+  }
+}
