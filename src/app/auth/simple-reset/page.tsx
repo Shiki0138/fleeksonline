@@ -55,8 +55,17 @@ export default function SimpleResetPage() {
               <ul className="text-sm text-blue-700 mt-2 list-disc list-inside">
                 <li>パスワードリセット用のリンクが含まれています</li>
                 <li>リンクをクリックして新しいパスワードを設定してください</li>
-                <li>6桁のコードは送信されません</li>
+                <li className="text-red-600 font-bold">6桁のコードは送信されません</li>
               </ul>
+              <p className="text-sm text-blue-800 mt-3">
+                <strong>重要:</strong> もしメールのリンクが機能しない場合は、URLの「#」を「?」に手動で変更してください。
+              </p>
+              <p className="text-sm text-blue-800 mt-2">
+                <strong>例:</strong><br/>
+                <code className="text-xs bg-gray-100 px-1 py-0.5 rounded">
+                  /auth/update-password#access_token=xxx → /auth/update-password?access_token=xxx
+                </code>
+              </p>
               <p className="text-sm text-blue-800 mt-3">
                 <strong>注意:</strong> メールが届かない場合は、迷惑メールフォルダをご確認ください。
               </p>

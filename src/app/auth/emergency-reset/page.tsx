@@ -122,6 +122,14 @@ export default function EmergencyResetPage() {
           </form>
         ) : (
           <form className="mt-8 space-y-6" onSubmit={handleVerifyAndReset}>
+            <div className="bg-yellow-50 border border-yellow-200 rounded-md p-4 mb-4">
+              <p className="text-sm text-yellow-800">
+                <strong>重要:</strong> Supabaseの設定により、6桁のコードではなくリセット用のリンクがメールで送信される場合があります。
+              </p>
+              <p className="text-sm text-yellow-700 mt-2">
+                メールにリンクが含まれている場合は、<a href="/auth/simple-reset" className="underline font-medium">シンプルリセット</a>をご利用ください。
+              </p>
+            </div>
             <div className="space-y-4">
               <div>
                 <label htmlFor="code" className="block text-sm font-medium text-gray-700">

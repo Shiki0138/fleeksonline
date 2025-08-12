@@ -282,7 +282,7 @@ export default function LoginPage() {
               {/* Links */}
               <div className="text-center space-y-2">
                 <Link 
-                  href="/auth/simple-reset" 
+                  href="/auth/reset-guide" 
                   className="text-sm text-blue-400 hover:text-blue-300 transition"
                 >
                   パスワードを忘れましたか？
