@@ -1,92 +1,54 @@
 import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 
-export async function GET(request: NextRequest) {
+export async function GET(request: Request) {
   const requestUrl = new URL(request.url)
   const code = requestUrl.searchParams.get('code')
-  const token = requestUrl.searchParams.get('token')
-  const type = requestUrl.searchParams.get('type')
-  const next = requestUrl.searchParams.get('next') ?? '/'
+  const error = requestUrl.searchParams.get('error')
+  const error_description = requestUrl.searchParams.get('error_description')
+  
+  console.log('[Auth Callback] Processing callback:', {
+    hasCode: !!code,
+    hasError: !!error,
+    url: requestUrl.toString()
+  })
 
-  // Handle password recovery with token (direct from email)
-  if (token && type === 'recovery') {
-    console.log('Processing recovery token:', token)
-    const cookieStore = cookies()
-    const supabase = createRouteHandlerClient({ cookies: () => cookieStore })
-    
-    try {
-      // Use the token directly to verify OTP
-      const { data, error } = await supabase.auth.verifyOtp({
-        token,
-        type: 'recovery',
-      })
-      
-      if (error) {
-        console.error('Recovery token error:', error)
-        // Try alternative approach with exchangeCodeForSession
-        try {
-          const { data: sessionData, error: sessionError } = await supabase.auth.exchangeCodeForSession(token)
-          if (sessionError) {
-            return NextResponse.redirect(`${requestUrl.origin}/auth/login?error=invalid_recovery_token`)
-          }
-          if (sessionData.user) {
-            return NextResponse.redirect(`${requestUrl.origin}/auth/update-password`)
-          }
-        } catch (altErr) {
-          console.error('Alternative recovery error:', altErr)
-          return NextResponse.redirect(`${requestUrl.origin}/auth/login?error=recovery_failed`)
-        }
-      }
-
-      if (data.user && data.session) {
-        console.log('Recovery successful, redirecting to update-password')
-        return NextResponse.redirect(`${requestUrl.origin}/auth/update-password?recovery=true`)
-      }
-    } catch (err) {
-      console.error('Recovery verification error:', err)
-      return NextResponse.redirect(`${requestUrl.origin}/auth/login?error=recovery_exception`)
-    }
+  if (error) {
+    console.error('[Auth Callback] Error:', error, error_description)
+    return NextResponse.redirect(
+      `${requestUrl.origin}/auth/reset-guide?error=${encodeURIComponent(error_description || error)}`
+    )
   }
 
-  // Handle OAuth code exchange
   if (code) {
-    const cookieStore = cookies()
-    const supabase = createRouteHandlerClient({ cookies: () => cookieStore })
+    const supabase = createRouteHandlerClient({ cookies })
     
     try {
-      const { data, error } = await supabase.auth.exchangeCodeForSession(code)
+      // Exchange the code for a session
+      const { data, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code)
       
-      if (error) {
-        console.error('Auth callback error:', error)
-        return NextResponse.redirect(`${requestUrl.origin}/auth/login?error=${encodeURIComponent(error.message)}`)
+      if (exchangeError) {
+        console.error('[Auth Callback] Code exchange error:', exchangeError)
+        return NextResponse.redirect(
+          `${requestUrl.origin}/auth/reset-guide?error=${encodeURIComponent(exchangeError.message)}`
+        )
       }
-
-      if (data.user) {
-        // Check if this is a password recovery
-        if (type === 'recovery') {
-          return NextResponse.redirect(`${requestUrl.origin}/auth/update-password`)
-        }
-
-        // Check if user is admin
-        const { data: profile } = await supabase
-          .from('fleeks_profiles')
-          .select('role')
-          .eq('id', data.user.id)
-          .single()
-
-        if (data.user.email === 'greenroom51@gmail.com' || profile?.role === 'admin') {
-          return NextResponse.redirect(`${requestUrl.origin}/admin`)
-        } else {
-          return NextResponse.redirect(`${requestUrl.origin}/dashboard`)
-        }
+      
+      if (data.session) {
+        console.log('[Auth Callback] Session established, redirecting to update-password')
+        // Redirect to the update password page with the session established
+        return NextResponse.redirect(`${requestUrl.origin}/auth/update-password`)
       }
     } catch (err) {
-      console.error('Auth exchange error:', err)
-      return NextResponse.redirect(`${requestUrl.origin}/auth/login?error=auth_error`)
+      console.error('[Auth Callback] Unexpected error:', err)
+      return NextResponse.redirect(
+        `${requestUrl.origin}/auth/reset-guide?error=unexpected_error`
+      )
     }
   }
 
-  // Return the user to specified redirect URL or dashboard
-  return NextResponse.redirect(requestUrl.origin + next)
+  // Default redirect if no code
+  console.log('[Auth Callback] No code provided, redirecting to home')
+  return NextResponse.redirect(requestUrl.origin)
 }
