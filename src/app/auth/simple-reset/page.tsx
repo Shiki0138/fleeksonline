@@ -48,15 +48,17 @@ export default function SimpleResetPage() {
             <p className="mt-2 text-sm text-gray-600">
               {email} 宛にパスワードリセットメールを送信しました。
             </p>
-            <div className="mt-4 bg-yellow-50 border border-yellow-200 rounded-md p-4">
-              <p className="text-sm text-yellow-800">
-                <strong>重要:</strong> メールのリンクをクリックすると、以下のようなURLに移動します：
+            <div className="mt-4 bg-blue-50 border border-blue-200 rounded-md p-4">
+              <p className="text-sm text-blue-800">
+                <strong>メールの内容:</strong>
               </p>
-              <p className="text-xs text-yellow-700 mt-2 font-mono break-all">
-                https://app.fleeks.jp/auth/update-password#access_token=...
-              </p>
-              <p className="text-sm text-yellow-800 mt-2">
-                もしエラーが表示された場合は、URLの <code className="bg-yellow-100 px-1">#</code> を <code className="bg-yellow-100 px-1">?</code> に変更してください。
+              <ul className="text-sm text-blue-700 mt-2 list-disc list-inside">
+                <li>パスワードリセット用のリンクが含まれています</li>
+                <li>リンクをクリックして新しいパスワードを設定してください</li>
+                <li>6桁のコードは送信されません</li>
+              </ul>
+              <p className="text-sm text-blue-800 mt-3">
+                <strong>注意:</strong> メールが届かない場合は、迷惑メールフォルダをご確認ください。
               </p>
             </div>
           </div>
@@ -70,6 +72,20 @@ export default function SimpleResetPage() {
             >
               別のメールアドレスで試す
             </button>
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gray-300"></div>
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="px-2 bg-white text-gray-500">または</span>
+              </div>
+            </div>
+            <a
+              href="/auth/admin-reset"
+              className="block w-full text-center py-2 px-4 border border-red-300 rounded-md text-sm font-medium text-red-700 bg-white hover:bg-red-50"
+            >
+              管理者に問い合わせる（リンクが機能しない場合）
+            </a>
             <a
               href="/auth/login"
               className="block w-full text-center py-2 px-4 border border-transparent rounded-md text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700"
@@ -91,6 +107,9 @@ export default function SimpleResetPage() {
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
             登録したメールアドレスを入力してください
+          </p>
+          <p className="mt-1 text-center text-xs text-gray-500">
+            ※ リセット用のリンクをメールで送信します（6桁のコードは送信されません）
           </p>
         </div>
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
