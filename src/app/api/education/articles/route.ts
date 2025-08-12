@@ -26,7 +26,14 @@ export async function GET() {
 
     if (error) {
       console.error('Error fetching education contents:', error)
-      return NextResponse.json({ articles: [] })
+      return NextResponse.json({ 
+        articles: [], 
+        error: error.message,
+        debug: {
+          hasSupabaseUrl: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
+          hasAnonKey: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+        }
+      })
     }
 
     // クライアント用のフォーマットに変換
