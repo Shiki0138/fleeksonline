@@ -46,15 +46,19 @@ export async function GET(request: Request) {
           const response = NextResponse.redirect(`${requestUrl.origin}/auth/update-password?verified=true`)
           response.cookies.set('sb-access-token', data.session.access_token, {
             httpOnly: false,
-            secure: true,
+            secure: process.env.NODE_ENV === 'production',
             sameSite: 'lax',
+            path: '/',
+            domain: process.env.NODE_ENV === 'production' ? '.fleeks.jp' : undefined,
             maxAge: 60 * 60 * 24 * 7 // 7 days
           })
           if (data.session.refresh_token) {
             response.cookies.set('sb-refresh-token', data.session.refresh_token, {
               httpOnly: false,
-              secure: true,
+              secure: process.env.NODE_ENV === 'production',
               sameSite: 'lax',
+              path: '/',
+              domain: process.env.NODE_ENV === 'production' ? '.fleeks.jp' : undefined,
               maxAge: 60 * 60 * 24 * 30 // 30 days
             })
           }
@@ -77,14 +81,18 @@ export async function GET(request: Request) {
           const response = NextResponse.redirect(`${requestUrl.origin}/auth/update-password?verified=true`)
           response.cookies.set('sb-access-token', data.session.access_token, {
             httpOnly: false,
-            secure: true,
+            secure: process.env.NODE_ENV === 'production',
             sameSite: 'lax',
+            path: '/',
+            domain: process.env.NODE_ENV === 'production' ? '.fleeks.jp' : undefined,
             maxAge: 60 * 60 * 24 * 7 // 7 days
           })
           response.cookies.set('sb-refresh-token', data.session.refresh_token, {
             httpOnly: false,
-            secure: true,
+            secure: process.env.NODE_ENV === 'production',
             sameSite: 'lax',
+            path: '/',
+            domain: process.env.NODE_ENV === 'production' ? '.fleeks.jp' : undefined,
             maxAge: 60 * 60 * 24 * 30 // 30 days
           })
           return response
