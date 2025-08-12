@@ -3,6 +3,8 @@
 /.pnp
 .pnp.js
 fleeks-clean/node_modules
+src/backend/node_modules
+**/node_modules
 
 # duplicate project folders
 ai-community/
