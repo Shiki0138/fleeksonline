@@ -29,6 +29,9 @@ export default async function EducationContentPage({
 }) {
   const supabase = createServerComponentClient({ cookies })
   
+  // slugから記事番号を抽出（例: "001" -> 1）
+  const articleNumber = parseInt(params.slug, 10)
+  
   // コンテンツを取得
   const { data: content, error } = await supabase
     .from('education_contents')
@@ -40,11 +43,17 @@ export default async function EducationContentPage({
         title
       )
     `)
-    .eq('slug', params.slug)
-    .eq('status', 'published')
+    .eq('article_number', articleNumber)
     .single()
 
   if (error || !content) {
+    notFound()
+  }
+  
+  // 公開チェック
+  const now = new Date()
+  const publishDate = new Date(content.publish_date)
+  if (content.status !== 'published' || publishDate > now) {
     notFound()
   }
 

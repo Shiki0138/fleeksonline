@@ -33,12 +33,25 @@ export default function EducationContentList() {
 
   const loadArticles = async () => {
     try {
-      // 実際の実装では、APIから記事リストを取得
-      // ここではサンプルデータを生成
-      const sampleArticles = generateSampleArticles()
-      setArticles(sampleArticles)
+      // Supabaseから記事リストを取得
+      const response = await fetch('/api/education/articles')
+      if (!response.ok) {
+        throw new Error('Failed to fetch articles')
+      }
+      const data = await response.json()
+      
+      if (data.articles && data.articles.length > 0) {
+        setArticles(data.articles)
+      } else {
+        // フォールバック：サンプルデータを使用
+        const sampleArticles = generateSampleArticles()
+        setArticles(sampleArticles)
+      }
     } catch (error) {
       console.error('Error loading articles:', error)
+      // エラー時はサンプルデータを使用
+      const sampleArticles = generateSampleArticles()
+      setArticles(sampleArticles)
     } finally {
       setLoading(false)
     }
