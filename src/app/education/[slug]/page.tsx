@@ -2,11 +2,12 @@ import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, Clock, BookOpen, Lock, Crown } from 'lucide-react'
+import { ArrowLeft, Clock, BookOpen, Lock, Crown, ChevronRight, Calendar, User, Tag } from 'lucide-react'
 import ArticleFooterCTA from '@/components/ArticleFooterCTA'
 import fs from 'fs/promises'
 import path from 'path'
 import ReactMarkdown from 'react-markdown'
+import Image from 'next/image'
 
 // アクセスレベルを記事番号から判定
 function getAccessLevel(articleNumber: number): 'free' | 'partial' | 'premium' {
@@ -22,6 +23,19 @@ function getChapterInfo(articleNumber: number) {
   if (articleNumber <= 40) return { number: 2, name: '経営編', icon: '💼' }
   if (articleNumber <= 60) return { number: 3, name: 'DX編', icon: '🚀' }
   return { number: 4, name: '総合編', icon: '🎯' }
+}
+
+// Unsplash画像を記事番号に基づいて取得
+function getArticleImage(articleNumber: number) {
+  // 美容関連のキーワードを記事のカテゴリーに応じて選択
+  const keywords = [
+    'beauty salon', 'hairdresser', 'hair styling', 'beauty treatment',
+    'hair color', 'hair cutting', 'beauty professional', 'salon interior'
+  ]
+  const keyword = keywords[articleNumber % keywords.length]
+  
+  // 記事番号をシードとして使用し、同じ記事には常に同じ画像を表示
+  return `https://source.unsplash.com/800x400/?${keyword}&sig=${articleNumber}`
 }
 
 export default async function EducationContentPage({
@@ -82,6 +96,10 @@ export default async function EducationContentPage({
     return previewLines.join('\n')
   }
 
+  // 次の記事を取得
+  const nextArticleNumber = articleNumber + 1
+  const hasNextArticle = nextArticleNumber <= 80
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* ヘッダー */}
@@ -95,83 +113,178 @@ export default async function EducationContentPage({
             教育コンテンツ一覧に戻る
           </Link>
           
-          <div className="flex items-center gap-4 text-sm text-purple-200 mb-4">
+          {/* パンくずリスト */}
+          <div className="flex items-center gap-2 text-sm text-purple-200 mb-6">
+            <Link href="/education" className="hover:text-white transition">
+              教育コンテンツ
+            </Link>
+            <span>/</span>
             <span className="flex items-center gap-1">
-              <span className="text-xl">{chapter.icon}</span>
-              第{chapter.number}章 {chapter.name}
+              <span className="text-lg">{chapter.icon}</span>
+              {chapter.name}
             </span>
-            <span>•</span>
-            <span>記事No.{articleNumber}</span>
-          </div>
-          
-          <h1 className="text-3xl md:text-4xl font-bold mb-4">
-            {article.title}
-          </h1>
-          
-          <div className="flex items-center gap-4 text-purple-200">
-            <span className="flex items-center gap-1">
-              <Clock className="w-4 h-4" />
-              {article.readingTime}分で読了
-            </span>
-            <span className="flex items-center gap-1">
-              {accessLevel === 'free' && (
-                <>
-                  <BookOpen className="w-4 h-4" />
-                  無料公開
-                </>
-              )}
-              {accessLevel === 'partial' && (
-                <>
-                  <Crown className="w-4 h-4" />
-                  一部有料
-                </>
-              )}
-              {accessLevel === 'premium' && (
-                <>
-                  <Lock className="w-4 h-4" />
-                  プレミアム限定
-                </>
-              )}
-            </span>
+            <span>/</span>
+            <span>記事{articleNumber}</span>
           </div>
         </div>
       </div>
 
       {/* メインコンテンツ */}
-      <div className="container mx-auto px-4 py-12">
+      <article className="container mx-auto px-4 py-12">
         <div className="max-w-4xl mx-auto">
-          <div className="bg-white rounded-lg shadow-sm p-8">
+          {/* 記事ヘッダー */}
+          <div className="bg-white rounded-xl shadow-sm overflow-hidden mb-8">
+            {/* アイキャッチ画像 */}
+            <div className="relative h-64 md:h-96 bg-gray-200">
+              <Image
+                src={getArticleImage(articleNumber)}
+                alt={article.title}
+                fill
+                className="object-cover"
+                priority
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+              
+              {/* アクセスレベルバッジ */}
+              <div className="absolute top-4 right-4">
+                {accessLevel === 'free' && (
+                  <span className="inline-flex items-center gap-1 px-3 py-1.5 bg-green-600 text-white text-sm rounded-full">
+                    <BookOpen className="w-4 h-4" />
+                    無料公開
+                  </span>
+                )}
+                {accessLevel === 'partial' && (
+                  <span className="inline-flex items-center gap-1 px-3 py-1.5 bg-yellow-600 text-white text-sm rounded-full">
+                    <Crown className="w-4 h-4" />
+                    一部有料
+                  </span>
+                )}
+                {accessLevel === 'premium' && (
+                  <span className="inline-flex items-center gap-1 px-3 py-1.5 bg-purple-600 text-white text-sm rounded-full">
+                    <Lock className="w-4 h-4" />
+                    プレミアム限定
+                  </span>
+                )}
+              </div>
+            </div>
+
+            {/* 記事情報 */}
+            <div className="p-8">
+              <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-6 leading-tight">
+                {article.title}
+              </h1>
+              
+              <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600 mb-8">
+                <span className="flex items-center gap-1">
+                  <Calendar className="w-4 h-4" />
+                  {new Date(article.publishedAt).toLocaleDateString('ja-JP', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                  })}
+                </span>
+                <span className="flex items-center gap-1">
+                  <Clock className="w-4 h-4" />
+                  {article.readingTime}分で読了
+                </span>
+                <span className="flex items-center gap-1">
+                  <User className="w-4 h-4" />
+                  FLEEKS編集部
+                </span>
+              </div>
+
+              {/* キーワードタグ */}
+              {article.keywords && article.keywords.length > 0 && (
+                <div className="flex flex-wrap gap-2 mb-8">
+                  {article.keywords.map((keyword: string) => (
+                    <span
+                      key={keyword}
+                      className="inline-flex items-center gap-1 px-3 py-1 bg-purple-50 text-purple-700 text-sm rounded-full"
+                    >
+                      <Tag className="w-3 h-3" />
+                      {keyword}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* 記事本文 */}
+          <div className="bg-white rounded-xl shadow-sm p-8 md:p-12">
             {canRead ? (
-              <div className="prose prose-lg max-w-none">
-                <ReactMarkdown>
-                  {hasPartialAccess && !hasFullAccess ? getPreviewContent(article.content) : article.content}
-                </ReactMarkdown>
+              <>
+                <div className="prose prose-lg max-w-none 
+                  prose-headings:font-bold prose-headings:text-gray-900
+                  prose-h2:text-3xl prose-h2:mt-12 prose-h2:mb-6 prose-h2:pb-3 prose-h2:border-b-2 prose-h2:border-purple-100
+                  prose-h3:text-2xl prose-h3:mt-8 prose-h3:mb-4 prose-h3:text-purple-900
+                  prose-p:text-gray-700 prose-p:leading-relaxed prose-p:mb-6
+                  prose-strong:text-purple-900 prose-strong:font-semibold
+                  prose-ul:my-6 prose-ul:ml-6
+                  prose-li:text-gray-700 prose-li:mb-2
+                  prose-blockquote:border-l-4 prose-blockquote:border-purple-400 prose-blockquote:pl-6 prose-blockquote:italic prose-blockquote:text-gray-600
+                  prose-a:text-purple-600 prose-a:underline prose-a:hover:text-purple-800
+                ">
+                  <ReactMarkdown
+                    components={{
+                      h2: ({ children }) => {
+                        const text = String(children)
+                        // "見出し1："のようなプレフィックスを除去
+                        const cleanText = text.replace(/^見出し\d+[：:]\s*/, '')
+                        return <h2>{cleanText}</h2>
+                      },
+                      h3: ({ children }) => {
+                        const text = String(children)
+                        const cleanText = text.replace(/^見出し\d+[：:]\s*/, '')
+                        return <h3>{cleanText}</h3>
+                      }
+                    }}
+                  >
+                    {hasPartialAccess && !hasFullAccess ? getPreviewContent(article.content) : article.content}
+                  </ReactMarkdown>
+                </div>
                 
                 {hasPartialAccess && !hasFullAccess && (
-                  <div className="mt-8 p-6 bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg border border-purple-200">
-                    <h3 className="text-lg font-semibold text-purple-900 mb-2">
+                  <div className="mt-12 p-8 bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl border border-purple-200">
+                    <h3 className="text-xl font-bold text-purple-900 mb-3">
                       続きを読むにはプレミアムプランへ
                     </h3>
-                    <p className="text-purple-700 mb-4">
+                    <p className="text-purple-700 mb-6">
                       この記事の全文と、他の有料記事すべてが読み放題になります。
                     </p>
                     <Link
                       href="/membership/upgrade"
-                      className="inline-flex items-center gap-2 bg-purple-600 text-white px-6 py-3 rounded-full font-semibold hover:bg-purple-700 transition"
+                      className="inline-flex items-center gap-2 bg-purple-600 text-white px-6 py-3 rounded-full font-semibold hover:bg-purple-700 transition shadow-lg"
                     >
                       <Crown className="w-5 h-5" />
                       プレミアムプランで続きを読む
                     </Link>
                   </div>
                 )}
-              </div>
+
+                {/* 次の記事へのリンク */}
+                {canRead && hasNextArticle && (
+                  <div className="mt-16 p-6 bg-gray-50 rounded-xl">
+                    <p className="text-sm text-gray-600 mb-3">次の記事</p>
+                    <Link
+                      href={`/education/${String(nextArticleNumber).padStart(3, '0')}`}
+                      className="flex items-center justify-between group hover:bg-white rounded-lg p-4 transition"
+                    >
+                      <span className="text-lg font-semibold text-gray-900 group-hover:text-purple-600 transition">
+                        記事{nextArticleNumber}を読む
+                      </span>
+                      <ChevronRight className="w-6 h-6 text-gray-400 group-hover:text-purple-600 transition" />
+                    </Link>
+                  </div>
+                )}
+              </>
             ) : (
-              <div className="text-center py-12">
-                <Lock className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                <h2 className="text-2xl font-bold mb-4">
+              <div className="text-center py-16">
+                <Lock className="w-20 h-20 text-gray-300 mx-auto mb-6" />
+                <h2 className="text-3xl font-bold mb-4 text-gray-900">
                   {!user ? 'ログインが必要です' : 'プレミアム限定コンテンツ'}
                 </h2>
-                <p className="text-gray-600 mb-8">
+                <p className="text-gray-600 mb-8 text-lg">
                   {!user 
                     ? 'この記事を読むにはログインが必要です。' 
                     : 'この記事はプレミアムプラン会員限定です。'
@@ -180,16 +293,16 @@ export default async function EducationContentPage({
                 {!user ? (
                   <Link
                     href={`/login?redirect=/education/${params.slug}`}
-                    className="inline-flex items-center gap-2 bg-purple-600 text-white px-6 py-3 rounded-full font-semibold hover:bg-purple-700 transition"
+                    className="inline-flex items-center gap-2 bg-purple-600 text-white px-8 py-4 rounded-full font-semibold hover:bg-purple-700 transition shadow-lg text-lg"
                   >
                     ログインして読む
                   </Link>
                 ) : (
                   <Link
                     href="/membership/upgrade"
-                    className="inline-flex items-center gap-2 bg-purple-600 text-white px-6 py-3 rounded-full font-semibold hover:bg-purple-700 transition"
+                    className="inline-flex items-center gap-2 bg-purple-600 text-white px-8 py-4 rounded-full font-semibold hover:bg-purple-700 transition shadow-lg text-lg"
                   >
-                    <Crown className="w-5 h-5" />
+                    <Crown className="w-6 h-6" />
                     プレミアムプランで読む
                   </Link>
                 )}
@@ -198,7 +311,7 @@ export default async function EducationContentPage({
           </div>
 
           {/* CTA */}
-          {canRead && (
+          {canRead && !isPremiumUser && (
             <div className="mt-12">
               <ArticleFooterCTA 
                 isLoggedIn={!!user} 
@@ -207,27 +320,13 @@ export default async function EducationContentPage({
             </div>
           )}
 
-          {/* キーワード */}
-          {article.keywords && article.keywords.length > 0 && (
-            <div className="mt-8 flex flex-wrap gap-2">
-              {article.keywords.map((keyword: string) => (
-                <span
-                  key={keyword}
-                  className="px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded-full"
-                >
-                  #{keyword}
-                </span>
-              ))}
-            </div>
-          )}
-
           {/* ナビゲーション */}
-          <div className="mt-16 pt-8 border-t border-gray-200 flex items-center justify-between">
+          <div className="mt-16 flex items-center justify-between">
             <Link
               href="/education"
-              className="inline-flex items-center gap-2 text-purple-600 hover:text-purple-700 transition"
+              className="inline-flex items-center gap-2 text-purple-600 hover:text-purple-700 transition font-medium"
             >
-              <ArrowLeft className="w-4 h-4" />
+              <ArrowLeft className="w-5 h-5" />
               教育コンテンツ一覧
             </Link>
             
@@ -237,12 +336,12 @@ export default async function EducationContentPage({
                 className="inline-flex items-center gap-2 text-purple-600 hover:text-purple-700 font-semibold"
               >
                 全記事を読む
-                <Crown className="w-4 h-4" />
+                <Crown className="w-5 h-5" />
               </Link>
             )}
           </div>
         </div>
-      </div>
+      </article>
     </div>
   )
 }
