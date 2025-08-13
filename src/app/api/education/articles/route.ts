@@ -1,9 +1,23 @@
 import { NextResponse } from 'next/server'
+import { EDUCATION_ARTICLES, formatArticle } from '@/lib/education-articles'
 
 // Route Segment Configを追加
 export const dynamic = 'force-dynamic'
 
 export async function GET() {
+  // 静的データから記事を返す（ファイルシステムアクセスの問題を回避）
+  try {
+    const articles = EDUCATION_ARTICLES.map(formatArticle)
+    console.log(`Returning ${articles.length} articles from static data`)
+    return NextResponse.json({ articles })
+  } catch (error) {
+    console.error('API Error:', error)
+    return NextResponse.json({ articles: [] })
+  }
+}
+
+// ファイルシステムからの読み込み（開発環境用）
+export async function GET_FROM_FILES() {
   try {
     // JSONファイルから記事を読み込む
     const fs = require('fs').promises
