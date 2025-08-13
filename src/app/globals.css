@@ -2,32 +2,115 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Article content styles - Fix text wrapping issues */
+/* Article content styles */
 .article-content {
-  word-wrap: break-word;
-  overflow-wrap: break-word;
-  -webkit-hyphens: auto;
-  -moz-hyphens: auto;
-  -ms-hyphens: auto;
-  hyphens: auto;
+  width: 100%;
+  max-width: none;
 }
 
-.article-content * {
-  max-width: 100% !important;
-  word-wrap: break-word !important;
-  overflow-wrap: break-word !important;
+.article-content p {
+  font-size: 1.125rem;
+  line-height: 1.8;
+  color: #374151;
+  margin-bottom: 1.5rem;
+  word-break: normal;
+  white-space: normal;
+  max-width: none;
 }
 
-.article-content p,
-.article-content h1,
-.article-content h2,
-.article-content h3,
-.article-content h4,
-.article-content h5,
-.article-content h6,
+.article-content h2 {
+  font-size: 2rem;
+  font-weight: bold;
+  color: #111827;
+  margin-top: 3rem;
+  margin-bottom: 1.5rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 2px solid #e5e7eb;
+  max-width: none;
+}
+
+.article-content h3 {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #7c3aed;
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+  padding-left: 1rem;
+  border-left: 4px solid #a78bfa;
+  max-width: none;
+}
+
+.article-content ul,
+.article-content ol {
+  margin: 1.5rem 0;
+  padding-left: 2rem;
+  max-width: none;
+}
+
 .article-content li {
-  word-break: normal !important;
-  line-break: auto !important;
+  font-size: 1.125rem;
+  line-height: 1.8;
+  color: #374151;
+  margin-bottom: 0.75rem;
+  max-width: none;
+}
+
+.article-content ul li {
+  list-style-type: disc;
+  list-style-position: outside;
+}
+
+.article-content ol li {
+  list-style-type: decimal;
+  list-style-position: outside;
+}
+
+.article-content a {
+  color: #7c3aed;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.article-content a:hover {
+  color: #6d28d9;
+}
+
+.article-content strong {
+  font-weight: bold;
+  color: #7c3aed;
+}
+
+.article-content blockquote {
+  margin: 2rem 0;
+  padding: 1.5rem 2rem;
+  background-color: #faf5ff;
+  border-left: 4px solid #a78bfa;
+  font-style: italic;
+  max-width: none;
+}
+
+.article-content pre {
+  margin: 2rem 0;
+  padding: 1.5rem;
+  background-color: #1f2937;
+  border-radius: 0.75rem;
+  overflow-x: auto;
+  max-width: none;
+}
+
+.article-content code {
+  padding: 0.25rem 0.5rem;
+  background-color: #f3e8ff;
+  color: #7c3aed;
+  border-radius: 0.25rem;
+  font-family: monospace;
+  font-size: 0.875rem;
+}
+
+.article-content pre code {
+  padding: 0;
+  background-color: transparent;
+  color: #e5e7eb;
 }
 
 /* Custom animations */

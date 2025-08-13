@@ -131,7 +131,7 @@ export default async function EducationContentPage({
 
       {/* メインコンテンツ */}
       <article className="container mx-auto px-4 py-12">
-        <div className="max-w-4xl mx-auto">
+        <div className="max-w-6xl mx-auto">
           {/* 記事ヘッダー */}
           <div className="bg-white rounded-xl shadow-sm overflow-hidden mb-8">
             {/* アイキャッチ画像 */}
@@ -214,61 +214,19 @@ export default async function EducationContentPage({
           <div className="bg-white rounded-xl shadow-sm p-6 sm:p-8 md:p-12 lg:px-16 lg:py-14">
             {canRead ? (
               <>
-                <div className="article-content w-full max-w-none [&>*]:w-full
-                  [&>p]:text-base sm:text-lg [&>p]:text-gray-700 [&>p]:leading-[1.8] [&>p]:mb-6 sm:mb-8 [&>p]:tracking-normal [&>p]:max-w-none [&>p]:break-normal
-                  [&>h2]:text-[24px] sm:text-[28px] md:text-[32px] [&>h2]:font-bold [&>h2]:text-gray-900 [&>h2]:mt-12 sm:mt-16 [&>h2]:mb-6 sm:mb-8 
-                  [&>h2]:pb-3 sm:pb-4 [&>h2]:border-b-2 [&>h2]:border-purple-200 [&>h2]:relative [&>h2]:break-normal [&>h2]:max-w-none
-                  [&>h2:before]:content-[''] [&>h2:before]:absolute [&>h2:before]:bottom-0 [&>h2:before]:left-0 
-                  [&>h2:before]:w-16 sm:w-24 [&>h2:before]:h-1 [&>h2:before]:bg-purple-600 [&>h2:before]:rounded-full
-                  [&>h3]:text-[20px] sm:text-[22px] md:text-[24px] [&>h3]:font-bold [&>h3]:text-purple-800 [&>h3]:mt-8 sm:mt-10 [&>h3]:mb-4 sm:mb-6
-                  [&>h3]:pl-3 sm:pl-4 [&>h3]:border-l-4 [&>h3]:border-purple-400 [&>h3]:break-normal [&>h3]:max-w-none
-                  [&>ul]:my-6 sm:my-8 [&>ul]:ml-0 [&>ul]:space-y-3 sm:space-y-4 [&>ul]:w-full
-                  [&>ul>li]:text-base sm:text-lg [&>ul>li]:text-gray-700 [&>ul>li]:leading-relaxed [&>ul>li]:pl-6 sm:pl-8 
-                  [&>ul>li]:relative [&>ul>li]:break-normal [&>ul>li]:max-w-none [&>ul>li:before]:content-['•'] [&>ul>li:before]:absolute 
-                  [&>ul>li:before]:left-0 [&>ul>li:before]:text-purple-600 [&>ul>li:before]:font-bold
-                  [&>ul>li:before]:text-xl
-                  [&>ol]:my-8 [&>ol]:ml-0 [&>ol]:space-y-4 [&>ol]:counter-reset-list [&>ol]:w-full
-                  [&>ol>li]:text-lg [&>ol>li]:text-gray-700 [&>ol>li]:leading-relaxed [&>ol>li]:pl-10 [&>ol>li]:break-normal [&>ol>li]:max-w-none 
-                  [&>ol>li]:relative [&>ol>li]:counter-increment-list
-                  [&>ol>li:before]:content-[counter(list)'.'] [&>ol>li:before]:absolute 
-                  [&>ol>li:before]:left-0 [&>ol>li:before]:text-purple-600 [&>ol>li:before]:font-bold
-                  [&>ol>li:before]:text-lg
-                  [&>blockquote]:my-10 [&>blockquote]:pl-8 [&>blockquote]:pr-4 [&>blockquote]:py-6
-                  [&>blockquote]:bg-purple-50 [&>blockquote]:border-l-4 [&>blockquote]:border-purple-500
-                  [&>blockquote]:rounded-r-lg [&>blockquote]:italic
-                  [&>blockquote>p]:text-gray-700 [&>blockquote>p]:text-lg [&>blockquote>p]:mb-0
-                  [&>pre]:my-8 [&>pre]:p-6 [&>pre]:bg-gray-900 [&>pre]:rounded-xl [&>pre]:overflow-x-auto
-                  [&>pre]:shadow-lg [&>pre>code]:text-gray-100 [&>pre>code]:text-base
-                  [&_code]:px-2 [&_code]:py-1 [&_code]:bg-purple-100 [&_code]:text-purple-800 
-                  [&_code]:rounded [&_code]:font-mono [&_code]:text-sm
-                  [&>pre_code]:px-0 [&>pre_code]:py-0 [&>pre_code]:bg-transparent [&>pre_code]:text-gray-100
-                  [&_strong]:font-bold [&_strong]:text-purple-900 [&_strong]:bg-yellow-50 
-                  [&_strong]:px-1 [&_strong]:rounded
-                  [&_a]:text-purple-600 [&_a]:font-medium [&_a]:underline [&_a]:underline-offset-4 
-                  [&_a]:decoration-purple-300 [&_a:hover]:text-purple-800 [&_a:hover]:decoration-purple-500
-                  [&_a]:transition-colors [&_a]:duration-200
-                  [&>hr]:my-12 [&>hr]:border-t-2 [&>hr]:border-gray-200
-                  [&>p:first-child]:text-xl [&>p:first-child]:text-gray-800 [&>p:first-child]:font-medium
-                  [&>p:first-child]:leading-relaxed [&>p:first-child]:mb-10
-                ">
+                <div className="article-content">
                   <ReactMarkdown
                     components={{
-                      p: ({ children }) => {
-                        return <p style={{ wordBreak: 'normal', overflowWrap: 'break-word', width: '100%' }}>{children}</p>
-                      },
                       h2: ({ children }) => {
                         const text = String(children)
                         // "見出し1："のようなプレフィックスを除去
                         const cleanText = text.replace(/^見出し\d+[：:]\s*/, '')
-                        return <h2 style={{ wordBreak: 'normal', overflowWrap: 'break-word', width: '100%' }}>{cleanText}</h2>
+                        return <h2>{cleanText}</h2>
                       },
                       h3: ({ children }) => {
                         const text = String(children)
                         const cleanText = text.replace(/^見出し\d+[：:]\s*/, '')
-                        return <h3 style={{ wordBreak: 'normal', overflowWrap: 'break-word', width: '100%' }}>{cleanText}</h3>
-                      },
-                      li: ({ children }) => {
-                        return <li style={{ wordBreak: 'normal', overflowWrap: 'break-word', width: '100%' }}>{children}</li>
+                        return <h3>{cleanText}</h3>
                       }
                     }}
                   >
