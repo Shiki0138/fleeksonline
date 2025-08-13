@@ -146,39 +146,12 @@ export default function DashboardPage() {
   }
 
   const fetchEducationContents = async () => {
-    // 章データを取得
-    const { data: chaptersData, error: chaptersError } = await supabase
-      .from('education_chapters')
-      .select('*')
-      .eq('is_published', true)
-      .order('sort_order', { ascending: true })
-
-    if (!chaptersError && chaptersData) {
-      setEducationChapters(chaptersData)
-    }
-
-    // 教育コンテンツを取得
-    const { data, error } = await supabase
-      .from('education_contents')
-      .select(`
-        *,
-        education_chapters (
-          id,
-          chapter_number,
-          title,
-          description
-        )
-      `)
-      .eq('status', 'published')
-      .order('sort_order', { ascending: true })
-
-    if (!error && data) {
-      const contentsWithChapter = data.map(content => ({
-        ...content,
-        chapter: content.education_chapters
-      }))
-      setEducationContents(contentsWithChapter)
-    }
+    // 教育コンテンツはまだ準備中なので、空の配列を設定
+    setEducationChapters([])
+    setEducationContents([])
+    
+    // TODO: 将来的にはSupabaseから取得
+    // 現在は/educationページで静的に表示
   }
 
   const handleLogout = async () => {
