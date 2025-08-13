@@ -32,11 +32,10 @@ export async function GET() {
         if (index >= 5 && index < 15) accessLevel = 'partial'
         else if (index >= 15) accessLevel = 'premium'
         
-        // 現在の日付より前の記事のみ公開とする
+        // すべての記事を公開済みとする
         const today = new Date()
-        const dayOffset = Math.floor((articleNumber - 1) / 2) // 2記事ずつ公開
         const publishDate = new Date(today)
-        publishDate.setDate(today.getDate() - dayOffset)
+        publishDate.setDate(today.getDate() - 30) // 30日前に公開済みとする
         
         articles.push({
           id: articleData.id,
