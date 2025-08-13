@@ -40,10 +40,13 @@ export default function EducationContentList() {
       }
       const data = await response.json()
       
+      console.log('Fetched articles:', data.articles?.length || 0) // デバッグログ
+      
       if (data.articles && data.articles.length > 0) {
         setArticles(data.articles)
       } else {
         // フォールバック：サンプルデータを使用
+        console.log('No articles from API, using sample data')
         const sampleArticles = generateSampleArticles()
         setArticles(sampleArticles)
       }
