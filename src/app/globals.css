@@ -2,6 +2,34 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Article content styles - Fix text wrapping issues */
+.article-content {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  -webkit-hyphens: auto;
+  -moz-hyphens: auto;
+  -ms-hyphens: auto;
+  hyphens: auto;
+}
+
+.article-content * {
+  max-width: 100% !important;
+  word-wrap: break-word !important;
+  overflow-wrap: break-word !important;
+}
+
+.article-content p,
+.article-content h1,
+.article-content h2,
+.article-content h3,
+.article-content h4,
+.article-content h5,
+.article-content h6,
+.article-content li {
+  word-break: normal !important;
+  line-break: auto !important;
+}
+
 /* Custom animations */
 @keyframes blob {
   0% {

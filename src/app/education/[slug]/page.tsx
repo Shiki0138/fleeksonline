@@ -253,16 +253,22 @@ export default async function EducationContentPage({
                 ">
                   <ReactMarkdown
                     components={{
+                      p: ({ children }) => {
+                        return <p style={{ wordBreak: 'normal', overflowWrap: 'break-word', width: '100%' }}>{children}</p>
+                      },
                       h2: ({ children }) => {
                         const text = String(children)
                         // "見出し1："のようなプレフィックスを除去
                         const cleanText = text.replace(/^見出し\d+[：:]\s*/, '')
-                        return <h2>{cleanText}</h2>
+                        return <h2 style={{ wordBreak: 'normal', overflowWrap: 'break-word', width: '100%' }}>{cleanText}</h2>
                       },
                       h3: ({ children }) => {
                         const text = String(children)
                         const cleanText = text.replace(/^見出し\d+[：:]\s*/, '')
-                        return <h3>{cleanText}</h3>
+                        return <h3 style={{ wordBreak: 'normal', overflowWrap: 'break-word', width: '100%' }}>{cleanText}</h3>
+                      },
+                      li: ({ children }) => {
+                        return <li style={{ wordBreak: 'normal', overflowWrap: 'break-word', width: '100%' }}>{children}</li>
                       }
                     }}
                   >
