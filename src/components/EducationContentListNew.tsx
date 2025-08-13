@@ -46,26 +46,26 @@ const CHAPTERS = {
 // 正しい80記事のタイトル（当初の仕様通り）
 const ALL_ARTICLES = [
   // 初心者編（1-20）
-  { number: 1, title: "美容師のための効果的な挨拶とその心理学的効果", category: "beginner" },
-  { number: 2, title: "失敗しない！新人美容師のためのシャンプー技術完全ガイド", category: "beginner" },
-  { number: 3, title: "カラーリングの基礎知識：色彩理論から薬剤選定まで", category: "beginner" },
-  { number: 4, title: "パーマの基礎技術：ロッド選定からウェーブデザインまで", category: "beginner" },
-  { number: 5, title: "ブロードライの極意：艶とボリュームを生み出すテクニック", category: "beginner" },
+  { number: 1, title: "プロとしての電話応対術：売上を左右する最初の接点", category: "beginner" },
+  { number: 2, title: "第一印象を決める入店時の挨拶術", category: "beginner" },
+  { number: 3, title: "お客様の名前を覚える記憶術とその効果", category: "beginner" },
+  { number: 4, title: "プロの聞き方：お客様の本音を引き出す質問テクニック", category: "beginner" },
+  { number: 5, title: "クレーム対応の極意：ピンチをチャンスに変える方法", category: "beginner" },
   { number: 6, title: "カウンセリング力向上！お客様の本音を引き出す会話術", category: "beginner" },
-  { number: 7, title: "ヘアケア知識の基礎：髪質診断からトリートメント選定まで", category: "beginner" },
-  { number: 8, title: "スタイリング剤の選び方と効果的な使用方法", category: "beginner" },
-  { number: 9, title: "美容師のための解剖学：頭皮と髪の構造を理解する", category: "beginner" },
+  { number: 7, title: "待ち時間を快適に：お客様を飽きさせない工夫", category: "beginner" },
+  { number: 8, title: "商品販売の心理学：押し売りせずに売る技術", category: "beginner" },
+  { number: 9, title: "リピート率を上げる会計時の一言", category: "beginner" },
   { number: 10, title: "接客マナーの基本：リピーターを生む接客術", category: "beginner" },
-  { number: 11, title: "ハサミの選び方とメンテナンス方法", category: "beginner" },
-  { number: 12, title: "カット理論の基礎：ベーシックカットから応用まで", category: "beginner" },
-  { number: 13, title: "薬剤知識：安全な施術のための化学基礎", category: "beginner" },
-  { number: 14, title: "美容師のための皮膚科学：アレルギーとパッチテスト", category: "beginner" },
-  { number: 15, title: "シザーワークの基本動作と練習方法", category: "beginner" },
-  { number: 16, title: "顔型診断と似合わせ理論の基礎", category: "beginner" },
-  { number: 17, title: "美容師のための栄養学：髪と健康の関係", category: "beginner" },
-  { number: 18, title: "カラーチャートの読み方と色の配合理論", category: "beginner" },
-  { number: 19, title: "新人美容師が陥りやすい失敗とその対策", category: "beginner" },
-  { number: 20, title: "アシスタントから抜け出すための実践的スキルアップ法", category: "beginner" },
+  { number: 11, title: "SNSでの顧客対応：好感度を上げる返信術", category: "beginner" },
+  { number: 12, title: "予約管理の極意：ダブルブッキングを防ぐ方法", category: "beginner" },
+  { number: 13, title: "売上を上げる追加メニューの提案方法", category: "beginner" },
+  { number: 14, title: "顧客カルテの作り方：情報管理で差をつける", category: "beginner" },
+  { number: 15, title: "プロの時間管理：効率的な施術スケジュール", category: "beginner" },
+  { number: 16, title: "紹介客を増やす仕組み作り", category: "beginner" },
+  { number: 17, title: "季節ごとのキャンペーン企画術", category: "beginner" },
+  { number: 18, title: "客単価を上げるメニュー構成の考え方", category: "beginner" },
+  { number: 19, title: "新人美容師が陥りやすい接客の失敗とその対策", category: "beginner" },
+  { number: 20, title: "アシスタントから指名客を獲得する方法", category: "beginner" },
   // 経営編（21-40）
   { number: 21, title: "美容室開業の完全ガイド：資金計画から物件選びまで", category: "management" },
   { number: 22, title: "集客力を3倍にするSNSマーケティング戦略", category: "management" },
@@ -109,26 +109,26 @@ const ALL_ARTICLES = [
   { number: 59, title: "美容室向けIoTデバイスの活用事例", category: "dx" },
   { number: 60, title: "データドリブン経営で美容室を成長させる方法", category: "dx" },
   // 総合編（61-80）
-  { number: 61, title: "トレンドを先取り！2024年注目のヘアスタイル", category: "general" },
-  { number: 62, title: "海外研修で学ぶ最新カット技術", category: "general" },
-  { number: 63, title: "コンテスト入賞を目指すための練習方法", category: "general" },
-  { number: 64, title: "美容師のためのフォトグラフィー技術", category: "general" },
-  { number: 65, title: "ヘアメイクアーティストへの道：メイク技術習得法", category: "general" },
-  { number: 66, title: "美容師のための英会話：外国人客への対応", category: "general" },
-  { number: 67, title: "トップスタイリストになるためのキャリア戦略", category: "general" },
-  { number: 68, title: "美容師の健康管理：腰痛・手荒れ対策", category: "general" },
-  { number: 69, title: "クリエイティビティを高める発想法とインスピレーション", category: "general" },
-  { number: 70, title: "美容師のための心理学：顧客心理を理解する", category: "general" },
-  { number: 71, title: "サロンワークと私生活のワークライフバランス", category: "general" },
-  { number: 72, title: "美容師のための投資と資産運用入門", category: "general" },
-  { number: 73, title: "独立への道：フリーランス美容師という選択", category: "general" },
-  { number: 74, title: "美容師のためのプレゼンテーション技術", category: "general" },
-  { number: 75, title: "美容業界のSDGs：サステナブルな美容室経営", category: "general" },
-  { number: 76, title: "美容師のための栄養学：体調管理と食事", category: "general" },
-  { number: 77, title: "セミナー講師になるための話し方とコンテンツ作り", category: "general" },
-  { number: 78, title: "美容師のための副業ガイド：収入源の多様化", category: "general" },
-  { number: 79, title: "50歳からの美容師人生：セカンドキャリアの選択肢", category: "general" },
-  { number: 80, title: "美容業界の未来予測：これからの10年で変わること", category: "general" }
+  { number: 61, title: "美容師の健康管理：腰痛・手荒れ対策", category: "general" },
+  { number: 62, title: "美容師のための栄養学：体調管理と食事", category: "general" },
+  { number: 63, title: "サロンワークと私生活のワークライフバランス", category: "general" },
+  { number: 64, title: "美容師のための心理学：顧客心理を理解する", category: "general" },
+  { number: 65, title: "組織心理学を活用したチームビルディング", category: "general" },
+  { number: 66, title: "美容師のための投資と資産運用入門", category: "general" },
+  { number: 67, title: "独立への道：フリーランス美容師という選択", category: "general" },
+  { number: 68, title: "美容師のためのプレゼンテーション技術", category: "general" },
+  { number: 69, title: "セミナー講師になるための話し方とコンテンツ作り", category: "general" },
+  { number: 70, title: "美容業界のSDGs：サステナブルな美容室経営", category: "general" },
+  { number: 71, title: "美容師のための副業ガイド：収入源の多様化", category: "general" },
+  { number: 72, title: "50歳からの美容師人生：セカンドキャリアの選択肢", category: "general" },
+  { number: 73, title: "美容業界の未来予測：これからの10年で変わること", category: "general" },
+  { number: 74, title: "グローバル展開：海外で美容師として働く方法", category: "general" },
+  { number: 75, title: "美容師のための英会話：外国人客への対応", category: "general" },
+  { number: 76, title: "美容室のための危機管理：災害・感染症対策", category: "general" },
+  { number: 77, title: "美容師のキャリアプラン：10年後の自分を描く", category: "general" },
+  { number: 78, title: "美容室の事業承継：後継者育成と経営移譲", category: "general" },
+  { number: 79, title: "美容師のためのメンタルヘルス：ストレス管理法", category: "general" },
+  { number: 80, title: "美容業界でのイノベーション：新しい価値の創造", category: "general" }
 ]
 
 export default function EducationContentListNew() {
@@ -286,7 +286,7 @@ export default function EducationContentListNew() {
             公開中の記事
           </h2>
           
-          <div className="grid gap-4">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {publishedArticles
               .filter(article => selectedChapter === 'all' || article.category === selectedChapter)
               .map((article, index) => (
@@ -295,51 +295,54 @@ export default function EducationContentListNew() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.05 }}
-                  className="bg-white rounded-lg border border-gray-200 hover:border-purple-300 hover:shadow-lg transition-all p-6"
+                  className="bg-white rounded-lg border border-gray-200 hover:border-purple-300 hover:shadow-lg transition-all p-6 flex flex-col"
                 >
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-3">
-                        {canAccessArticle(article.accessLevel) ? (
-                          <Link
-                            href={`/education/${article.id.replace('article_', '')}`}
-                            className="text-lg font-semibold text-gray-900 hover:text-purple-600 transition"
-                          >
-                            {article.title}
-                          </Link>
-                        ) : (
-                          <span className="text-lg font-semibold text-gray-500">
-                            {article.title}
-                          </span>
-                        )}
-                        {getAccessLevelBadge(article.accessLevel)}
-                      </div>
-                      
-                      <div className="flex items-center gap-4 text-sm text-gray-500">
-                        <span className="flex items-center gap-1">
-                          <BookOpen className="w-4 h-4" />
-                          {article.readTime || 7}分で読了
+                  <div className="flex-1">
+                    <div className="mb-3">
+                      {canAccessArticle(article.accessLevel) ? (
+                        <Link
+                          href={`/education/${article.id.replace('article_', '')}`}
+                          className="text-lg font-semibold text-gray-900 hover:text-purple-600 transition line-clamp-2"
+                        >
+                          {article.title}
+                        </Link>
+                      ) : (
+                        <span className="text-lg font-semibold text-gray-500 line-clamp-2">
+                          {article.title}
                         </span>
-                        <span className="flex items-center gap-1">
-                          <span className="text-lg">
-                            {CHAPTERS[article.category].icon}
-                          </span>
-                          {CHAPTERS[article.category].name}
-                        </span>
-                      </div>
+                      )}
                     </div>
                     
+                    <div className="mb-4">
+                      {getAccessLevelBadge(article.accessLevel)}
+                    </div>
+                    
+                    <div className="flex flex-col gap-2 text-sm text-gray-500 mb-4">
+                      <span className="flex items-center gap-1">
+                        <BookOpen className="w-4 h-4" />
+                        {article.readTime || 7}分で読了
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <span className="text-lg">
+                          {CHAPTERS[article.category].icon}
+                        </span>
+                        {CHAPTERS[article.category].name}
+                      </span>
+                    </div>
+                  </div>
+                  
+                  <div className="mt-auto pt-4 border-t border-gray-100">
                     {canAccessArticle(article.accessLevel) ? (
                       <Link
                         href={`/education/${article.id.replace('article_', '')}`}
-                        className="flex items-center gap-1 text-purple-600 hover:text-purple-700 font-medium"
+                        className="flex items-center justify-center gap-1 w-full py-2 px-4 bg-purple-50 text-purple-600 hover:bg-purple-100 hover:text-purple-700 font-medium rounded-lg transition"
                       >
-                        読む
+                        記事を読む
                         <ChevronRight className="w-4 h-4" />
                       </Link>
                     ) : (
                       <button
-                        className="flex items-center gap-1 text-gray-400 cursor-not-allowed"
+                        className="flex items-center justify-center gap-1 w-full py-2 px-4 bg-gray-50 text-gray-400 cursor-not-allowed rounded-lg"
                         disabled
                       >
                         <Lock className="w-4 h-4" />
@@ -359,36 +362,45 @@ export default function EducationContentListNew() {
             今後公開予定の記事
           </h2>
           
-          <div className="grid gap-3">
+          <div className="grid gap-3 md:grid-cols-2">
             {upcomingArticles
               .filter(article => selectedChapter === 'all' || article.category === selectedChapter)
               .slice(0, 10)
-              .map((article, index) => (
-                <motion.div
-                  key={article.number}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.03 }}
-                  className="bg-gray-50 rounded-lg border border-gray-100 p-4"
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <span className="text-gray-400 text-sm">
-                        記事{article.number}
-                      </span>
-                      <span className="text-gray-600">
-                        {article.title}
-                      </span>
-                      <span className="text-xl">
-                        {CHAPTERS[article.category as keyof typeof CHAPTERS].icon}
+              .map((article, index) => {
+                // 公開予定日を計算（記事番号に基づいて2日ごとに公開）
+                const publishDate = new Date()
+                publishDate.setDate(publishDate.getDate() + Math.floor((article.number - publishedArticles.length - 1) / 2) * 2)
+                const formattedDate = publishDate.toLocaleDateString('ja-JP', { month: 'numeric', day: 'numeric' })
+                
+                return (
+                  <motion.div
+                    key={article.number}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.03 }}
+                    className="bg-gray-50 rounded-lg border border-gray-100 p-4"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="text-gray-400 text-sm">
+                            記事{article.number}
+                          </span>
+                          <span className="text-xl">
+                            {CHAPTERS[article.category as keyof typeof CHAPTERS].icon}
+                          </span>
+                        </div>
+                        <span className="text-gray-600 line-clamp-1">
+                          {article.title}
+                        </span>
+                      </div>
+                      <span className="text-sm text-gray-400 whitespace-nowrap ml-4">
+                        {formattedDate}公開予定
                       </span>
                     </div>
-                    <span className="text-sm text-gray-400">
-                      近日公開
-                    </span>
-                  </div>
-                </motion.div>
-              ))}
+                  </motion.div>
+                )
+              })}
           </div>
           
           {upcomingArticles.length > 10 && (
