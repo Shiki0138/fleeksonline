@@ -4,6 +4,8 @@ import { Toaster } from 'react-hot-toast'
 import { cookies } from 'next/headers'
 import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
 import SupabaseProvider from './supabase-provider'
+import ServiceWorkerRegister from '@/components/ServiceWorkerRegister'
+import InstallPrompt from '@/components/InstallPrompt'
 
 export const metadata: Metadata = {
   title: 'FLEEKS Platform',
@@ -30,10 +32,10 @@ export const metadata: Metadata = {
 }
 
 export const viewport: Viewport = {
-  themeColor: '#000000',
+  themeColor: '#7c3aed',
   width: 'device-width',
   initialScale: 1,
-  maximumScale: 1,
+  maximumScale: 5,
 }
 
 export default async function RootLayout({
@@ -51,6 +53,8 @@ export default async function RootLayout({
       <body>
         <SupabaseProvider session={session}>
           {children}
+          <ServiceWorkerRegister />
+          <InstallPrompt />
         </SupabaseProvider>
         <Toaster 
           position="top-center"

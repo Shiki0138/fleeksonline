@@ -1,50 +1,62 @@
-// PWA icons generator script
-// This script creates placeholder icons for PWA
-// In production, replace these with actual branded icons
+// PWAアイコン生成スクリプト
+// 実際の実装では sharp や canvas を使用して画像を生成しますが、
+// ここではプレースホルダーとしてSVGベースのアイコンを作成します
 
-const fs = require('fs')
-const path = require('path')
+const fs = require('fs');
+const path = require('path');
 
-const sizes = [72, 96, 128, 144, 152, 192, 384, 512]
-const publicDir = path.join(__dirname, '..', 'public')
+// アイコンのサイズ設定
+const iconSizes = [72, 96, 128, 144, 152, 192, 384, 512];
 
-// Create a simple SVG icon
-const createSvgIcon = (size) => {
-  return `<svg width="${size}" height="${size}" xmlns="http://www.w3.org/2000/svg">
-    <rect width="${size}" height="${size}" fill="#000000"/>
-    <circle cx="${size/2}" cy="${size/2}" r="${size/3}" fill="#4f46e5"/>
-    <text x="50%" y="50%" font-family="Arial, sans-serif" font-size="${size/4}px" fill="white" text-anchor="middle" dominant-baseline="middle">F</text>
-  </svg>`
+// SVGテンプレート（FLEEKSロゴ）
+const createSvgIcon = (size) => `
+<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" xmlns="http://www.w3.org/2000/svg">
+  <rect width="${size}" height="${size}" fill="#7c3aed" rx="${size * 0.1}"/>
+  <text x="50%" y="50%" text-anchor="middle" dominant-baseline="middle" 
+        font-family="Arial, sans-serif" font-size="${size * 0.3}" font-weight="bold" fill="white">
+    F
+  </text>
+</svg>
+`;
+
+// アイコンディレクトリを作成
+const iconsDir = path.join(__dirname, '..', 'public', 'icons');
+if (!fs.existsSync(iconsDir)) {
+  fs.mkdirSync(iconsDir, { recursive: true });
 }
 
-// Generate icons
-sizes.forEach(size => {
-  const svgContent = createSvgIcon(size)
-  const filename = path.join(publicDir, `icon-${size}x${size}.svg`)
-  
-  fs.writeFileSync(filename, svgContent)
-  console.log(`Created ${filename}`)
-})
+// 各サイズのアイコンを生成
+iconSizes.forEach(size => {
+  const svg = createSvgIcon(size);
+  const filename = path.join(iconsDir, `icon-${size}x${size}.svg`);
+  fs.writeFileSync(filename, svg);
+  console.log(`Generated: icon-${size}x${size}.svg`);
+});
 
-// Create special icons
-const specialIcons = {
-  'icon-video.svg': createSvgIcon(96),
-  'icon-community.svg': createSvgIcon(96),
-  'screenshot1.svg': `<svg width="1280" height="720" xmlns="http://www.w3.org/2000/svg">
-    <rect width="1280" height="720" fill="#1a1a1a"/>
-    <text x="50%" y="50%" font-family="Arial, sans-serif" font-size="48px" fill="#4f46e5" text-anchor="middle" dominant-baseline="middle">FLEEKS Home</text>
-  </svg>`,
-  'screenshot2.svg': `<svg width="1280" height="720" xmlns="http://www.w3.org/2000/svg">
-    <rect width="1280" height="720" fill="#1a1a1a"/>
-    <text x="50%" y="50%" font-family="Arial, sans-serif" font-size="48px" fill="#4f46e5" text-anchor="middle" dominant-baseline="middle">FLEEKS Videos</text>
-  </svg>`
-}
+// 特殊用途のアイコンも生成
+// バッジアイコン
+const badgeSvg = createSvgIcon(72);
+fs.writeFileSync(path.join(iconsDir, 'badge-72x72.svg'), badgeSvg);
 
-Object.entries(specialIcons).forEach(([filename, content]) => {
-  const filepath = path.join(publicDir, filename)
-  fs.writeFileSync(filepath, content)
-  console.log(`Created ${filepath}`)
-})
+// 教育アイコン
+const educationSvg = `
+<svg width="96" height="96" viewBox="0 0 96 96" xmlns="http://www.w3.org/2000/svg">
+  <rect width="96" height="96" fill="#7c3aed" rx="9.6"/>
+  <path d="M48 28L24 40l24 12l20-10v14h4V40L48 28zm-16 23v10c0 5.5 7.2 10 16 10s16-4.5 16-10V51l-16 8-16-8z" fill="white"/>
+</svg>
+`;
+fs.writeFileSync(path.join(iconsDir, 'education-96x96.svg'), educationSvg);
 
-console.log('PWA icons generated successfully!')
-console.log('Note: These are placeholder icons. Replace with actual branded icons for production.')
+// フォーラムアイコン
+const forumSvg = `
+<svg width="96" height="96" viewBox="0 0 96 96" xmlns="http://www.w3.org/2000/svg">
+  <rect width="96" height="96" fill="#7c3aed" rx="9.6"/>
+  <path d="M32 32h32v24H44l-8 8v-8h-4V32zm8 32h24v-8h4v12H48l-8 8v-8h-8V48h8v16z" fill="white"/>
+</svg>
+`;
+fs.writeFileSync(path.join(iconsDir, 'forum-96x96.svg'), forumSvg);
+
+console.log('All PWA icons generated successfully!');
+
+// 注意: 本番環境では、SVGからPNGへの変換が必要です。
+// sharp パッケージを使用して変換することを推奨します。
