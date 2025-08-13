@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { motion } from 'framer-motion'
-import { Target, Play, Clock, Star, LogOut, User, Crown, Edit, Plus, FileText, Youtube, Settings, CheckCircle, GraduationCap, BookOpen } from 'lucide-react'
+import { Target, Play, Clock, Star, LogOut, User, Crown, Edit, Plus, FileText, Youtube, Settings, CheckCircle, GraduationCap, BookOpen, ChevronRight } from 'lucide-react'
 import { supabase } from '@/lib/supabase-browser'
 import type { Profile, Video, EducationContent, EducationChapter } from '@/lib/supabase-browser'
 // import PasswordChangePrompt from '@/components/PasswordChangePrompt' // Temporarily removed
@@ -499,7 +500,21 @@ export default function DashboardPage() {
               )}
 
               {/* Education Content */}
-              {educationContents.length === 0 ? (
+              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-12 text-center">
+                <GraduationCap className="w-16 h-16 mx-auto mb-4 text-gray-400" />
+                <h3 className="text-2xl font-semibold mb-2">教育コンテンツ</h3>
+                <p className="text-gray-400 mb-6">
+                  美容師のためのビジネススキルアップコンテンツ（80記事）
+                </p>
+                <Link
+                  href="/education"
+                  className="inline-flex items-center gap-2 bg-purple-600 text-white px-6 py-3 rounded-full font-semibold hover:bg-purple-700 transition"
+                >
+                  教育コンテンツを見る
+                  <ChevronRight className="w-5 h-5" />
+                </Link>
+              </div>
+              {false && educationContents.length === 0 ? (
                 <div className="bg-white/10 backdrop-blur-sm rounded-xl p-12 text-center">
                   <GraduationCap className="w-16 h-16 mx-auto mb-4 text-gray-400" />
                   <h3 className="text-2xl font-semibold mb-2">間もなく公開し、順次投稿します</h3>
@@ -507,7 +522,7 @@ export default function DashboardPage() {
                     美容師のためのビジネススキルアップコンテンツを準備中です
                   </p>
                 </div>
-              ) : (
+              ) : false && (
                 <div className="space-y-8">
                   {/* Group contents by chapter */}
                   {educationChapters.map((chapter) => {
