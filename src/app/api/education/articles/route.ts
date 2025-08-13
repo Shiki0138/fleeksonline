@@ -10,10 +10,25 @@ export async function GET() {
     const path = require('path')
     
     const articlesDir = path.join(process.cwd(), 'data', 'education-articles')
+    
+    // ディレクトリの存在確認
+    try {
+      await fs.access(articlesDir)
+    } catch (err) {
+      console.error('Articles directory not found:', articlesDir)
+      console.error('Current working directory:', process.cwd())
+      return NextResponse.json({ 
+        articles: [],
+        error: 'Articles directory not found',
+        path: articlesDir,
+        cwd: process.cwd()
+      })
+    }
+    
     const files = await fs.readdir(articlesDir)
     const articleFiles = files.filter((f: string) => f.endsWith('.json')).sort()
     
-    console.log(`Found ${articleFiles.length} article files`)
+    console.log(`Found ${articleFiles.length} article files in ${articlesDir}`)
     console.log('Files:', articleFiles.slice(0, 10)) // デバッグ用：最初の10ファイルを表示
     
     const articles = []
