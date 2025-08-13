@@ -78,10 +78,6 @@ export default function ArticleFooterCTA({ isLoggedIn, isPremiumUser }: ArticleF
             <Crown className="w-6 h-6" />
             有料プランを見る
           </Link>
-          
-          <p className="mt-4 text-sm opacity-75">
-            今なら初月50%OFF！この機会をお見逃しなく
-          </p>
         </div>
       </div>
     </motion.div>
