@@ -14,8 +14,11 @@ export async function GET() {
     const articleFiles = files.filter((f: string) => f.endsWith('.json')).sort()
     
     console.log(`Found ${articleFiles.length} article files`)
+    console.log('Files:', articleFiles.slice(0, 10)) // デバッグ用：最初の10ファイルを表示
     
     const articles = []
+    let successCount = 0
+    let errorCount = 0
     
     for (const file of articleFiles) {
       try {
@@ -46,10 +49,16 @@ export async function GET() {
           isPublished: publishDate <= today,
           readTime: 7
         })
+        successCount++
       } catch (err) {
         console.error(`Error loading ${file}:`, err)
+        errorCount++
+        // エラーがあってもcontinue
+        continue
       }
     }
+    
+    console.log(`Successfully loaded: ${successCount}, Errors: ${errorCount}`)
     
     // ソート
     articles.sort((a, b) => {
@@ -58,6 +67,7 @@ export async function GET() {
       return numA - numB
     })
     
+    console.log(`Returning ${articles.length} articles`)
     return NextResponse.json({ articles })
   } catch (error) {
     console.error('API Error:', error)
