@@ -373,7 +373,8 @@ export default function EducationContentListNew() {
                           {article.readTime || 7}分で読了
                         </span>
                       </div>
-                      
+                    </div>
+                    
                     <div className="mt-auto pt-4 border-t border-gray-100">
                     {canAccessArticle(article.accessLevel) ? (
                       <Link
