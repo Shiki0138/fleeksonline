@@ -115,12 +115,30 @@ function getChapterInfo(articleNumber: number) {
 
 // Unsplash画像を記事番号に基づいて取得
 function getArticleImage(articleNumber: number) {
-  // 美容関連のキーワードを記事のカテゴリーに応じて選択
-  const keywords = [
-    'beauty salon', 'hairdresser', 'hair styling', 'beauty treatment',
-    'hair color', 'hair cutting', 'beauty professional', 'salon interior'
-  ]
-  const keyword = keywords[articleNumber % keywords.length]
+  const chapter = getChapterInfo(articleNumber)
+  
+  // チャプターごとに異なるキーワードを設定
+  const keywordsByChapter: { [key: number]: string[] } = {
+    1: [ // 初心者編 - 接客・サービス
+      'customer service', 'business meeting', 'professional service', 'salon reception',
+      'beauty consultation', 'client consultation', 'professional communication', 'business handshake'
+    ],
+    2: [ // 経営編
+      'business strategy', 'business planning', 'entrepreneur', 'business growth',
+      'marketing strategy', 'business analysis', 'financial planning', 'team management'
+    ],
+    3: [ // DX編
+      'digital transformation', 'technology business', 'digital marketing', 'social media marketing',
+      'mobile app', 'data analytics', 'online business', 'digital innovation'
+    ],
+    4: [ // 総合編
+      'professional development', 'wellness lifestyle', 'work life balance', 'career planning',
+      'mental health', 'healthy lifestyle', 'professional growth', 'leadership'
+    ]
+  }
+  
+  const keywords = keywordsByChapter[chapter.number] || keywordsByChapter[1]
+  const keyword = keywords[(articleNumber - 1) % keywords.length]
   
   // 記事番号をシードとして使用し、同じ記事には常に同じ画像を表示
   return `https://source.unsplash.com/800x400/?${keyword}&sig=${articleNumber}`

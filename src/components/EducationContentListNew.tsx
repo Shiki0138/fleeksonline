@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { Lock, Crown, Calendar, CheckCircle, Clock, BookOpen, ChevronRight, Star, ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { useAuth } from '@/hooks/useAuth'
 
 interface Article {
@@ -130,6 +131,23 @@ const ALL_ARTICLES = [
   { number: 79, title: "美容師のためのメンタルヘルス：ストレス管理法", category: "general" },
   { number: 80, title: "美容業界でのイノベーション：新しい価値の創造", category: "general" }
 ]
+
+// 記事画像を取得する関数
+function getArticleImage(articleNumber: number) {
+  const chapter = Math.ceil(articleNumber / 20)
+  
+  const keywordsByChapter: { [key: number]: string[] } = {
+    1: ['customer service', 'business meeting', 'professional service', 'salon reception'],
+    2: ['business strategy', 'business planning', 'entrepreneur', 'marketing strategy'],
+    3: ['digital transformation', 'technology business', 'digital marketing', 'mobile app'],
+    4: ['professional development', 'wellness lifestyle', 'work life balance', 'career planning']
+  }
+  
+  const keywords = keywordsByChapter[chapter] || keywordsByChapter[1]
+  const keyword = keywords[(articleNumber - 1) % keywords.length]
+  
+  return `https://source.unsplash.com/400x200/?${keyword}&sig=${articleNumber}`
+}
 
 export default function EducationContentListNew() {
   const [articles, setArticles] = useState<Article[]>([])
@@ -304,34 +322,22 @@ export default function EducationContentListNew() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.05 }}
-                  className="bg-white rounded-lg border border-gray-200 hover:border-purple-300 hover:shadow-lg transition-all p-6 flex flex-col"
+                  className="bg-white rounded-lg border border-gray-200 hover:border-purple-300 hover:shadow-lg transition-all overflow-hidden flex flex-col"
                 >
-                  <div className="flex-1">
-                    <div className="mb-3">
-                      {canAccessArticle(article.accessLevel) ? (
-                        <Link
-                          href={`/education/${article.id.replace('article_', '')}`}
-                          className="text-lg font-semibold text-gray-900 hover:text-purple-600 transition line-clamp-2"
-                        >
-                          {article.title}
-                        </Link>
-                      ) : (
-                        <span className="text-lg font-semibold text-gray-500 line-clamp-2">
-                          {article.title}
-                        </span>
-                      )}
-                    </div>
+                  {/* サムネイル画像 */}
+                  <div className="relative h-40 bg-gray-100">
+                    <Image
+                      src={getArticleImage(parseInt(article.id.replace('article_', '')))}
+                      alt={article.title}
+                      fill
+                      className="object-cover"
+                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
                     
-                    <div className="mb-4">
-                      {getAccessLevelBadge(article.accessLevel)}
-                    </div>
-                    
-                    <div className="flex flex-col gap-2 text-sm text-gray-500 mb-4">
-                      <span className="flex items-center gap-1">
-                        <BookOpen className="w-4 h-4" />
-                        {article.readTime || 7}分で読了
-                      </span>
-                      <span className="flex items-center gap-1">
+                    {/* カテゴリーバッジ */}
+                    <div className="absolute bottom-2 left-2">
+                      <span className="inline-flex items-center gap-1 px-2 py-1 bg-white/90 backdrop-blur text-xs rounded-full">
                         <span className="text-lg">
                           {CHAPTERS[article.category].icon}
                         </span>
@@ -340,7 +346,35 @@ export default function EducationContentListNew() {
                     </div>
                   </div>
                   
-                  <div className="mt-auto pt-4 border-t border-gray-100">
+                  <div className="p-6 flex-1 flex flex-col">
+                    <div className="flex-1">
+                      <div className="mb-3">
+                        {canAccessArticle(article.accessLevel) ? (
+                          <Link
+                            href={`/education/${article.id.replace('article_', '')}`}
+                            className="text-lg font-semibold text-gray-900 hover:text-purple-600 transition line-clamp-2"
+                          >
+                            {article.title}
+                          </Link>
+                        ) : (
+                          <span className="text-lg font-semibold text-gray-500 line-clamp-2">
+                            {article.title}
+                          </span>
+                        )}
+                      </div>
+                      
+                      <div className="mb-4">
+                        {getAccessLevelBadge(article.accessLevel)}
+                      </div>
+                      
+                      <div className="flex flex-col gap-2 text-sm text-gray-500 mb-4">
+                        <span className="flex items-center gap-1">
+                          <BookOpen className="w-4 h-4" />
+                          {article.readTime || 7}分で読了
+                        </span>
+                      </div>
+                      
+                    <div className="mt-auto pt-4 border-t border-gray-100">
                     {canAccessArticle(article.accessLevel) ? (
                       <Link
                         href={`/education/${article.id.replace('article_', '')}`}
@@ -358,6 +392,7 @@ export default function EducationContentListNew() {
                         {!user ? 'ログインが必要' : 'プレミアム限定'}
                       </button>
                     )}
+                    </div>
                   </div>
                 </motion.div>
               ))}

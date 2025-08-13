@@ -129,7 +129,7 @@ export default function HomePage() {
                 <div className="bg-gradient-to-br from-blue-800/20 to-indigo-800/20 rounded-lg p-4 mb-4 overflow-hidden">
                   <div className="aspect-video rounded-lg overflow-hidden shadow-2xl">
                     <Image
-                      src="/images/dashboard-preview.png"
+                      src="/dashboard-preview.png"
                       alt="FLEEKSダッシュボード - 動画コンテンツとブログ記事の管理画面"
                       width={1600}
                       height={900}
