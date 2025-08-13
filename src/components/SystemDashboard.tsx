@@ -91,40 +91,18 @@ export default function SystemDashboard() {
       console.error('Dashboard data fetch failed:', error);
       setSystemHealth('error');
       
-      // フォールバック用のサンプルデータ
+      // エラー時は0を表示
       setStats({
-        totalUsers: 1247,
-        premiumUsers: 312,
-        totalVideos: 89,
-        totalViews: 15420,
-        totalBlogPosts: 45,
-        activeStreams: 3,
-        scheduledContent: 12,
+        totalUsers: 0,
+        premiumUsers: 0,
+        totalVideos: 0,
+        totalViews: 0,
+        totalBlogPosts: 0,
+        activeStreams: 0,
+        scheduledContent: 0,
       });
       
-      setRecentActivity([
-        {
-          id: '1',
-          type: 'user_signup',
-          description: '新規ユーザー登録',
-          timestamp: new Date(Date.now() - 5 * 60000),
-          user: 'user@example.com',
-        },
-        {
-          id: '2',
-          type: 'video_upload',
-          description: 'YouTube動画「美容基礎講座#1」を追加',
-          timestamp: new Date(Date.now() - 15 * 60000),
-          user: 'admin@fleeks.com',
-        },
-        {
-          id: '3',
-          type: 'stream_start',
-          description: 'ライブ配信「Q&A セッション」を開始',
-          timestamp: new Date(Date.now() - 30 * 60000),
-          user: 'instructor@fleeks.com',
-        },
-      ]);
+      setRecentActivity([]);
     } finally {
       setLoading(false);
     }

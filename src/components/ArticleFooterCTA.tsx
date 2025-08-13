@@ -83,24 +83,6 @@ export default function ArticleFooterCTA({ isLoggedIn, isPremiumUser }: ArticleF
             今なら初月50%OFF！この機会をお見逃しなく
           </p>
         </div>
-
-        {/* 実績表示 */}
-        <div className="mt-8 pt-8 border-t border-white/20">
-          <div className="flex flex-wrap justify-center gap-8 text-center">
-            <div>
-              <div className="text-3xl font-bold">2,500+</div>
-              <div className="text-sm opacity-75">有料会員数</div>
-            </div>
-            <div>
-              <div className="text-3xl font-bold">4.8/5.0</div>
-              <div className="text-sm opacity-75">満足度評価</div>
-            </div>
-            <div>
-              <div className="text-3xl font-bold">92%</div>
-              <div className="text-sm opacity-75">継続率</div>
-            </div>
-          </div>
-        </div>
       </div>
     </motion.div>
   )
