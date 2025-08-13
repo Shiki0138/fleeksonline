@@ -214,21 +214,21 @@ export default async function EducationContentPage({
           <div className="bg-white rounded-xl shadow-sm p-6 sm:p-8 md:p-12 lg:px-16 lg:py-14">
             {canRead ? (
               <>
-                <div className="prose prose-lg max-w-none
-                  [&>p]:text-base sm:text-lg [&>p]:text-gray-700 [&>p]:leading-[1.8] [&>p]:mb-6 sm:mb-8 [&>p]:tracking-wide
+                <div className="article-content w-full
+                  [&>p]:text-base sm:text-lg [&>p]:text-gray-700 [&>p]:leading-[1.8] [&>p]:mb-6 sm:mb-8 [&>p]:tracking-normal [&>p]:w-full [&>p]:word-break-keep-all
                   [&>h2]:text-[24px] sm:text-[28px] md:text-[32px] [&>h2]:font-bold [&>h2]:text-gray-900 [&>h2]:mt-12 sm:mt-16 [&>h2]:mb-6 sm:mb-8 
-                  [&>h2]:pb-3 sm:pb-4 [&>h2]:border-b-2 [&>h2]:border-purple-200 [&>h2]:relative
+                  [&>h2]:pb-3 sm:pb-4 [&>h2]:border-b-2 [&>h2]:border-purple-200 [&>h2]:relative [&>h2]:break-words [&>h2]:w-full
                   [&>h2:before]:content-[''] [&>h2:before]:absolute [&>h2:before]:bottom-0 [&>h2:before]:left-0 
                   [&>h2:before]:w-16 sm:w-24 [&>h2:before]:h-1 [&>h2:before]:bg-purple-600 [&>h2:before]:rounded-full
                   [&>h3]:text-[20px] sm:text-[22px] md:text-[24px] [&>h3]:font-bold [&>h3]:text-purple-800 [&>h3]:mt-8 sm:mt-10 [&>h3]:mb-4 sm:mb-6
-                  [&>h3]:pl-3 sm:pl-4 [&>h3]:border-l-4 [&>h3]:border-purple-400
-                  [&>ul]:my-6 sm:my-8 [&>ul]:ml-0 [&>ul]:space-y-3 sm:space-y-4
+                  [&>h3]:pl-3 sm:pl-4 [&>h3]:border-l-4 [&>h3]:border-purple-400 [&>h3]:break-words [&>h3]:w-full
+                  [&>ul]:my-6 sm:my-8 [&>ul]:ml-0 [&>ul]:space-y-3 sm:space-y-4 [&>ul]:w-full
                   [&>ul>li]:text-base sm:text-lg [&>ul>li]:text-gray-700 [&>ul>li]:leading-relaxed [&>ul>li]:pl-6 sm:pl-8 
-                  [&>ul>li]:relative [&>ul>li:before]:content-['•'] [&>ul>li:before]:absolute 
+                  [&>ul>li]:relative [&>ul>li]:word-break-keep-all [&>ul>li:before]:content-['•'] [&>ul>li:before]:absolute 
                   [&>ul>li:before]:left-0 [&>ul>li:before]:text-purple-600 [&>ul>li:before]:font-bold
                   [&>ul>li:before]:text-xl
-                  [&>ol]:my-8 [&>ol]:ml-0 [&>ol]:space-y-4 [&>ol]:counter-reset-list
-                  [&>ol>li]:text-lg [&>ol>li]:text-gray-700 [&>ol>li]:leading-relaxed [&>ol>li]:pl-10 
+                  [&>ol]:my-8 [&>ol]:ml-0 [&>ol]:space-y-4 [&>ol]:counter-reset-list [&>ol]:w-full
+                  [&>ol>li]:text-lg [&>ol>li]:text-gray-700 [&>ol>li]:leading-relaxed [&>ol>li]:pl-10 [&>ol>li]:word-break-keep-all 
                   [&>ol>li]:relative [&>ol>li]:counter-increment-list
                   [&>ol>li:before]:content-[counter(list)'.'] [&>ol>li:before]:absolute 
                   [&>ol>li:before]:left-0 [&>ol>li:before]:text-purple-600 [&>ol>li:before]:font-bold
