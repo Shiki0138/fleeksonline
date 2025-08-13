@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { Lock, Crown, Calendar, CheckCircle, Clock, BookOpen, ChevronRight, Star } from 'lucide-react'
+import { Lock, Crown, Calendar, CheckCircle, Clock, BookOpen, ChevronRight, Star, ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
 import { useAuth } from '@/hooks/useAuth'
 
@@ -210,9 +210,18 @@ export default function EducationContentListNew() {
       {/* ヘッダー */}
       <div className="bg-gradient-to-r from-purple-900 to-pink-900 text-white">
         <div className="max-w-7xl mx-auto px-4 py-16">
-          <h1 className="text-4xl md:text-5xl font-bold mb-4">
-            美容師のための教育コンテンツ
-          </h1>
+          <div className="flex items-center justify-between mb-6">
+            <h1 className="text-4xl md:text-5xl font-bold">
+              美容師のための教育コンテンツ
+            </h1>
+            <Link
+              href="/dashboard"
+              className="bg-white/20 backdrop-blur px-6 py-3 rounded-lg hover:bg-white/30 transition flex items-center gap-2"
+            >
+              <ArrowLeft className="w-5 h-5" />
+              ダッシュボード
+            </Link>
+          </div>
           <p className="text-xl text-purple-100 max-w-3xl">
             初心者から経営者まで、80記事の体系的な学習プログラムで
             プロフェッショナルへの道をサポート
