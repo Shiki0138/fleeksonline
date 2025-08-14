@@ -136,17 +136,35 @@ const ALL_ARTICLES = [
 function getArticleImage(articleNumber: number) {
   const chapter = Math.ceil(articleNumber / 20)
   
+  // チャプターごとに異なるキーワードを設定
   const keywordsByChapter: { [key: number]: string[] } = {
-    1: ['customer service', 'business meeting', 'professional service', 'salon reception'],
-    2: ['business strategy', 'business planning', 'entrepreneur', 'marketing strategy'],
-    3: ['digital transformation', 'technology business', 'digital marketing', 'mobile app'],
-    4: ['professional development', 'wellness lifestyle', 'work life balance', 'career planning']
+    1: [ // 初心者編 - 接客・サービス
+      'customer service', 'business meeting', 'professional service', 'salon reception',
+      'beauty consultation', 'client consultation', 'professional communication', 'business handshake'
+    ],
+    2: [ // 経営編
+      'business strategy', 'business planning', 'entrepreneur', 'business growth',
+      'marketing strategy', 'business analysis', 'financial planning', 'team management'
+    ],
+    3: [ // DX編
+      'digital transformation', 'technology business', 'digital marketing', 'social media marketing',
+      'mobile app', 'data analytics', 'online business', 'digital innovation'
+    ],
+    4: [ // 総合編
+      'professional development', 'wellness lifestyle', 'work life balance', 'career planning',
+      'mental health', 'healthy lifestyle', 'professional growth', 'leadership'
+    ]
   }
   
   const keywords = keywordsByChapter[chapter] || keywordsByChapter[1]
   const keyword = keywords[(articleNumber - 1) % keywords.length]
   
-  return `https://source.unsplash.com/400x200/?${keyword}&sig=${articleNumber}`
+  // Unsplash Source APIを使用
+  const width = 400
+  const height = 200
+  
+  // Unsplash Source APIのURLを返す
+  return `https://source.unsplash.com/${width}x${height}/?${encodeURIComponent(keyword)}`
 }
 
 export default function EducationContentListNew() {
@@ -325,13 +343,20 @@ export default function EducationContentListNew() {
                   className="bg-white rounded-lg border border-gray-200 hover:border-purple-300 hover:shadow-lg transition-all overflow-hidden flex flex-col"
                 >
                   {/* サムネイル画像 */}
-                  <div className="relative h-40 bg-gray-100">
-                    <Image
+                  <div className="relative h-40 bg-gray-100 overflow-hidden">
+                    <img
                       src={getArticleImage(parseInt(article.id.replace('article_', '')))}
                       alt={article.title}
-                      fill
-                      className="object-cover"
-                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                      className="w-full h-full object-cover"
+                      loading="lazy"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.style.display = 'none';
+                        const parent = target.parentElement;
+                        if (parent) {
+                          parent.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+                        }
+                      }}
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
                     

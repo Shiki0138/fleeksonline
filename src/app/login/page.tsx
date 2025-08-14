@@ -26,11 +26,12 @@ export default function LoginPage() {
       if (session?.user) {
         console.log('Existing session found, redirecting...')
         const isAdmin = session.user.email === 'greenroom51@gmail.com'
-        window.location.href = isAdmin ? '/admin' : '/dashboard'
+        const redirectUrl = searchParams.get('redirect')
+        window.location.href = isAdmin ? '/admin' : (redirectUrl || '/dashboard')
       }
     }
     checkSession()
-  }, [])
+  }, [searchParams])
 
   // Check for recovery token and redirect to password update page
   useEffect(() => {
@@ -131,13 +132,14 @@ export default function LoginPage() {
           return
         }
 
-        // For other users, redirect to dashboard without profile check
-        console.log('[Login] Regular user detected, redirecting to /dashboard')
+        // For other users, redirect to requested page or dashboard
+        const redirectUrl = searchParams.get('redirect') || '/dashboard'
+        console.log('[Login] Regular user detected, redirecting to:', redirectUrl)
         setSuccess('ログインしています...')
         setLoading(false)
         // Use window.location for hard redirect to ensure session is set
-        console.log('[Login] Using window.location.href = "/dashboard"')
-        window.location.href = '/dashboard'
+        console.log('[Login] Using window.location.href =', redirectUrl)
+        window.location.href = redirectUrl
       } else {
         console.error('No user data returned')
         setError('ログインに失敗しました')

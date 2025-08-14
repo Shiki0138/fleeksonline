@@ -32,7 +32,7 @@ export async function middleware(req: NextRequest) {
   }
   
   // Allow access to protected pages for authenticated users
-  const protectedPaths = ['/dashboard', '/premium', '/free', '/videos', '/education', '/blog']
+  const protectedPaths = ['/dashboard', '/premium', '/free', '/videos', '/education', '/blog', '/forum']
   const isProtectedPath = protectedPaths.some(path => pathname.startsWith(path))
   
   if (session && isProtectedPath) {

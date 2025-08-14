@@ -140,8 +140,12 @@ function getArticleImage(articleNumber: number) {
   const keywords = keywordsByChapter[chapter.number] || keywordsByChapter[1]
   const keyword = keywords[(articleNumber - 1) % keywords.length]
   
-  // 記事番号をシードとして使用し、同じ記事には常に同じ画像を表示
-  return `https://source.unsplash.com/800x400/?${keyword}&sig=${articleNumber}`
+  // Unsplash Source APIを使用（より安定的）
+  const width = 1200
+  const height = 600
+  
+  // Unsplash Source APIのURLを返す
+  return `https://source.unsplash.com/${width}x${height}/?${encodeURIComponent(keyword)}`
 }
 
 export default async function EducationContentPage({
@@ -320,12 +324,21 @@ export default async function EducationContentPage({
           <div className="bg-white rounded-xl shadow-sm overflow-hidden mb-8">
             {/* アイキャッチ画像 */}
             <div className="relative h-64 md:h-96 bg-gray-200">
-              <Image
+              <img
                 src={getArticleImage(articleNumber)}
                 alt={article.title}
-                fill
-                className="object-cover"
-                priority
+                className="w-full h-full object-cover"
+                loading="eager"
+                onError={(e) => {
+                  // 画像読み込みエラー時のフォールバック
+                  const target = e.target as HTMLImageElement;
+                  target.style.display = 'none';
+                  // 代わりにグラデーション背景を表示
+                  const parent = target.parentElement;
+                  if (parent) {
+                    parent.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+                  }
+                }}
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
               

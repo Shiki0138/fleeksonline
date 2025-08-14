@@ -66,9 +66,6 @@ export default function HomePage() {
               <a href="/education" className="hidden md:block hover:text-blue-400 transition">
                 教育コンテンツ
               </a>
-              <a href="/forum" className="hidden md:block hover:text-blue-400 transition">
-                フォーラム
-              </a>
               <a href="/auth/login" className="bg-white/10 backdrop-blur-sm px-3 py-2 rounded-full hover:bg-white/20 transition text-sm whitespace-nowrap md:bg-transparent md:px-0 md:py-0 md:rounded-none md:hover:text-blue-400 md:hover:bg-transparent md:text-base">
                 ログイン
               </a>
@@ -128,7 +125,7 @@ export default function HomePage() {
                 <div className="bg-gradient-to-br from-blue-800/20 to-indigo-800/20 rounded-lg p-4 mb-4 overflow-hidden">
                   <div className="aspect-video rounded-lg overflow-hidden shadow-2xl">
                     <img
-                      src="/dashboard-preview.png"
+                      src="/images/dashboard-preview.png"
                       alt="FLEEKSダッシュボード - 動画コンテンツとブログ記事の管理画面"
                       className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
                     />

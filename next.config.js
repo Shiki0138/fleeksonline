@@ -39,7 +39,7 @@ const nextConfig = {
     ignoreDuringBuilds: true,
   },
   images: {
-    domains: ['i.ytimg.com', 'img.youtube.com', 'source.unsplash.com'],
+    domains: ['i.ytimg.com', 'img.youtube.com', 'source.unsplash.com', 'picsum.photos'],
   },
 }
 
