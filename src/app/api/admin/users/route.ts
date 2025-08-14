@@ -378,7 +378,34 @@ export async function POST(request: NextRequest) {
               updated_at: new Date().toISOString()
             })
 
-          if (profileError) throw profileError
+          if (profileError) {
+            console.error('Profile creation error:', profileError)
+            throw profileError
+          }
+
+          // If creating a premium user, also add to RBAC system
+          if (data.membership_type === 'premium') {
+            // Get premium_user role
+            const { data: premiumRole } = await supabaseAdmin
+              .from('roles')
+              .select('id')
+              .eq('name', 'premium_user')
+              .maybeSingle()
+
+            if (premiumRole) {
+              const { error: rbacError } = await supabaseAdmin
+                .from('user_roles')
+                .insert({
+                  user_id: newUser.user.id,
+                  role_id: premiumRole.id,
+                  granted_at: new Date().toISOString()
+                })
+
+              if (rbacError) {
+                console.error('RBAC role assignment error:', rbacError)
+              }
+            }
+          }
         }
 
         return NextResponse.json({ success: true, user: newUser.user })
