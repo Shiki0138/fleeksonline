@@ -197,9 +197,10 @@ export default async function EducationContentPage({
   }
   
   // アクセス権限の確認
+  // 有料会員（paid/admin）は全ての記事を全文読める
   const hasFullAccess = accessLevel === 'free' || isPremiumUser
-  const hasPartialAccess = user && accessLevel === 'partial'
-  const canRead = hasFullAccess || hasPartialAccess
+  const hasPartialAccess = user && accessLevel === 'partial' && !isPremiumUser
+  const canRead = hasFullAccess || hasPartialAccess || (user && isPremiumUser)
 
   // プレビューコンテンツを生成（有料記事の場合）
   const getPreviewContent = (content: string) => {
