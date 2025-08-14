@@ -133,37 +133,8 @@ const ALL_ARTICLES = [
 
 // 記事画像を取得する関数
 function getArticleImage(articleNumber: number) {
-  const chapter = Math.ceil(articleNumber / 20)
-  
-  // チャプターごとに異なるキーワードを設定
-  const keywordsByChapter: { [key: number]: string[] } = {
-    1: [ // 初心者編 - 接客・サービス
-      'customer service', 'business meeting', 'professional service', 'salon reception',
-      'beauty consultation', 'client consultation', 'professional communication', 'business handshake'
-    ],
-    2: [ // 経営編
-      'business strategy', 'business planning', 'entrepreneur', 'business growth',
-      'marketing strategy', 'business analysis', 'financial planning', 'team management'
-    ],
-    3: [ // DX編
-      'digital transformation', 'technology business', 'digital marketing', 'social media marketing',
-      'mobile app', 'data analytics', 'online business', 'digital innovation'
-    ],
-    4: [ // 総合編
-      'professional development', 'wellness lifestyle', 'work life balance', 'career planning',
-      'mental health', 'healthy lifestyle', 'professional growth', 'leadership'
-    ]
-  }
-  
-  const keywords = keywordsByChapter[chapter] || keywordsByChapter[1]
-  const keyword = keywords[(articleNumber - 1) % keywords.length]
-  
-  // Unsplash Source APIを使用
-  const width = 400
-  const height = 200
-  
-  // Unsplash Source APIのURLを返す
-  return `https://source.unsplash.com/${width}x${height}/?${encodeURIComponent(keyword)}`
+  // デフォルトのSVG画像を使用（読み込み速度の問題を解決）
+  return '/images/default-article-image.svg'
 }
 
 export default function EducationContentListNew() {

@@ -5,10 +5,22 @@ import { EDUCATION_ARTICLES, formatArticle } from '@/lib/education-articles'
 export const dynamic = 'force-dynamic'
 
 export async function GET() {
-  // 静的データから記事を返す（ファイルシステムアクセスの問題を回避）
+  // 本番環境ではファイルシステムアクセスができないため、
+  // 存在する記事番号に基づいて静的データをフィルタリング
   try {
-    const articles = EDUCATION_ARTICLES.map(formatArticle)
-    console.log(`Returning ${articles.length} articles from static data`)
+    // 存在する記事番号（欠番を除く）
+    const existingArticleNumbers = [
+      1, 3, 4, 5, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
+      22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40,
+      42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60,
+      62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80
+    ]
+    
+    const articles = EDUCATION_ARTICLES
+      .filter(article => existingArticleNumbers.includes(article.number))
+      .map(formatArticle)
+    
+    console.log(`Returning ${articles.length} articles (excluding missing files)`)
     return NextResponse.json({ articles })
   } catch (error) {
     console.error('API Error:', error)

@@ -2,7 +2,8 @@
 // 本番環境でファイルシステムアクセスの問題を回避するため、静的データとして定義
 
 // 実際に公開されている記事数（ファイルが存在する数）
-export const PUBLISHED_ARTICLE_COUNT = 73
+// article_002, article_006, article_021, article_041, article_061が欠けているため74記事
+export const PUBLISHED_ARTICLE_COUNT = 74
 
 export const EDUCATION_ARTICLES = [
   // 初心者編（1-20）
