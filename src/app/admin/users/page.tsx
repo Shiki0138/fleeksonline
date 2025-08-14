@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { ArrowLeft, Users, Crown, Shield, Calendar, Mail, Search, Key, RefreshCw, Plus, Ban, CheckCircle, Trash2 } from 'lucide-react'
+import { ArrowLeft, Users, Crown, Shield, Calendar, Mail, Search, Key, RefreshCw, Plus, Ban, CheckCircle, Trash2, Edit, Save, X } from 'lucide-react'
 import { supabase } from '@/lib/supabase-browser'
 import toast, { Toaster } from 'react-hot-toast'
 
@@ -34,6 +34,14 @@ export default function UserManagementPage() {
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [userToDelete, setUserToDelete] = useState<User | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
+  const [showEditModal, setShowEditModal] = useState(false)
+  const [editingUser, setEditingUser] = useState<User | null>(null)
+  const [isUpdatingUser, setIsUpdatingUser] = useState(false)
+  const [editForm, setEditForm] = useState({
+    full_name: '',
+    username: '',
+    email: ''
+  })
   const [newUserForm, setNewUserForm] = useState({
     email: '',
     password: '',
@@ -305,6 +313,65 @@ export default function UserManagementPage() {
       toast.error('アカウントの削除に失敗しました')
     } finally {
       setIsDeleting(false)
+    }
+  }
+
+  const handleEditUser = (user: User) => {
+    setEditingUser(user)
+    setEditForm({
+      full_name: user.full_name || '',
+      username: user.username || '',
+      email: user.email
+    })
+    setShowEditModal(true)
+  }
+
+  const handleUpdateUser = async () => {
+    if (!editingUser) return
+
+    if (!editForm.full_name.trim() || !editForm.username.trim()) {
+      toast.error('名前とユーザー名は必須です')
+      return
+    }
+
+    setIsUpdatingUser(true)
+    try {
+      const response = await fetch('/api/admin/users', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          action: 'updateProfile',
+          userId: editingUser.id,
+          data: {
+            full_name: editForm.full_name.trim(),
+            username: editForm.username.trim(),
+            email: editForm.email.trim()
+          }
+        })
+      })
+
+      const result = await response.json()
+
+      if (!response.ok) {
+        throw new Error(result.error || result.details || 'Failed to update user')
+      }
+
+      toast.success('ユーザー情報を更新しました')
+      setShowEditModal(false)
+      setEditingUser(null)
+      fetchUsers()
+    } catch (error: any) {
+      console.error('Error updating user:', error)
+      if (error.message?.includes('already exists') || error.message?.includes('duplicate')) {
+        toast.error('そのユーザー名またはメールアドレスは既に使用されています')
+      } else {
+        toast.error('ユーザー情報の更新に失敗しました: ' + error.message)
+      }
+    } finally {
+      setIsUpdatingUser(false)
     }
   }
 
@@ -581,6 +648,13 @@ export default function UserManagementPage() {
                               </select>
                             )}
                             <button
+                              onClick={() => handleEditUser(user)}
+                              className="bg-blue-600 hover:bg-blue-700 p-2 rounded transition"
+                              title="ユーザー情報編集"
+                            >
+                              <Edit className="w-4 h-4" />
+                            </button>
+                            <button
                               onClick={() => {
                                 setSelectedUser(user)
                                 setShowPasswordModal(true)
@@ -836,6 +910,89 @@ export default function UserManagementPage() {
               </motion.div>
             </div>
           )}
+          {/* ユーザー編集モーダル */}
+          {showEditModal && editingUser && (
+            <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="bg-slate-800 rounded-xl p-6 w-full max-w-md"
+              >
+                <h3 className="text-xl font-bold mb-4">ユーザー情報編集</h3>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-1">表示名</label>
+                    <input
+                      type="text"
+                      value={editForm.full_name}
+                      onChange={(e) => setEditForm(prev => ({ ...prev, full_name: e.target.value }))}
+                      className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:border-blue-400"
+                      placeholder="表示名を入力"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">ユーザー名</label>
+                    <input
+                      type="text"
+                      value={editForm.username}
+                      onChange={(e) => setEditForm(prev => ({ ...prev, username: e.target.value }))}
+                      className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:border-blue-400"
+                      placeholder="ユーザー名を入力"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">メールアドレス</label>
+                    <input
+                      type="email"
+                      value={editForm.email}
+                      onChange={(e) => setEditForm(prev => ({ ...prev, email: e.target.value }))}
+                      className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:border-blue-400"
+                      placeholder="メールアドレスを入力"
+                    />
+                  </div>
+                  <p className="text-xs text-gray-400">
+                    ユーザーID: {editingUser.id}
+                  </p>
+                </div>
+                <div className="flex space-x-3 mt-6">
+                  <button
+                    onClick={handleUpdateUser}
+                    disabled={isUpdatingUser}
+                    className="flex-1 bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg font-medium transition disabled:opacity-50"
+                  >
+                    {isUpdatingUser ? (
+                      <div className="flex items-center justify-center">
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                        <Save className="w-4 h-4 mr-2" />
+                        更新中...
+                      </div>
+                    ) : (
+                      <div className="flex items-center justify-center">
+                        <Save className="w-4 h-4 mr-2" />
+                        更新
+                      </div>
+                    )}
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowEditModal(false)
+                      setEditingUser(null)
+                      setEditForm({
+                        full_name: '',
+                        username: '',
+                        email: ''
+                      })
+                    }}
+                    className="px-4 py-2 border border-white/20 rounded-lg hover:bg-white/10 transition flex items-center"
+                  >
+                    <X className="w-4 h-4 mr-2" />
+                    キャンセル
+                  </button>
+                </div>
+              </motion.div>
+            </div>
+          )}
+
         </motion.div>
       </div>
     </div>

@@ -410,6 +410,71 @@ export async function POST(request: NextRequest) {
 
         return NextResponse.json({ success: true, user: newUser.user })
 
+      case 'updateProfile':
+        // Update user profile information
+        const updateData: any = {
+          updated_at: new Date().toISOString()
+        }
+        
+        if (data.full_name) updateData.full_name = data.full_name
+        if (data.username) updateData.username = data.username
+        
+        // First check if profile exists
+        const { data: existingProfile } = await supabaseAdmin
+          .from('fleeks_profiles')
+          .select('id')
+          .eq('id', userId)
+          .maybeSingle()
+        
+        if (!existingProfile) {
+          // Create profile if it doesn't exist
+          const { data: { user: authUser } } = await supabaseAdmin.auth.admin.getUserById(userId)
+          if (authUser) {
+            const { error: createError } = await supabaseAdmin
+              .from('fleeks_profiles')
+              .insert({
+                id: userId,
+                email: data.email || authUser.email,
+                username: data.username || authUser.email?.split('@')[0] || 'user',
+                full_name: data.full_name || authUser.user_metadata?.full_name || authUser.email?.split('@')[0] || 'User',
+                membership_type: 'free',
+                role: 'user',
+                created_at: authUser.created_at,
+                updated_at: new Date().toISOString()
+              })
+            
+            if (createError) throw createError
+          } else {
+            throw new Error('User not found in auth system')
+          }
+        } else {
+          // Update existing profile
+          const { error: profileError } = await supabaseAdmin
+            .from('fleeks_profiles')
+            .update(updateData)
+            .eq('id', userId)
+
+          if (profileError) throw profileError
+        }
+        
+        // If email is being updated, also update auth user
+        if (data.email) {
+          const { error: authUpdateError } = await supabaseAdmin.auth.admin.updateUserById(
+            userId,
+            { email: data.email }
+          )
+          
+          if (authUpdateError) {
+            console.error('Auth email update error:', authUpdateError)
+            // Don't throw here as profile update succeeded
+          }
+        }
+        
+        return NextResponse.json({ 
+          success: true, 
+          message: 'ユーザー情報を更新しました'
+        })
+
       default:
         return NextResponse.json({ error: 'Invalid action' }, { status: 400 })
     }
