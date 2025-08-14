@@ -15,6 +15,7 @@ export default function LoginPage() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState('')
+  const [pageLoading, setPageLoading] = useState(true)
   const router = useRouter()
   const searchParams = useSearchParams()
   const supabase = createClientComponentClient()
@@ -22,12 +23,19 @@ export default function LoginPage() {
   // Check for existing session first
   useEffect(() => {
     const checkSession = async () => {
-      const session = await checkExistingSession()
-      if (session?.user) {
-        console.log('Existing session found, redirecting...')
-        const isAdmin = session.user.email === 'greenroom51@gmail.com'
-        const redirectUrl = searchParams.get('redirect')
-        window.location.href = isAdmin ? '/admin' : (redirectUrl || '/dashboard')
+      try {
+        const session = await checkExistingSession()
+        if (session?.user) {
+          console.log('Existing session found, redirecting...')
+          const isAdmin = session.user.email === 'greenroom51@gmail.com'
+          const redirectUrl = searchParams.get('redirect')
+          window.location.href = isAdmin ? '/admin' : (redirectUrl || '/dashboard')
+          return
+        }
+      } catch (error) {
+        console.error('Session check error:', error)
+      } finally {
+        setPageLoading(false)
       }
     }
     checkSession()
@@ -35,45 +43,55 @@ export default function LoginPage() {
 
   // Check for recovery token and redirect to password update page
   useEffect(() => {
-    // Check URL parameters first
-    const token = searchParams.get('token')
-    const type = searchParams.get('type')
-    const redirect = searchParams.get('redirect')
+    if (pageLoading) return // Wait for initial page load
     
-    // Also check hash fragments (Supabase format)
-    const hashParams = new URLSearchParams(window.location.hash.substring(1))
-    const hashAccessToken = hashParams.get('access_token')
-    const hashRefreshToken = hashParams.get('refresh_token')
-    const hashType = hashParams.get('type')
-    
-    console.log('Recovery check - URL params:', { token, type, redirect })
-    console.log('Recovery check - Hash params:', { 
-      access_token: hashAccessToken, 
-      refresh_token: hashRefreshToken, 
-      type: hashType 
-    })
-    
-    // If we have hash parameters with recovery type, redirect with the hash
-    if (hashAccessToken && hashType === 'recovery') {
-      console.log('Hash recovery tokens detected, redirecting to update password page')
-      // Preserve the entire hash fragment for the update-password page
-      window.location.href = `/auth/update-password${window.location.hash}`
-      return
+    try {
+      // Check URL parameters first
+      const token = searchParams.get('token')
+      const type = searchParams.get('type')
+      const redirect = searchParams.get('redirect')
+      
+      // Also check hash fragments (Supabase format) - モバイル対応の改善
+      let hashParams: URLSearchParams | null = null
+      if (typeof window !== 'undefined' && window.location.hash) {
+        hashParams = new URLSearchParams(window.location.hash.substring(1))
+      }
+      
+      const hashAccessToken = hashParams?.get('access_token')
+      const hashRefreshToken = hashParams?.get('refresh_token')
+      const hashType = hashParams?.get('type')
+      
+      console.log('Recovery check - URL params:', { token, type, redirect })
+      console.log('Recovery check - Hash params:', { 
+        access_token: hashAccessToken, 
+        refresh_token: hashRefreshToken, 
+        type: hashType 
+      })
+      
+      // If we have hash parameters with recovery type, redirect with the hash
+      if (hashAccessToken && hashType === 'recovery') {
+        console.log('Hash recovery tokens detected, redirecting to update password page')
+        // Preserve the entire hash fragment for the update-password page
+        window.location.href = `/auth/update-password${window.location.hash}`
+        return
+      }
+      
+      // If we have a redirect parameter and hash, combine them
+      if (redirect === '/auth/update-password' && window.location.hash) {
+        console.log('Redirect with hash detected, forwarding to update password page')
+        window.location.href = `/auth/update-password${window.location.hash}`
+        return
+      }
+      
+      // Legacy URL parameter support
+      if (token && type === 'recovery') {
+        console.log('URL recovery token detected, redirecting to update password page')
+        window.location.href = `/auth/update-password?token=${token}&type=recovery`
+      }
+    } catch (error) {
+      console.error('Recovery token check error:', error)
     }
-    
-    // If we have a redirect parameter and hash, combine them
-    if (redirect === '/auth/update-password' && window.location.hash) {
-      console.log('Redirect with hash detected, forwarding to update password page')
-      window.location.href = `/auth/update-password${window.location.hash}`
-      return
-    }
-    
-    // Legacy URL parameter support
-    if (token && type === 'recovery') {
-      console.log('URL recovery token detected, redirecting to update password page')
-      window.location.href = `/auth/update-password?token=${token}&type=recovery`
-    }
-  }, [searchParams])
+  }, [searchParams, pageLoading])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -166,9 +184,21 @@ export default function LoginPage() {
     }
   }, [])
 
+  // Show loading while checking session
+  if (pageLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 text-white flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
+          <p className="text-gray-300">読み込み中...</p>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 text-white flex items-center justify-center px-4">
-      {/* Animated Background */}
+      {/* Animated Background - モバイルでは無効化 */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute inset-0 bg-[url('/grid.svg')] bg-center opacity-10"></div>
         <div className="absolute top-0 -left-4 w-72 h-72 md:w-96 md:h-96 bg-blue-600 rounded-full mix-blend-multiply filter blur-2xl md:blur-3xl opacity-20 animate-blob hidden md:block"></div>
@@ -198,120 +228,98 @@ export default function LoginPage() {
         {/* Form */}
         <div className="bg-white/10 backdrop-blur-md rounded-2xl p-8 shadow-2xl">
           {success ? (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="text-center"
-            >
+            <div className="text-center">
               <CheckCircle className="w-16 h-16 text-green-400 mx-auto mb-4" />
-              <h2 className="text-xl font-semibold mb-2">ログイン成功</h2>
-              <p className="text-gray-300 mb-6">{success}</p>
-            </motion.div>
+              <p className="text-xl font-semibold mb-2">{success}</p>
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white mx-auto"></div>
+            </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Error Message */}
               {error && (
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  className="bg-red-500/20 border border-red-500/50 rounded-lg p-3 flex items-center gap-2"
-                >
-                  <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0" />
-                  <span className="text-sm text-red-300">{error}</span>
-                </motion.div>
+                <div className="bg-red-500/20 border border-red-500/50 rounded-lg p-3 flex items-start gap-3">
+                  <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
+                  <p className="text-sm text-red-200">{error}</p>
+                </div>
               )}
 
-              {/* Email Field */}
               <div>
                 <label className="block text-sm font-medium mb-2">
                   メールアドレス
                 </label>
                 <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                   <input
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full bg-white/10 border border-white/20 rounded-lg pl-10 pr-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400 transition"
+                    className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-lg focus:outline-none focus:border-blue-400 transition pl-10"
                     placeholder="your@email.com"
                     required
                     disabled={loading}
                   />
+                  <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                 </div>
               </div>
 
-              {/* Password Field */}
               <div>
                 <label className="block text-sm font-medium mb-2">
                   パスワード
                 </label>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                   <input
                     type={showPassword ? 'text' : 'password'}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full bg-white/10 border border-white/20 rounded-lg pl-10 pr-12 py-3 text-white placeholder-gray-400 focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400 transition"
+                    className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-lg focus:outline-none focus:border-blue-400 transition pl-10 pr-10"
                     placeholder="••••••••"
                     required
                     disabled={loading}
                   />
+                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition"
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition"
                     disabled={loading}
                   >
-                    {showPassword ? (
-                      <EyeOff className="w-5 h-5" />
-                    ) : (
-                      <Eye className="w-5 h-5" />
-                    )}
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
                 </div>
               </div>
 
-              {/* Submit Button */}
-              <motion.button
+              <div className="flex items-center justify-between text-sm">
+                <Link href="/auth/reset-password" className="text-blue-400 hover:text-blue-300 transition">
+                  パスワードを忘れた方
+                </Link>
+              </div>
+
+              <button
                 type="submit"
                 disabled={loading}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 py-3 rounded-lg font-semibold shadow-lg hover:shadow-xl hover:shadow-blue-500/25 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 py-3 rounded-lg font-semibold hover:shadow-lg hover:shadow-blue-500/25 transition disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {loading ? (
                   <span className="flex items-center justify-center">
-                    <svg className="animate-spin h-5 w-5 mr-2" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
-                    ログイン中...
+                    処理中...
                   </span>
                 ) : (
                   'ログイン'
                 )}
-              </motion.button>
-
-              {/* Links */}
-              <div className="text-center space-y-2">
-                <Link 
-                  href="/auth/reset-guide" 
-                  className="text-sm text-blue-400 hover:text-blue-300 transition"
-                >
-                  パスワードを忘れましたか？
-                </Link>
-                <p className="text-sm text-gray-400">
-                  アカウントをお持ちでないですか？{' '}
-                  <Link 
-                    href="/auth/signup" 
-                    className="text-blue-400 hover:text-blue-300 transition"
-                  >
-                    新規登録
-                  </Link>
-                </p>
-              </div>
+              </button>
             </form>
           )}
+
+          <div className="mt-6 text-center">
+            <p className="text-gray-300">
+              アカウントをお持ちでない方は{' '}
+              <Link href="/auth/signup" className="text-blue-400 hover:text-blue-300 transition">
+                新規登録
+              </Link>
+            </p>
+          </div>
         </div>
       </motion.div>
     </div>
