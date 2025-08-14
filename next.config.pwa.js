@@ -3,7 +3,8 @@ const withPWA = require('next-pwa')({
   dest: 'public',
   register: true,
   skipWaiting: true,
-  disable: true, // PWAを一時的に無効化
+  disable: false, // PWAを有効化
+  buildExcludes: [/middleware-manifest.json$/],
   runtimeCaching: [
     {
       urlPattern: /^https:\/\/.*\.supabase\.co\/storage\/v1\/object\/public\/.*/i,
