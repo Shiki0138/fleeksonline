@@ -20,7 +20,13 @@ export async function middleware(req: NextRequest) {
   
   // Public paths that don't require authentication
   const publicPaths = ['/', '/login', '/auth/signup', '/auth/reset-password', '/auth/update-password', '/auth/confirm', '/auth/reset-password-otp', '/auth/callback', '/auth/test-reset', '/privacy', '/terms']
-  const isPublicPath = publicPaths.includes(pathname) || pathname.startsWith('/api/auth/') || pathname.startsWith('/auth/') || pathname.startsWith('/education')
+  const isPublicPath = publicPaths.includes(pathname) || 
+    pathname.startsWith('/api/auth/') || 
+    pathname.startsWith('/auth/') || 
+    pathname.startsWith('/education') ||
+    pathname.startsWith('/images/') ||  // 画像ファイルは認証不要
+    pathname.startsWith('/icons/') ||   // アイコンファイルは認証不要
+    pathname.match(/\.(png|jpg|jpeg|gif|svg|ico|webp)$/i) // 画像拡張子は認証不要
   
   // If user is logged in and trying to access login page, redirect them
   if (session && pathname === '/login') {
@@ -82,7 +88,10 @@ export const config = {
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
+     * - images (public images)
+     * - icons (public icons)
+     * - manifest.json (PWA manifest)
      */
-    '/((?!api|_next/static|_next/image|favicon.ico).*)',
+    '/((?!api|_next/static|_next/image|favicon.ico|images|icons|manifest.json).*)',
   ]
 }
