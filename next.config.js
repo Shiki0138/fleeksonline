@@ -3,6 +3,7 @@ const withPWA = require('next-pwa')({
   register: true,
   skipWaiting: true,
   disable: process.env.NODE_ENV === 'development',
+  buildExcludes: [/middleware-manifest\.json$/],
   runtimeCaching: [
     {
       urlPattern: /^https:\/\/.*\.supabase\.co\/.*/i,
@@ -12,7 +13,8 @@ const withPWA = require('next-pwa')({
         expiration: {
           maxEntries: 32,
           maxAgeSeconds: 60 * 60 * 24 // 24時間
-        }
+        },
+        networkTimeoutSeconds: 10 // 10秒でタイムアウト
       }
     },
     {
@@ -25,6 +27,10 @@ const withPWA = require('next-pwa')({
           maxAgeSeconds: 60 * 60 * 24 * 30 // 30日
         }
       }
+    },
+    {
+      urlPattern: /^\/(login|auth|api\/auth)/,
+      handler: 'NetworkOnly' // ログイン関連は常にネットワークから
     }
   ]
 })
