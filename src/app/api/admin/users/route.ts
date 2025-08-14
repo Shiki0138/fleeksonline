@@ -420,13 +420,13 @@ export async function POST(request: NextRequest) {
         if (data.username) updateData.username = data.username
         
         // First check if profile exists
-        const { data: existingProfile } = await supabaseAdmin
+        const { data: existingUpdateProfile } = await supabaseAdmin
           .from('fleeks_profiles')
           .select('id')
           .eq('id', userId)
           .maybeSingle()
         
-        if (!existingProfile) {
+        if (!existingUpdateProfile) {
           // Create profile if it doesn't exist
           const { data: { user: authUser } } = await supabaseAdmin.auth.admin.getUserById(userId)
           if (authUser) {
