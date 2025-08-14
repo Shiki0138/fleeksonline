@@ -7,7 +7,6 @@ import ArticleFooterCTA from '@/components/ArticleFooterCTA'
 import fs from 'fs/promises'
 import path from 'path'
 import ReactMarkdown from 'react-markdown'
-import Image from 'next/image'
 
 // 記事タイトルのリスト
 const ALL_ARTICLES = [
@@ -325,20 +324,10 @@ export default async function EducationContentPage({
             {/* アイキャッチ画像 */}
             <div className="relative h-64 md:h-96 bg-gray-200">
               <img
-                src={getArticleImage(articleNumber)}
+                src="/images/default-article-image.svg"
                 alt={article.title}
                 className="w-full h-full object-cover"
                 loading="eager"
-                onError={(e) => {
-                  // 画像読み込みエラー時のフォールバック
-                  const target = e.target as HTMLImageElement;
-                  target.style.display = 'none';
-                  // 代わりにグラデーション背景を表示
-                  const parent = target.parentElement;
-                  if (parent) {
-                    parent.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
-                  }
-                }}
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
               

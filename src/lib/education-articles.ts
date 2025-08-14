@@ -1,6 +1,9 @@
 // 教育コンテンツの記事データ
 // 本番環境でファイルシステムアクセスの問題を回避するため、静的データとして定義
 
+// 実際に公開されている記事数（ファイルが存在する数）
+export const PUBLISHED_ARTICLE_COUNT = 73
+
 export const EDUCATION_ARTICLES = [
   // 初心者編（1-20）
   { number: 1, title: "プロとしての電話応対術：売上を左右する最初の接点", category: "beginner" },
@@ -103,7 +106,17 @@ export function getAccessLevel(articleNumber: number): 'free' | 'partial' | 'pre
 export function formatArticle(article: typeof EDUCATION_ARTICLES[0]) {
   const today = new Date()
   const publishDate = new Date(today)
-  publishDate.setDate(today.getDate() - 30) // 30日前に公開済みとする
+  
+  // 記事番号がPUBLISHED_ARTICLE_COUNT以下の場合は公開済み
+  const isPublished = article.number <= PUBLISHED_ARTICLE_COUNT
+  
+  if (isPublished) {
+    publishDate.setDate(today.getDate() - 30) // 30日前に公開済みとする
+  } else {
+    // 未公開記事は将来の日付を設定
+    const daysUntilPublish = (article.number - PUBLISHED_ARTICLE_COUNT) * 2 // 2日ごとに公開
+    publishDate.setDate(today.getDate() + daysUntilPublish)
+  }
   
   return {
     id: `article_${String(article.number).padStart(3, '0')}`,
@@ -111,7 +124,7 @@ export function formatArticle(article: typeof EDUCATION_ARTICLES[0]) {
     category: article.category,
     accessLevel: getAccessLevel(article.number),
     publishDate: publishDate.toISOString(),
-    isPublished: true,
+    isPublished,
     readTime: 7
   }
 }

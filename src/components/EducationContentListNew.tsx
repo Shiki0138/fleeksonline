@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { Lock, Crown, Calendar, CheckCircle, Clock, BookOpen, ChevronRight, Star, ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
-import Image from 'next/image'
 import { useAuth } from '@/hooks/useAuth'
 
 interface Article {
@@ -259,7 +258,7 @@ export default function EducationContentListNew() {
             </Link>
           </div>
           <p className="text-xl text-purple-100 max-w-3xl">
-            初心者から経営者まで、80記事の体系的な学習プログラムで
+            初心者から経営者まで、体系的な学習プログラムで
             プロフェッショナルへの道をサポート
           </p>
         </div>
@@ -283,7 +282,10 @@ export default function EducationContentListNew() {
             />
           </div>
           <p className="text-sm text-gray-500 mt-2">
-            新しい記事を順次公開中！毎週2記事ずつ追加されます
+            {publishedArticles.length < ALL_ARTICLES.length 
+              ? '新しい記事を順次公開中！' 
+              : '全記事公開済み！'
+            }
           </p>
         </div>
 
@@ -345,18 +347,10 @@ export default function EducationContentListNew() {
                   {/* サムネイル画像 */}
                   <div className="relative h-40 bg-gray-100 overflow-hidden">
                     <img
-                      src={getArticleImage(parseInt(article.id.replace('article_', '')))}
+                      src="/images/default-article-image.svg"
                       alt={article.title}
                       className="w-full h-full object-cover"
                       loading="lazy"
-                      onError={(e) => {
-                        const target = e.target as HTMLImageElement;
-                        target.style.display = 'none';
-                        const parent = target.parentElement;
-                        if (parent) {
-                          parent.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
-                        }
-                      }}
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
                     
@@ -426,11 +420,12 @@ export default function EducationContentListNew() {
         </div>
 
         {/* 今後公開予定の記事 */}
-        <div className="mb-12">
-          <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-            <Calendar className="w-6 h-6 text-purple-600" />
-            今後公開予定の記事
-          </h2>
+        {upcomingArticles.length > 0 && (
+          <div className="mb-12">
+            <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
+              <Calendar className="w-6 h-6 text-purple-600" />
+              今後公開予定の記事
+            </h2>
           
           <div className="grid gap-3 md:grid-cols-2">
             {upcomingArticles
@@ -473,12 +468,13 @@ export default function EducationContentListNew() {
               })}
           </div>
           
-          {upcomingArticles.length > 10 && (
-            <p className="text-center text-gray-500 mt-4">
-              他{upcomingArticles.length - 10}記事も順次公開予定
-            </p>
-          )}
-        </div>
+            {upcomingArticles.length > 10 && (
+              <p className="text-center text-gray-500 mt-4">
+                他{upcomingArticles.length - 10}記事も順次公開予定
+              </p>
+            )}
+          </div>
+        )}
 
         {/* CTA */}
         <motion.div

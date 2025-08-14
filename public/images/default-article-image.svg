@@ -1,6 +1,11 @@
-<svg width="800" height="400" xmlns="http://www.w3.org/2000/svg">
-  <rect width="800" height="400" fill="#f3f4f6"/>
-  <text x="400" y="200" font-family="Arial, sans-serif" font-size="24" fill="#9ca3af" text-anchor="middle" dominant-baseline="middle">
-    FLEEKS 教育コンテンツ
-  </text>
+<svg width="400" height="200" viewBox="0 0 400 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="400" height="200" fill="url(#gradient)"/>
+  <path d="M200 60C183.431 60 170 73.4315 170 90C170 106.569 183.431 120 200 120C216.569 120 230 106.569 230 90C230 73.4315 216.569 60 200 60ZM200 110C189.507 110 181 101.493 181 91C181 80.5066 189.507 72 200 72C210.493 72 219 80.5066 219 91C219 101.493 210.493 110 200 110Z" fill="white" opacity="0.3"/>
+  <path d="M140 140H260V130L240 110L220 130L180 90L140 130V140Z" fill="white" opacity="0.3"/>
+  <defs>
+    <linearGradient id="gradient" x1="0" y1="0" x2="400" y2="200" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#667eea"/>
+      <stop offset="1" stop-color="#764ba2"/>
+    </linearGradient>
+  </defs>
 </svg>
