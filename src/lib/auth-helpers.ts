@@ -17,42 +17,53 @@ export async function signInWithRateLimit(email: string, password: string) {
   
   if (timeSinceLastAttempt < AUTH_RETRY_DELAY) {
     const waitTime = AUTH_RETRY_DELAY - timeSinceLastAttempt
+    console.log(`Waiting ${waitTime}ms before next auth attempt`)
     await new Promise(resolve => setTimeout(resolve, waitTime))
   }
   
   lastAuthAttempt = Date.now()
   
   try {
+    console.log('Attempting sign in...')
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
     })
     
     if (error) {
+      console.error('Sign in error:', error)
+      
       // レート制限エラーの場合
-      if (error.message.includes('rate limit') || error.status === 429) {
+      if (error.message.includes('rate limit') || error.status === 429 || error.message.includes('Too many requests')) {
         retryCount++
         
         if (retryCount > MAX_RETRIES) {
-          throw new Error('ログイン試行回数が上限に達しました。30分後に再度お試しください。')
+          console.error('Max retries exceeded')
+          retryCount = 0 // リセット
+          throw new Error('ログイン試行回数が上限に達しました。しばらくお待ちください。')
         }
         
         // 指数バックオフ
         const delay = AUTH_RETRY_DELAY * Math.pow(BACKOFF_MULTIPLIER, retryCount)
+        console.log(`Rate limited. Retrying in ${delay}ms (attempt ${retryCount}/${MAX_RETRIES})`)
         await new Promise(resolve => setTimeout(resolve, delay))
         
         // リトライ
         return signInWithRateLimit(email, password)
       }
       
+      // レート制限以外のエラーの場合もリセット
+      retryCount = 0
       throw error
     }
     
     // 成功時はリトライカウントをリセット
+    console.log('Sign in successful')
     retryCount = 0
     return { data, error: null }
     
   } catch (error) {
+    console.error('Sign in exception:', error)
     return { data: null, error }
   }
 }

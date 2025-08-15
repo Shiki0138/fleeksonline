@@ -24,9 +24,13 @@ export default function LoginPage() {
 
   // Check for existing session first
   useEffect(() => {
+    let mounted = true
+    
     const checkSession = async () => {
       try {
         const session = await checkExistingSession()
+        if (!mounted) return // コンポーネントがアンマウントされた場合は処理を中断
+        
         if (session?.user) {
           console.log('Existing session found, redirecting...')
           const isAdmin = session.user.email === 'greenroom51@gmail.com'
@@ -37,10 +41,16 @@ export default function LoginPage() {
       } catch (error) {
         console.error('Session check error:', error)
       } finally {
-        setPageLoading(false)
+        if (mounted) {
+          setPageLoading(false)
+        }
       }
     }
     checkSession()
+    
+    return () => {
+      mounted = false
+    }
   }, [searchParams])
 
   // Check for recovery token and redirect to password update page
@@ -122,6 +132,13 @@ export default function LoginPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    
+    // 既にログイン処理中の場合は何もしない
+    if (loading) {
+      console.log('Already processing login, ignoring duplicate submission')
+      return
+    }
+    
     setError('')
     setSuccess('')
     setLoading(true)
@@ -135,7 +152,7 @@ export default function LoginPage() {
         setError('ログイン処理に時間がかかっています。もう一度お試しください。')
         setLoading(false)
       }
-    }, 8000) // 8 seconds timeout for better mobile experience
+    }, 15000) // 15 seconds timeout to allow for retries
 
     try {
       const { data, error } = await signInWithRateLimit(email, password)
@@ -206,12 +223,6 @@ export default function LoginPage() {
     }
   }
 
-  // Clean up on unmount
-  useEffect(() => {
-    return () => {
-      setLoading(false)
-    }
-  }, [])
 
   // Show loading while checking session
   if (pageLoading) {
