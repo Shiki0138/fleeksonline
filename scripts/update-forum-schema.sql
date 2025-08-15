@@ -2,12 +2,16 @@
 -- 管理者が返信した質問のみ表示する機能と、管理者による質問編集機能を追加
 
 -- 1. 質問テーブルに管理者返信フラグと関連フィールドを追加
-ALTER TABLE forum_questions ADD COLUMN IF NOT EXISTS
-  has_admin_answer BOOLEAN DEFAULT FALSE,
-  is_admin_question BOOLEAN DEFAULT FALSE,
-  priority VARCHAR(20) DEFAULT 'normal',
-  edited_by UUID REFERENCES auth.users(id),
-  edited_at TIMESTAMP;
+ALTER TABLE forum_questions 
+  ADD COLUMN IF NOT EXISTS has_admin_answer BOOLEAN DEFAULT FALSE;
+ALTER TABLE forum_questions 
+  ADD COLUMN IF NOT EXISTS is_admin_question BOOLEAN DEFAULT FALSE;
+ALTER TABLE forum_questions 
+  ADD COLUMN IF NOT EXISTS priority VARCHAR(20) DEFAULT 'normal';
+ALTER TABLE forum_questions 
+  ADD COLUMN IF NOT EXISTS edited_by UUID REFERENCES auth.users(id);
+ALTER TABLE forum_questions 
+  ADD COLUMN IF NOT EXISTS edited_at TIMESTAMP;
 
 -- 2. 管理者が質問を編集できるようにRLSポリシーを更新
 DROP POLICY IF EXISTS "Users can update their own questions" ON forum_questions;
