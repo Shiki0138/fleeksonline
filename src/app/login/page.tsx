@@ -16,6 +16,7 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState('')
   const [pageLoading, setPageLoading] = useState(true)
+  const [sessionChecked, setSessionChecked] = useState(false)
   const [unconfirmedEmail, setUnconfirmedEmail] = useState('')
   const [resendingEmail, setResendingEmail] = useState(false)
   const router = useRouter()
@@ -27,8 +28,19 @@ export default function LoginPage() {
     let mounted = true
     
     const checkSession = async () => {
+      // 短いタイムアウトを設定して、セッションチェックが長引かないようにする
+      const timeoutId = setTimeout(() => {
+        if (mounted && pageLoading) {
+          console.log('Session check timeout, proceeding to login form')
+          setPageLoading(false)
+          setSessionChecked(true)
+        }
+      }, 2000) // 2秒でタイムアウト
+      
       try {
         const session = await checkExistingSession()
+        clearTimeout(timeoutId)
+        
         if (!mounted) return // コンポーネントがアンマウントされた場合は処理を中断
         
         if (session?.user) {
@@ -40,9 +52,11 @@ export default function LoginPage() {
         }
       } catch (error) {
         console.error('Session check error:', error)
+        clearTimeout(timeoutId)
       } finally {
         if (mounted) {
           setPageLoading(false)
+          setSessionChecked(true)
         }
       }
     }
@@ -152,7 +166,7 @@ export default function LoginPage() {
         setError('ログイン処理に時間がかかっています。もう一度お試しください。')
         setLoading(false)
       }
-    }, 15000) // 15 seconds timeout to allow for retries
+    }, 10000) // 10 seconds timeout - balanced between retries and UX
 
     try {
       const { data, error } = await signInWithRateLimit(email, password)
@@ -224,13 +238,35 @@ export default function LoginPage() {
   }
 
 
-  // Show loading while checking session
+  // Show loading while checking session - but with a skeleton instead of blocking
+  // This prevents the "flashing" effect
   if (pageLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 text-white flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
-          <p className="text-gray-300">読み込み中...</p>
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 text-white flex items-center justify-center px-4">
+        <div className="w-full max-w-md">
+          {/* Logo skeleton */}
+          <div className="text-center mb-8">
+            <div className="inline-flex items-center justify-center mb-4">
+              <div className="w-12 h-12 bg-white/20 rounded-full animate-pulse"></div>
+            </div>
+            <div className="h-8 bg-white/20 rounded w-48 mx-auto mb-2 animate-pulse"></div>
+            <div className="h-4 bg-white/20 rounded w-64 mx-auto animate-pulse"></div>
+          </div>
+          
+          {/* Form skeleton */}
+          <div className="bg-white/10 backdrop-blur-md rounded-2xl p-8 shadow-2xl">
+            <div className="space-y-6">
+              <div>
+                <div className="h-4 bg-white/20 rounded w-24 mb-2 animate-pulse"></div>
+                <div className="h-12 bg-white/20 rounded animate-pulse"></div>
+              </div>
+              <div>
+                <div className="h-4 bg-white/20 rounded w-20 mb-2 animate-pulse"></div>
+                <div className="h-12 bg-white/20 rounded animate-pulse"></div>
+              </div>
+              <div className="h-12 bg-white/30 rounded animate-pulse"></div>
+            </div>
+          </div>
         </div>
       </div>
     )
