@@ -13,8 +13,21 @@ export async function GET(request: NextRequest) {
     const status = searchParams.get('status')
     const sort = searchParams.get('sort') || 'newest'
     const page = parseInt(searchParams.get('page') || '1')
+    const showAll = searchParams.get('showAll') === 'true' // 管理者用パラメータ
     const limit = 20
     const offset = (page - 1) * limit
+
+    // 現在のユーザーが管理者かチェック
+    const { data: { user } } = await supabase.auth.getUser()
+    let isAdmin = false
+    if (user) {
+      const { data: profile } = await supabase
+        .from('fleeks_profiles')
+        .select('role')
+        .eq('id', user.id)
+        .single()
+      isAdmin = profile?.role === 'admin'
+    }
 
     let query = supabase
       .from('forum_questions')
@@ -25,6 +38,11 @@ export async function GET(request: NextRequest) {
         answers:forum_answers(count),
         likes:forum_likes(count)
       `)
+
+    // 管理者以外は管理者が返信した質問のみ表示
+    if (!isAdmin || !showAll) {
+      query = query.eq('has_admin_answer', true)
+    }
 
     // フィルター
     if (category) {
@@ -68,7 +86,9 @@ export async function GET(request: NextRequest) {
         page,
         limit,
         hasMore: data?.length === limit
-      }
+      },
+      isAdmin,
+      showingAll: isAdmin && showAll
     })
   } catch (error) {
     console.error('Error in GET /api/forum/questions:', error)

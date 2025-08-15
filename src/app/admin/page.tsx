@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { Settings, Video, FileText, Users, BarChart3, Target, LogOut, BookOpen, Crown, Lock } from 'lucide-react'
+import { Settings, Video, FileText, Users, BarChart3, Target, LogOut, BookOpen, Crown, Lock, MessageSquare } from 'lucide-react'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import type { Profile } from '@/lib/supabase-client'
 
@@ -174,6 +174,13 @@ export default function AdminDashboard() {
       icon: Users,
       href: '/admin/users',
       color: 'from-green-500 to-green-600'
+    },
+    {
+      title: 'フォーラム管理',
+      description: '質問と回答の管理',
+      icon: MessageSquare,
+      href: '/admin/forum',
+      color: 'from-indigo-500 to-indigo-600'
     },
     {
       title: 'アナリティクス',
