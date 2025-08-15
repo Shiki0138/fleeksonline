@@ -108,21 +108,40 @@ export async function POST(request: NextRequest) {
     }
 
     // プレミアム会員チェック
-    const { data: profile } = await supabase
+    const { data: profile, error: profileError } = await supabase
       .from('fleeks_profiles')
-      .select('membership_type, role')
+      .select('membership_type, role, nickname')
       .eq('id', user.id)
       .single()
+
+    if (profileError) {
+      console.error('Profile fetch error:', profileError)
+      return NextResponse.json({ 
+        error: 'Profile not found',
+        message: 'ユーザープロフィールが見つかりません' 
+      }, { status: 404 })
+    }
 
     const isPremiumMember = profile?.membership_type === 'premium' || 
                            profile?.membership_type === 'vip' || 
                            profile?.role === 'admin' || 
                            profile?.role === 'paid'
 
+    console.log('User profile:', { 
+      id: user.id, 
+      membership_type: profile?.membership_type, 
+      role: profile?.role,
+      isPremiumMember 
+    })
+
     if (!isPremiumMember) {
       return NextResponse.json({ 
         error: 'Premium membership required',
-        message: 'フォーラムへの投稿には有料会員登録が必要です' 
+        message: 'フォーラムへの投稿には有料会員登録が必要です',
+        debug: {
+          membership_type: profile?.membership_type,
+          role: profile?.role
+        }
       }, { status: 403 })
     }
 
