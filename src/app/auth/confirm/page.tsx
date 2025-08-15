@@ -20,7 +20,44 @@ export default function ConfirmPage() {
         const token_hash = searchParams.get('token_hash')
         const type = searchParams.get('type')
         
-        console.log('[Confirm] Processing confirmation:', { token_hash: !!token_hash, type })
+        // ハッシュフラグメントからもトークンを取得してみる
+        let accessToken = searchParams.get('access_token')
+        let refreshToken = searchParams.get('refresh_token')
+        
+        if (typeof window !== 'undefined' && window.location.hash) {
+          const hashParams = new URLSearchParams(window.location.hash.substring(1))
+          accessToken = accessToken || hashParams.get('access_token')
+          refreshToken = refreshToken || hashParams.get('refresh_token')
+        }
+        
+        console.log('[Confirm] Processing confirmation:', { 
+          token_hash: !!token_hash, 
+          type, 
+          accessToken: !!accessToken,
+          refreshToken: !!refreshToken
+        })
+
+        // アクセストークンがある場合はセッションを設定
+        if (accessToken && refreshToken) {
+          const { error: sessionError } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken
+          })
+          
+          if (sessionError) {
+            console.error('[Confirm] Session setting error:', sessionError)
+            setStatus('error')
+            setMessage('セッションの設定に失敗しました')
+            return
+          }
+          
+          setStatus('success')
+          setMessage('メールアドレスが確認されました！ログインページへ移動します...')
+          setTimeout(() => {
+            router.push('/login')
+          }, 3000)
+          return
+        }
 
         if (!token_hash || !type) {
           setStatus('error')

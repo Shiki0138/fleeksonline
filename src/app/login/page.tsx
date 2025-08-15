@@ -15,49 +15,22 @@ export default function LoginPage() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState('')
-  const [pageLoading, setPageLoading] = useState(false) // 初期値をfalseに変更
-  const [sessionChecked, setSessionChecked] = useState(false)
+  const [initialLoading, setInitialLoading] = useState(true)
   const [unconfirmedEmail, setUnconfirmedEmail] = useState('')
   const [resendingEmail, setResendingEmail] = useState(false)
   const router = useRouter()
   const searchParams = useSearchParams()
   const supabase = createClientComponentClient()
 
-  // Check for existing session first - バックグラウンドで実行
+  // 最小限の初期化チェック - middlewareがリダイレクト処理済み
   useEffect(() => {
-    let mounted = true
+    // 短時間で初期ローディングを終了
+    const timer = setTimeout(() => {
+      setInitialLoading(false)
+    }, 100)
     
-    const checkSession = async () => {
-      try {
-        const session = await checkExistingSession()
-        
-        if (!mounted) return // コンポーネントがアンマウントされた場合は処理を中断
-        
-        if (session?.user) {
-          console.log('Existing session found, redirecting...')
-          const isAdmin = session.user.email === 'greenroom51@gmail.com'
-          const redirectUrl = searchParams.get('redirect')
-          // 既存セッションがある場合のみリダイレクト
-          window.location.href = isAdmin ? '/admin' : (redirectUrl || '/dashboard')
-          return
-        }
-        
-        setSessionChecked(true)
-      } catch (error) {
-        console.error('Session check error:', error)
-        if (mounted) {
-          setSessionChecked(true)
-        }
-      }
-    }
-    
-    // 非同期でセッションチェック（表示をブロックしない）
-    checkSession()
-    
-    return () => {
-      mounted = false
-    }
-  }, [searchParams])
+    return () => clearTimeout(timer)
+  }, [])
 
   // Check for recovery token and redirect to password update page
   useEffect(() => {
@@ -196,8 +169,8 @@ export default function LoginPage() {
           setSuccess('管理者としてログインしています...')
           setLoading(false)
           // Use window.location for hard redirect to ensure session is set
-          console.log('[Login] Using window.location.href = "/admin"')
-          window.location.href = '/admin'
+          console.log('[Login] Using router.push for smoother transition')
+          router.push('/admin')
           return
         }
 
@@ -207,8 +180,8 @@ export default function LoginPage() {
         setSuccess('ログインしています...')
         setLoading(false)
         // Use window.location for hard redirect to ensure session is set
-        console.log('[Login] Using window.location.href =', redirectUrl)
-        window.location.href = redirectUrl
+        console.log('[Login] Using router.push for smoother transition')
+        router.push(redirectUrl)
       } else {
         console.error('No user data returned')
         setError('ログインに失敗しました')
@@ -229,9 +202,8 @@ export default function LoginPage() {
   }
 
 
-  // pageLoadingがtrueの場合のみスケルトンを表示
-  // 通常は即座にフォームを表示
-  if (pageLoading) {
+  // 初期ローディング中のみスケルトンを表示
+  if (initialLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 text-white flex items-center justify-center px-4">
         <div className="w-full max-w-md">
@@ -274,9 +246,9 @@ export default function LoginPage() {
       </div>
 
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
+        initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
+        transition={{ duration: 0.2, ease: "easeOut" }}
         className="relative z-10 max-w-md w-full"
       >
         {/* Logo */}
@@ -298,7 +270,7 @@ export default function LoginPage() {
             <div className="text-center">
               <CheckCircle className="w-16 h-16 text-green-400 mx-auto mb-4" />
               <p className="text-xl font-semibold mb-2">{success}</p>
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white mx-auto"></div>
+              <div className="animate-spin rounded-full h-6 w-6 border-2 border-white border-t-transparent mx-auto"></div>
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-6">
