@@ -15,7 +15,7 @@ export default function LoginPage() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState('')
-  const [pageLoading, setPageLoading] = useState(true)
+  const [pageLoading, setPageLoading] = useState(false) // 初期値をfalseに変更
   const [sessionChecked, setSessionChecked] = useState(false)
   const [unconfirmedEmail, setUnconfirmedEmail] = useState('')
   const [resendingEmail, setResendingEmail] = useState(false)
@@ -23,23 +23,13 @@ export default function LoginPage() {
   const searchParams = useSearchParams()
   const supabase = createClientComponentClient()
 
-  // Check for existing session first
+  // Check for existing session first - バックグラウンドで実行
   useEffect(() => {
     let mounted = true
     
     const checkSession = async () => {
-      // 短いタイムアウトを設定して、セッションチェックが長引かないようにする
-      const timeoutId = setTimeout(() => {
-        if (mounted && pageLoading) {
-          console.log('Session check timeout, proceeding to login form')
-          setPageLoading(false)
-          setSessionChecked(true)
-        }
-      }, 2000) // 2秒でタイムアウト
-      
       try {
         const session = await checkExistingSession()
-        clearTimeout(timeoutId)
         
         if (!mounted) return // コンポーネントがアンマウントされた場合は処理を中断
         
@@ -47,19 +37,21 @@ export default function LoginPage() {
           console.log('Existing session found, redirecting...')
           const isAdmin = session.user.email === 'greenroom51@gmail.com'
           const redirectUrl = searchParams.get('redirect')
+          // 既存セッションがある場合のみリダイレクト
           window.location.href = isAdmin ? '/admin' : (redirectUrl || '/dashboard')
           return
         }
+        
+        setSessionChecked(true)
       } catch (error) {
         console.error('Session check error:', error)
-        clearTimeout(timeoutId)
-      } finally {
         if (mounted) {
-          setPageLoading(false)
           setSessionChecked(true)
         }
       }
     }
+    
+    // 非同期でセッションチェック（表示をブロックしない）
     checkSession()
     
     return () => {
@@ -69,7 +61,6 @@ export default function LoginPage() {
 
   // Check for recovery token and redirect to password update page
   useEffect(() => {
-    if (pageLoading) return // Wait for initial page load
     
     try {
       // Check URL parameters first
@@ -117,7 +108,7 @@ export default function LoginPage() {
     } catch (error) {
       console.error('Recovery token check error:', error)
     }
-  }, [searchParams, pageLoading])
+  }, [searchParams])
 
   const resendConfirmationEmail = async () => {
     if (!unconfirmedEmail) return
@@ -238,8 +229,8 @@ export default function LoginPage() {
   }
 
 
-  // Show loading while checking session - but with a skeleton instead of blocking
-  // This prevents the "flashing" effect
+  // pageLoadingがtrueの場合のみスケルトンを表示
+  // 通常は即座にフォームを表示
   if (pageLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 text-white flex items-center justify-center px-4">
