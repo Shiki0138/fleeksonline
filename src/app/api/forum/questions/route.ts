@@ -165,6 +165,26 @@ export async function POST(request: NextRequest) {
       .update({ forum_points: supabase.raw('forum_points + 10') })
       .eq('id', user.id)
 
+    // 管理者に新しい質問の通知を送信
+    try {
+      await fetch(`${process.env.NEXTAUTH_URL}/api/notifications/admin`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          type: 'new_question',
+          title: '新しい質問が投稿されました',
+          message: `「${title}」- ${is_anonymous ? '匿名ユーザー' : profile.nickname}より`,
+          questionId: data.id,
+          questionTitle: title
+        })
+      })
+    } catch (error) {
+      console.error('Failed to send admin notification:', error)
+      // 通知の失敗は質問投稿を妨げない
+    }
+
     return NextResponse.json({ question: data }, { status: 201 })
   } catch (error) {
     console.error('Error in POST /api/forum/questions:', error)

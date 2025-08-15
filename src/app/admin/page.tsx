@@ -6,6 +6,7 @@ import { motion } from 'framer-motion'
 import { Settings, Video, FileText, Users, BarChart3, Target, LogOut, BookOpen, Crown, Lock, MessageSquare } from 'lucide-react'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import type { Profile } from '@/lib/supabase-client'
+import NotificationBell from '@/components/admin/NotificationBell'
 
 export default function AdminDashboard() {
   const router = useRouter()
@@ -212,6 +213,7 @@ export default function AdminDashboard() {
             </div>
             
             <div className="flex items-center space-x-6">
+              <NotificationBell />
               <div className="text-right">
                 <p className="text-sm font-medium">{profile?.full_name || profile?.username}</p>
                 <p className="text-xs text-red-400">管理者</p>
