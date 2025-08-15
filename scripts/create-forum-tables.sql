@@ -154,38 +154,49 @@ ALTER TABLE forum_reports ENABLE ROW LEVEL SECURITY;
 ALTER TABLE forum_follows ENABLE ROW LEVEL SECURITY;
 
 -- 質問のRLSポリシー
+DROP POLICY IF EXISTS "Anyone can view questions" ON forum_questions;
 CREATE POLICY "Anyone can view questions" ON forum_questions
   FOR SELECT USING (true);
 
+DROP POLICY IF EXISTS "Authenticated users can create questions" ON forum_questions;
 CREATE POLICY "Authenticated users can create questions" ON forum_questions
   FOR INSERT WITH CHECK (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can update their own questions" ON forum_questions;
 CREATE POLICY "Users can update their own questions" ON forum_questions
   FOR UPDATE USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can delete their own questions" ON forum_questions;
 CREATE POLICY "Users can delete their own questions" ON forum_questions
   FOR DELETE USING (auth.uid() = user_id);
 
 -- 回答のRLSポリシー
+DROP POLICY IF EXISTS "Anyone can view answers" ON forum_answers;
 CREATE POLICY "Anyone can view answers" ON forum_answers
   FOR SELECT USING (true);
 
+DROP POLICY IF EXISTS "Authenticated users can create answers" ON forum_answers;
 CREATE POLICY "Authenticated users can create answers" ON forum_answers
   FOR INSERT WITH CHECK (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can update their own answers" ON forum_answers;
 CREATE POLICY "Users can update their own answers" ON forum_answers
   FOR UPDATE USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can delete their own answers" ON forum_answers;
 CREATE POLICY "Users can delete their own answers" ON forum_answers
   FOR DELETE USING (auth.uid() = user_id);
 
 -- 通知のRLSポリシー
+DROP POLICY IF EXISTS "Users can view their own notifications" ON notifications;
 CREATE POLICY "Users can view their own notifications" ON notifications
   FOR SELECT USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "System can create notifications" ON notifications;
 CREATE POLICY "System can create notifications" ON notifications
   FOR INSERT WITH CHECK (true);
 
+DROP POLICY IF EXISTS "Users can update their own notifications" ON notifications;
 CREATE POLICY "Users can update their own notifications" ON notifications
   FOR UPDATE USING (auth.uid() = user_id);
 
@@ -209,6 +220,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- トリガーの作成
+DROP TRIGGER IF EXISTS on_new_answer ON forum_answers;
 CREATE TRIGGER on_new_answer
   AFTER INSERT ON forum_answers
   FOR EACH ROW
@@ -238,6 +250,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS on_best_answer_selected ON forum_answers;
 CREATE TRIGGER on_best_answer_selected
   AFTER UPDATE ON forum_answers
   FOR EACH ROW
