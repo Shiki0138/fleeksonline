@@ -118,26 +118,33 @@ CREATE POLICY "System can create edit history" ON forum_question_edits
 CREATE OR REPLACE FUNCTION log_question_edit()
 RETURNS TRIGGER AS $$
 BEGIN
-  IF OLD.title != NEW.title OR OLD.content != NEW.content THEN
-    INSERT INTO forum_question_edits (
-      question_id,
-      editor_id,
-      title_before,
-      title_after,
-      content_before,
-      content_after
-    ) VALUES (
-      NEW.id,
-      auth.uid(),
-      OLD.title,
-      NEW.title,
-      OLD.content,
-      NEW.content
-    );
-    
-    -- edited_by と edited_at を更新
-    NEW.edited_by = auth.uid();
-    NEW.edited_at = NOW();
+  -- 管理者チェック
+  IF EXISTS (
+    SELECT 1 FROM fleeks_profiles 
+    WHERE id = auth.uid() 
+    AND role = 'admin'
+  ) THEN
+    IF OLD.title != NEW.title OR OLD.content != NEW.content THEN
+      INSERT INTO forum_question_edits (
+        question_id,
+        editor_id,
+        title_before,
+        title_after,
+        content_before,
+        content_after
+      ) VALUES (
+        NEW.id,
+        auth.uid(),
+        OLD.title,
+        NEW.title,
+        OLD.content,
+        NEW.content
+      );
+      
+      -- edited_by と edited_at を更新
+      NEW.edited_by = auth.uid();
+      NEW.edited_at = NOW();
+    END IF;
   END IF;
   
   RETURN NEW;
@@ -149,11 +156,4 @@ DROP TRIGGER IF EXISTS on_question_edit ON forum_questions;
 CREATE TRIGGER on_question_edit
   BEFORE UPDATE ON forum_questions
   FOR EACH ROW
-  WHEN (
-    EXISTS (
-      SELECT 1 FROM fleeks_profiles 
-      WHERE id = auth.uid() 
-      AND role = 'admin'
-    )
-  )
   EXECUTE FUNCTION log_question_edit();
