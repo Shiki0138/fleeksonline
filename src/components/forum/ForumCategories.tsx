@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { 
   Smile, 
   TrendingUp, 
@@ -9,7 +10,8 @@ import {
   Beaker, 
   Briefcase, 
   MessageCircle,
-  Hash
+  Hash,
+  Plus
 } from 'lucide-react'
 
 const iconMap: { [key: string]: any } = {
@@ -33,63 +35,47 @@ interface Category {
 const defaultCategories: Category[] = [
   {
     id: '1',
-    name: '接客・サービス',
-    slug: 'customer-service',
-    description: 'お客様対応について',
-    icon: 'smile',
-    postCount: 234
+    name: 'インスタ集客',
+    slug: 'instagram-marketing',
+    description: 'Instagram集客の戦略とテクニック',
+    icon: 'trending-up',
+    postCount: 0
   },
   {
     id: '2',
-    name: '経営・マーケティング',
-    slug: 'business-marketing',
-    description: '美容室経営について',
-    icon: 'trending-up',
-    postCount: 189
+    name: 'AI活用',
+    slug: 'ai-utilization',
+    description: 'AIツールの活用方法',
+    icon: 'beaker',
+    postCount: 0
   },
   {
     id: '3',
-    name: '技術相談',
-    slug: 'technical-advice',
-    description: '技術的な相談',
-    icon: 'scissors',
-    postCount: 312
+    name: '経営戦略',
+    slug: 'business-strategy',
+    description: 'ビジネス戦略と成長戦術',
+    icon: 'briefcase',
+    postCount: 0
   },
   {
     id: '4',
-    name: '商品・薬剤',
-    slug: 'products-chemicals',
-    description: '商品情報交換',
-    icon: 'beaker',
-    postCount: 156
-  },
-  {
-    id: '5',
-    name: 'キャリア・転職',
-    slug: 'career-job',
-    description: 'キャリア相談',
-    icon: 'briefcase',
-    postCount: 98
-  },
-  {
-    id: '6',
-    name: 'その他・雑談',
-    slug: 'others-chat',
-    description: 'その他の話題',
+    name: 'その他',
+    slug: 'others',
+    description: 'その他のご質問',
     icon: 'message-circle',
-    postCount: 245
+    postCount: 0
   }
 ]
 
 const popularTags = [
-  { name: 'カラー', count: 89 },
-  { name: 'パーマ', count: 67 },
-  { name: '接客', count: 54 },
-  { name: '集客', count: 48 },
-  { name: '独立', count: 42 },
-  { name: 'SNS', count: 38 },
-  { name: '料金', count: 35 },
-  { name: '教育', count: 31 },
+  { name: 'Instagram', count: 0 },
+  { name: 'リール', count: 0 },
+  { name: 'ストーリーズ', count: 0 },
+  { name: 'ChatGPT', count: 0 },
+  { name: '自動化', count: 0 },
+  { name: 'マーケティング', count: 0 },
+  { name: '集客', count: 0 },
+  { name: '売上アップ', count: 0 },
 ]
 
 export default function ForumCategories() {

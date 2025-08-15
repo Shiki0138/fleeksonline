@@ -87,8 +87,27 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    // プレミアム会員チェック
+    const { data: profile } = await supabase
+      .from('fleeks_profiles')
+      .select('membership_type, role')
+      .eq('id', user.id)
+      .single()
+
+    const isPremiumMember = profile?.membership_type === 'premium' || 
+                           profile?.membership_type === 'vip' || 
+                           profile?.role === 'admin' || 
+                           profile?.role === 'paid'
+
+    if (!isPremiumMember) {
+      return NextResponse.json({ 
+        error: 'Premium membership required',
+        message: 'フォーラムへの投稿には有料会員登録が必要です' 
+      }, { status: 403 })
+    }
+
     const body = await request.json()
-    const { title, content, category_id, tags, is_anonymous } = body
+    const { title, content, category_id, tags, is_anonymous, is_admin_question } = body
 
     // バリデーション
     if (!title || !content || !category_id) {
@@ -108,7 +127,9 @@ export async function POST(request: NextRequest) {
         content,
         category_id,
         tags: tags || [],
-        is_anonymous: is_anonymous || false
+        is_anonymous: is_anonymous || false,
+        is_admin_question: is_admin_question || false,
+        priority: is_admin_question ? 'high' : 'normal'
       })
       .select()
       .single()

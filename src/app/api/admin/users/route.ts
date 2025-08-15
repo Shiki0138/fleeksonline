@@ -114,7 +114,8 @@ export async function GET(request: NextRequest) {
         role: profile?.role || 'user',
         status: profile?.status || 'active',
         created_at: user.created_at,
-        updated_at: profile?.updated_at || user.updated_at
+        updated_at: profile?.updated_at || user.updated_at,
+        last_sign_in_at: user.last_sign_in_at || null
       }
     }).filter(user => user.email !== 'Unknown') || []
 

@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
     
     // Send password reset email using admin client
     const { error: resetError } = await supabaseAdmin.auth.resetPasswordForEmail(email, {
-      redirectTo: `${redirectUrl}/auth/reset-password`,
+      redirectTo: `${redirectUrl}/auth/update-password`,
     })
 
     if (resetError) {

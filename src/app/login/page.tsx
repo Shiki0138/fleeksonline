@@ -16,6 +16,8 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState('')
   const [pageLoading, setPageLoading] = useState(true)
+  const [unconfirmedEmail, setUnconfirmedEmail] = useState('')
+  const [resendingEmail, setResendingEmail] = useState(false)
   const router = useRouter()
   const searchParams = useSearchParams()
   const supabase = createClientComponentClient()
@@ -93,6 +95,31 @@ export default function LoginPage() {
     }
   }, [searchParams, pageLoading])
 
+  const resendConfirmationEmail = async () => {
+    if (!unconfirmedEmail) return
+    
+    setResendingEmail(true)
+    setError('')
+    
+    try {
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email: unconfirmedEmail
+      })
+      
+      if (error) {
+        setError('確認メールの再送信に失敗しました: ' + error.message)
+      } else {
+        setSuccess('確認メールを再送信しました。メールをご確認ください。')
+        setUnconfirmedEmail('')
+      }
+    } catch (err) {
+      setError('エラーが発生しました')
+    } finally {
+      setResendingEmail(false)
+    }
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
@@ -124,6 +151,8 @@ export default function LoginPage() {
           errorMsg = 'メールアドレスまたはパスワードが正しくありません'
         } else if (error.message.includes('Email not confirmed')) {
           errorMsg = 'メールアドレスが確認されていません。確認メールをご確認ください。'
+          // Store email for resend functionality
+          setUnconfirmedEmail(email)
         } else if (error.message.includes('Too many requests')) {
           errorMsg = 'ログイン試行回数が上限に達しました。しばらくお待ちください。'
         } else if (error.message.includes('Failed to fetch')) {
@@ -236,9 +265,21 @@ export default function LoginPage() {
           ) : (
             <form onSubmit={handleSubmit} className="space-y-6">
               {error && (
-                <div className="bg-red-500/20 border border-red-500/50 rounded-lg p-3 flex items-start gap-3">
-                  <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
-                  <p className="text-sm text-red-200">{error}</p>
+                <div className="bg-red-500/20 border border-red-500/50 rounded-lg p-3">
+                  <div className="flex items-start gap-3">
+                    <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
+                    <p className="text-sm text-red-200">{error}</p>
+                  </div>
+                  {unconfirmedEmail && (
+                    <button
+                      type="button"
+                      onClick={resendConfirmationEmail}
+                      disabled={resendingEmail}
+                      className="mt-3 w-full text-sm bg-red-600 hover:bg-red-700 px-3 py-2 rounded font-medium transition disabled:opacity-50"
+                    >
+                      {resendingEmail ? '送信中...' : '確認メールを再送信'}
+                    </button>
+                  )}
                 </div>
               )}
 
@@ -312,7 +353,12 @@ export default function LoginPage() {
             </form>
           )}
 
-          <div className="mt-6 text-center">
+          <div className="mt-6 space-y-3 text-center">
+            <p className="text-gray-300">
+              <Link href="/auth/forgot-password" className="text-blue-400 hover:text-blue-300 transition">
+                パスワードをお忘れの方
+              </Link>
+            </p>
             <p className="text-gray-300">
               アカウントをお持ちでない方は{' '}
               <Link href="/auth/signup" className="text-blue-400 hover:text-blue-300 transition">

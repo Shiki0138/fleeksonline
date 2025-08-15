@@ -11,7 +11,10 @@ import {
   Clock,
   User,
   TrendingUp,
-  Hash
+  Hash,
+  Crown,
+  AlertTriangle,
+  Plus
 } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
 import { ja } from 'date-fns/locale'
@@ -33,6 +36,8 @@ interface Question {
   tags: string[]
   is_anonymous: boolean
   is_resolved: boolean
+  is_admin_question?: boolean
+  priority?: 'normal' | 'high'
   view_count: number
   created_at: string
   answers: { count: number }[]
@@ -45,81 +50,14 @@ export default function ForumQuestionList() {
   const [loading, setLoading] = useState(true)
   const [sortBy, setSortBy] = useState('newest')
 
-  // ダミーデータ（実際にはAPIから取得）
+  // 実際にAPIから取得
   useEffect(() => {
     setLoading(true)
-    // API呼び出しのシミュレーション
+    // API呼び出し
     setTimeout(() => {
-      setQuestions([
-        {
-          id: '1',
-          title: 'カラー後の髪のダメージケアについて教えてください',
-          content: 'ブリーチを使用したカラーリング後のお客様の髪のダメージがひどく...',
-          user: {
-            id: '1',
-            nickname: '美容師#1234',
-            avatar_url: null
-          },
-          category: {
-            name: '技術相談',
-            slug: 'technical-advice',
-            icon: 'scissors'
-          },
-          tags: ['カラー', 'ダメージケア', 'トリートメント'],
-          is_anonymous: false,
-          is_resolved: false,
-          view_count: 234,
-          created_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-          answers: [{ count: 5 }],
-          likes: [{ count: 12 }]
-        },
-        {
-          id: '2',
-          title: '新規集客に効果的なSNS活用法を知りたいです',
-          content: '最近開業したばかりで、新規のお客様の集客に苦戦しています...',
-          user: {
-            id: '2',
-            nickname: 'サロンオーナー',
-            avatar_url: null
-          },
-          category: {
-            name: '経営・マーケティング',
-            slug: 'business-marketing',
-            icon: 'trending-up'
-          },
-          tags: ['集客', 'SNS', 'マーケティング'],
-          is_anonymous: false,
-          is_resolved: true,
-          view_count: 456,
-          created_at: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
-          answers: [{ count: 8 }],
-          likes: [{ count: 23 }]
-        },
-        {
-          id: '3',
-          title: '敏感肌のお客様へのパーマ施術について',
-          content: '敏感肌のお客様にパーマをかける際の注意点や、おすすめの薬剤を...',
-          user: {
-            id: '3',
-            nickname: '匿名の美容師',
-            avatar_url: null
-          },
-          category: {
-            name: '商品・薬剤',
-            slug: 'products-chemicals',
-            icon: 'beaker'
-          },
-          tags: ['パーマ', '敏感肌', '薬剤'],
-          is_anonymous: true,
-          is_resolved: false,
-          view_count: 189,
-          created_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
-          answers: [{ count: 3 }],
-          likes: [{ count: 7 }]
-        }
-      ])
+      setQuestions([])
       setLoading(false)
-    }, 1000)
+    }, 500)
   }, [searchParams])
 
   const getSortOptions = () => [
@@ -175,8 +113,22 @@ export default function ForumQuestionList() {
       </div>
 
       {/* 質問リスト */}
-      <div className="bg-white rounded-lg shadow-sm divide-y">
-        {questions.map((question) => (
+      {questions.length === 0 ? (
+        <div className="bg-white rounded-lg shadow-sm p-12 text-center">
+          <MessageCircle className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">まだ質問がありません</h3>
+          <p className="text-gray-600 mb-6">最初の質問を投稿してみましょう！</p>
+          <Link
+            href="/forum/questions/new"
+            className="inline-flex items-center gap-2 bg-purple-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-purple-700 transition"
+          >
+            <Plus className="w-5 h-5" />
+            質問を投稿する
+          </Link>
+        </div>
+      ) : (
+        <div className="bg-white rounded-lg shadow-sm divide-y">
+          {questions.map((question) => (
           <div key={question.id} className="p-6 hover:bg-gray-50 transition">
             <div className="flex gap-4">
               {/* 統計情報 */}
@@ -199,12 +151,20 @@ export default function ForumQuestionList() {
               <div className="flex-1">
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1">
-                    <Link
-                      href={`/forum/questions/${question.id}`}
-                      className="text-lg font-semibold text-gray-900 hover:text-purple-600 transition line-clamp-2"
-                    >
-                      {question.title}
-                    </Link>
+                    <div className="flex items-start gap-2 mb-1">
+                      {question.is_admin_question && (
+                        <Crown className="w-5 h-5 text-yellow-500 flex-shrink-0 mt-0.5" />
+                      )}
+                      {question.priority === 'high' && !question.is_admin_question && (
+                        <AlertTriangle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+                      )}
+                      <Link
+                        href={`/forum/questions/${question.id}`}
+                        className="text-lg font-semibold text-gray-900 hover:text-purple-600 transition line-clamp-2"
+                      >
+                        {question.title}
+                      </Link>
+                    </div>
                     
                     <p className="mt-1 text-gray-600 line-clamp-2">
                       {question.content}
@@ -261,7 +221,8 @@ export default function ForumQuestionList() {
             </div>
           </div>
         ))}
-      </div>
+        </div>
+      )}
 
       {/* ページネーション */}
       <div className="flex justify-center py-8">

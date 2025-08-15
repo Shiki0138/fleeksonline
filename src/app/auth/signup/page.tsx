@@ -59,6 +59,17 @@ export default function SignupPage() {
       }
 
       if (data.user) {
+        // Check if email confirmation is required
+        const needsEmailConfirmation = data.user.email && !data.user.confirmed_at
+        
+        if (needsEmailConfirmation) {
+          // User needs to confirm email first
+          setSuccess(true)
+          setError('')
+          // Show email confirmation message
+          return
+        }
+        
         // Create profile in fleeks_profiles table
         const { error: profileError } = await supabase
           .from('fleeks_profiles')
@@ -131,9 +142,26 @@ export default function SignupPage() {
             >
               <CheckCircle className="w-16 h-16 text-green-400 mx-auto mb-4" />
               <h2 className="text-xl font-semibold mb-2">アカウント作成成功</h2>
-              <p className="text-gray-300 mb-6">
-                ダッシュボードにリダイレクトしています...
-              </p>
+              <div className="bg-blue-500/20 border border-blue-500/50 rounded-lg p-4 mt-4">
+                <p className="text-blue-300 mb-2">
+                  確認メールを送信しました！
+                </p>
+                <p className="text-sm text-gray-300">
+                  {email} 宛に確認メールを送信しました。
+                  メール内のリンクをクリックしてアカウントを有効化してください。
+                </p>
+              </div>
+              <div className="mt-6 space-y-3">
+                <Link
+                  href="/login"
+                  className="block w-full bg-blue-600 hover:bg-blue-700 px-4 py-3 rounded-lg font-medium transition"
+                >
+                  ログインページへ
+                </Link>
+                <p className="text-xs text-gray-400">
+                  メールが届かない場合は、迷惑メールフォルダをご確認ください
+                </p>
+              </div>
             </motion.div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-6">

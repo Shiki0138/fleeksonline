@@ -18,6 +18,7 @@ interface User {
   status?: 'active' | 'suspended'
   created_at: string
   updated_at: string
+  last_sign_in_at?: string
 }
 
 export default function UserManagementPage() {
@@ -406,10 +407,16 @@ export default function UserManagementPage() {
       const result = await response.json()
 
       if (!response.ok) {
-        throw new Error(result.error || result.details || 'Failed to create user')
+        // Better error handling for user creation
+        const errorMessage = result.details || result.error || 'Failed to create user'
+        console.error('User creation failed:', result)
+        throw new Error(errorMessage)
       }
 
-      toast.success('ユーザーを作成しました')
+      // Show success message with membership type info
+      const membershipText = newUserForm.membership_type === 'premium' ? 'プレミアム' : 
+                            newUserForm.membership_type === 'vip' ? 'VIP' : '無料'
+      toast.success(`${membershipText}会員として ユーザーを作成しました`)
       setShowCreateModal(false)
       setNewUserForm({
         email: '',
@@ -422,10 +429,14 @@ export default function UserManagementPage() {
       fetchUsers()
     } catch (error: any) {
       console.error('Error creating user:', error)
-      if (error.message?.includes('already registered') || error.message?.includes('already exists')) {
+      if (error.message?.includes('already registered') || error.message?.includes('already exists') || error.message?.includes('duplicate')) {
         toast.error('このメールアドレスは既に登録されています')
+      } else if (error.message?.includes('Profile creation error')) {
+        toast.error('プロフィール作成でエラーが発生しました。再度お試しください。')
+      } else if (error.message?.includes('RBAC role assignment error')) {
+        toast.error('ユーザーは作成されましたが、権限設定でエラーが発生しました。')
       } else {
-        toast.error('ユーザーの作成に失敗しました: ' + error.message)
+        toast.error(`ユーザー作成エラー: ${error.message}`)
       }
     } finally {
       setIsCreatingUser(false)
@@ -574,6 +585,7 @@ export default function UserManagementPage() {
                       <th className="text-left px-6 py-4 text-sm font-medium text-gray-400">ロール</th>
                       <th className="text-left px-6 py-4 text-sm font-medium text-gray-400">ステータス</th>
                       <th className="text-left px-6 py-4 text-sm font-medium text-gray-400">登録日</th>
+                      <th className="text-left px-6 py-4 text-sm font-medium text-gray-400">最終ログイン</th>
                       <th className="text-left px-6 py-4 text-sm font-medium text-gray-400">アクション</th>
                     </tr>
                   </thead>
@@ -624,6 +636,12 @@ export default function UserManagementPage() {
                           <span className="text-sm text-gray-400 flex items-center">
                             <Calendar className="w-3 h-3 mr-1" />
                             {formatDate(user.created_at)}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className="text-sm text-gray-400 flex items-center">
+                            <Calendar className="w-3 h-3 mr-1" />
+                            {user.last_sign_in_at ? formatDate(user.last_sign_in_at) : '未ログイン'}
                           </span>
                         </td>
                         <td className="px-6 py-4">

@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
-import { Target, Play, Clock, Star, LogOut, User, Crown, Edit, Plus, FileText, Youtube, Settings, CheckCircle, GraduationCap, BookOpen, ChevronRight } from 'lucide-react'
+import { Target, Play, Clock, Star, LogOut, User, Crown, Edit, Plus, FileText, Youtube, Settings, CheckCircle, GraduationCap, BookOpen, ChevronRight, MessageSquare } from 'lucide-react'
 import { supabase } from '@/lib/supabase-browser'
 import type { Profile, Video, EducationContent, EducationChapter } from '@/lib/supabase-browser'
 // import PasswordChangePrompt from '@/components/PasswordChangePrompt' // Temporarily removed
@@ -305,6 +305,13 @@ export default function DashboardPage() {
               <GraduationCap className="w-5 h-5 inline mr-2" />
               教育コンテンツ
             </button>
+            <Link
+              href="/forum"
+              className="pb-4 px-2 font-medium transition text-gray-400 hover:text-white flex items-center"
+            >
+              <MessageSquare className="w-5 h-5 inline mr-2" />
+              フォーラム
+            </Link>
           </div>
 
           {/* Videos Tab */}

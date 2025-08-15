@@ -15,10 +15,10 @@ export default function ForumHeader() {
         <div className="flex flex-col md:flex-row items-center justify-between gap-6">
           <div>
             <h1 className="text-3xl md:text-4xl font-bold mb-3">
-              美容師のためのQ&Aフォーラム
+              運営サポートフォーラム
             </h1>
             <p className="text-purple-100 text-lg">
-              困ったことや知りたいことを、仲間と共有しよう
+              インスタ集客・AI活用・経営戦略についてご質問ください
             </p>
           </div>
           
@@ -58,15 +58,15 @@ export default function ForumHeader() {
         {/* 統計情報 */}
         <div className="mt-8 flex flex-wrap gap-8 text-sm">
           <div>
-            <div className="text-2xl font-bold">1,234</div>
+            <div className="text-2xl font-bold">0</div>
             <div className="text-purple-100">質問総数</div>
           </div>
           <div>
-            <div className="text-2xl font-bold">5,678</div>
+            <div className="text-2xl font-bold">0</div>
             <div className="text-purple-100">回答総数</div>
           </div>
           <div>
-            <div className="text-2xl font-bold">89%</div>
+            <div className="text-2xl font-bold">0%</div>
             <div className="text-purple-100">解決率</div>
           </div>
         </div>

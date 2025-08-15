@@ -48,7 +48,11 @@ export default function ForumPage() {
     }
   }
 
-  const isPaidMember = profile?.role === 'paid' || profile?.role === 'admin'
+  // 新しいRBACシステムと従来システムの両方をチェック
+  const isPaidMember = profile?.membership_type === 'premium' || 
+                      profile?.membership_type === 'vip' || 
+                      profile?.role === 'admin' || 
+                      profile?.role === 'paid'
 
   if (loading) {
     return (
@@ -73,10 +77,10 @@ export default function ForumPage() {
               ダッシュボードに戻る
             </Link>
             <h1 className="text-3xl md:text-4xl font-bold mb-3">
-              美容師のためのQ&Aフォーラム
+              運営サポートフォーラム
             </h1>
             <p className="text-purple-100 text-lg">
-              困ったことや知りたいことを、仲間と共有しよう
+              インスタ集客・AI活用・経営戦略についてご質問ください
             </p>
           </div>
         </div>
@@ -93,8 +97,8 @@ export default function ForumPage() {
               フォーラムは有料会員限定機能です
             </h2>
             <p className="text-lg text-gray-600 mb-8 max-w-2xl mx-auto">
-              フォーラムでは、全国の美容師仲間と知識や経験を共有できます。
-              技術的な質問から経営の悩みまで、プロフェッショナルが集まるコミュニティで解決策を見つけましょう。
+              システム運営者に直接質問できるフォーラムです。
+              インスタ集客の戦略、AI活用方法、経営戦略など、ビジネス成長に関するアドバイスを受けられます。
             </p>
             
             <div className="bg-purple-50 rounded-xl p-8 mb-8">
@@ -104,15 +108,15 @@ export default function ForumPage() {
               <ul className="space-y-3 text-left max-w-xl mx-auto">
                 <li className="flex items-start gap-3">
                   <MessageSquare className="w-5 h-5 text-purple-600 mt-0.5" />
-                  <span className="text-gray-700">無制限に質問を投稿・回答できます</span>
+                  <span className="text-gray-700">運営者に直接質問を投稿できます</span>
                 </li>
                 <li className="flex items-start gap-3">
                   <Crown className="w-5 h-5 text-purple-600 mt-0.5" />
-                  <span className="text-gray-700">プロの美容師からの専門的なアドバイスが受けられます</span>
+                  <span className="text-gray-700">インスタ集客・AI活用の専門的なアドバイスが受けられます</span>
                 </li>
                 <li className="flex items-start gap-3">
                   <Plus className="w-5 h-5 text-purple-600 mt-0.5" />
-                  <span className="text-gray-700">過去の質問・回答をすべて閲覧できます</span>
+                  <span className="text-gray-700">他の会員の質問・回答から学べます</span>
                 </li>
               </ul>
             </div>

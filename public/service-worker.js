@@ -45,8 +45,8 @@ self.addEventListener('fetch', event => {
     event.respondWith(
       fetch(request)
         .then(response => {
-          // 成功したAPIレスポンスをキャッシュ
-          if (response.status === 200) {
+          // GETリクエストの成功レスポンスのみキャッシュ
+          if (response.status === 200 && request.method === 'GET') {
             const responseClone = response.clone();
             caches.open(DYNAMIC_CACHE).then(cache => {
               cache.put(request, responseClone);
@@ -55,8 +55,15 @@ self.addEventListener('fetch', event => {
           return response;
         })
         .catch(() => {
-          // オフライン時はキャッシュから返す
-          return caches.match(request);
+          // オフライン時はGETリクエストのみキャッシュから返す
+          if (request.method === 'GET') {
+            return caches.match(request);
+          }
+          // POST/PUT/DELETE等は失敗を返す
+          return new Response(JSON.stringify({ error: 'Network error' }), {
+            status: 503,
+            headers: { 'Content-Type': 'application/json' }
+          });
         })
     );
     return;
