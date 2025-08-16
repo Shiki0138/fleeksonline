@@ -28,9 +28,9 @@ async function fixPublishDates() {
     let updatedCount = 0;
     
     for (const article of articles) {
-      // 公開日を正しく設定（今日から1日2記事ずつ）
-      const daysToAdd = Math.floor((article.article_number - 1) / 2);
-      const newPublishDate = new Date('2024-08-12');  // 2024年に修正
+      // 公開日を正しく設定（2日ごとに1記事）
+      const daysToAdd = (article.article_number - 1) * 2;
+      const newPublishDate = new Date('2024-08-12');  // 公開開始日
       newPublishDate.setDate(newPublishDate.getDate() + daysToAdd);
       
       // statusも適切に更新

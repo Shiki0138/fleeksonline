@@ -103,21 +103,24 @@ export function getAccessLevel(articleNumber: number): 'free' | 'partial' | 'pre
   return 'premium'
 }
 
+// 記事の公開日を取得する関数
+export function getPublishDate(articleNumber: number): Date {
+  const baseDate = new Date('2024-08-12') // 公開開始日
+  const publishDate = new Date(baseDate)
+  
+  // 2日ごとに公開（記事番号-1日分を追加）
+  publishDate.setDate(baseDate.getDate() + (articleNumber - 1) * 2)
+  
+  return publishDate
+}
+
 // 記事データを整形する関数
 export function formatArticle(article: typeof EDUCATION_ARTICLES[0]) {
   const today = new Date()
-  const publishDate = new Date(today)
+  const publishDate = getPublishDate(article.number)
   
-  // 記事番号がPUBLISHED_ARTICLE_COUNT以下の場合は公開済み
-  const isPublished = article.number <= PUBLISHED_ARTICLE_COUNT
-  
-  if (isPublished) {
-    publishDate.setDate(today.getDate() - 30) // 30日前に公開済みとする
-  } else {
-    // 未公開記事は将来の日付を設定
-    const daysUntilPublish = (article.number - PUBLISHED_ARTICLE_COUNT) * 2 // 2日ごとに公開
-    publishDate.setDate(today.getDate() + daysUntilPublish)
-  }
+  // 現在の日付と公開日を比較して公開状態を判定
+  const isPublished = publishDate <= today
   
   return {
     id: `article_${String(article.number).padStart(3, '0')}`,
