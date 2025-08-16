@@ -105,30 +105,39 @@ export function getAccessLevel(articleNumber: number): 'free' | 'partial' | 'pre
 
 // 記事の公開日を取得する関数
 export function getPublishDate(articleNumber: number): Date {
-  const baseDate = new Date('2024-08-12') // 公開開始日
+  const baseDate = new Date('2025-08-16') // 本日から開始
   const publishDate = new Date(baseDate)
   
-  // 2日ごとに公開（記事番号-1日分を追加）
-  publishDate.setDate(baseDate.getDate() + (articleNumber - 1) * 2)
+  // 1日ごとに公開（記事番号-1日分を追加）
+  publishDate.setDate(baseDate.getDate() + (articleNumber - 1) * 1)
   
   return publishDate
+}
+
+// 記事の公開状態を取得する関数
+export function getArticleStatus(articleNumber: number): 'title_only' | 'content_locked' | 'content_available' {
+  const today = new Date()
+  const publishDate = getPublishDate(articleNumber)
+  
+  // 常にタイトルは表示、詳細ページで本文の公開状態を判定
+  return publishDate <= today ? 'content_available' : 'content_locked'
 }
 
 // 記事データを整形する関数
 export function formatArticle(article: typeof EDUCATION_ARTICLES[0]) {
   const today = new Date()
   const publishDate = getPublishDate(article.number)
+  const status = getArticleStatus(article.number)
   
-  // 現在の日付と公開日を比較して公開状態を判定
-  const isPublished = publishDate <= today
-  
+  // タイトルは常に表示、詳細ページで本文表示を制御
   return {
     id: `article_${String(article.number).padStart(3, '0')}`,
     title: article.title,
     category: article.category,
     accessLevel: getAccessLevel(article.number),
     publishDate: publishDate.toISOString(),
-    isPublished,
+    isPublished: true, // タイトルは常に表示
+    contentStatus: status, // 本文の公開状態
     readTime: 7
   }
 }
