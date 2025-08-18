@@ -105,12 +105,20 @@ export function getAccessLevel(articleNumber: number): 'free' | 'partial' | 'pre
 
 // 記事の公開日を取得する関数
 export function getPublishDate(articleNumber: number): Date {
-  // 2025年8月16日（JST）から開始
-  const baseDate = new Date('2025-08-16T00:00:00+09:00')
+  // 001-004は既に公開済みとして過去の日付を設定
+  if (articleNumber >= 1 && articleNumber <= 4) {
+    // 2025年8月13日から8月16日に公開済みとする
+    const publishedDate = new Date('2025-08-13T00:00:00+09:00')
+    publishedDate.setDate(publishedDate.getDate() + (articleNumber - 1))
+    return publishedDate
+  }
+  
+  // 005以降は2025年8月18日（今日）から開始
+  const baseDate = new Date('2025-08-18T00:00:00+09:00')
   const publishDate = new Date(baseDate)
   
-  // 1日ごとに公開（記事番号-1日分を追加）
-  publishDate.setDate(baseDate.getDate() + (articleNumber - 1))
+  // 記事005は今日（8月18日）公開
+  publishDate.setDate(baseDate.getDate() + (articleNumber - 5))
   
   return publishDate
 }
