@@ -105,38 +105,52 @@ export function getAccessLevel(articleNumber: number): 'free' | 'partial' | 'pre
 
 // 記事の公開日を取得する関数
 export function getPublishDate(articleNumber: number): Date {
-  const baseDate = new Date('2025-08-16') // 本日から開始
+  // 2025年8月16日（JST）から開始
+  const baseDate = new Date('2025-08-16T00:00:00+09:00')
   const publishDate = new Date(baseDate)
   
   // 1日ごとに公開（記事番号-1日分を追加）
-  publishDate.setDate(baseDate.getDate() + (articleNumber - 1) * 1)
+  publishDate.setDate(baseDate.getDate() + (articleNumber - 1))
   
   return publishDate
 }
 
 // 記事の公開状態を取得する関数
 export function getArticleStatus(articleNumber: number): 'title_only' | 'content_locked' | 'content_available' {
+  // 日本時間で現在の日付を取得（時刻は0:00:00にリセット）
   const today = new Date()
+  const todayJST = new Date(today.toLocaleString('en-US', { timeZone: 'Asia/Tokyo' }))
+  todayJST.setHours(0, 0, 0, 0)
+  
   const publishDate = getPublishDate(articleNumber)
+  publishDate.setHours(0, 0, 0, 0)
   
   // 常にタイトルは表示、詳細ページで本文の公開状態を判定
-  return publishDate <= today ? 'content_available' : 'content_locked'
+  return publishDate <= todayJST ? 'content_available' : 'content_locked'
 }
 
 // 記事データを整形する関数
 export function formatArticle(article: typeof EDUCATION_ARTICLES[0]) {
+  // 日本時間で現在の日付を取得（時刻は0:00:00にリセット）
   const today = new Date()
+  const todayJST = new Date(today.toLocaleString('en-US', { timeZone: 'Asia/Tokyo' }))
+  todayJST.setHours(0, 0, 0, 0)
+  
   const publishDate = getPublishDate(article.number)
+  publishDate.setHours(0, 0, 0, 0)
+  
   const status = getArticleStatus(article.number)
   
-  // タイトルは常に表示、詳細ページで本文表示を制御
+  // 公開日が今日以前の記事のみ公開
+  const isPublished = publishDate <= todayJST
+  
   return {
     id: `article_${String(article.number).padStart(3, '0')}`,
     title: article.title,
     category: article.category,
     accessLevel: getAccessLevel(article.number),
     publishDate: publishDate.toISOString(),
-    isPublished: true, // タイトルは常に表示
+    isPublished: isPublished, // 公開日に基づいて判定
     contentStatus: status, // 本文の公開状態
     readTime: 7
   }
