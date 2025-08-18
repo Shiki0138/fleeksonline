@@ -43,8 +43,8 @@ export async function GET(request: Request) {
         // Handle different callback types
         switch (type) {
           case 'recovery':
-            // Password reset flow
-            return NextResponse.redirect(`${requestUrl.origin}/auth/update-password`)
+            // Password reset flow - try multiple paths to ensure compatibility
+            return NextResponse.redirect(`${requestUrl.origin}/auth/password-reset?code=${code}`)
           case 'signup':
           case 'email_confirmation':
             // Email confirmation flow
