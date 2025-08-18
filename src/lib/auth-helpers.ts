@@ -83,6 +83,8 @@ export async function checkExistingSession() {
 
 // 認証状態の監視（重複防止）
 let authStateListenerActive = false
+let lastEventTime = 0
+const EVENT_DEBOUNCE_MS = 500 // イベントのデバウンス時間
 
 export function setupAuthStateListener(callback: (user: any) => void) {
   if (authStateListenerActive) {
@@ -94,6 +96,14 @@ export function setupAuthStateListener(callback: (user: any) => void) {
   const supabase = createClientComponentClient()
   
   const { data: listener } = supabase.auth.onAuthStateChange((event, session) => {
+    // 同じイベントが短時間に複数回発生するのを防ぐ
+    const now = Date.now()
+    if (now - lastEventTime < EVENT_DEBOUNCE_MS) {
+      console.log(`Debouncing auth event ${event}, too soon after last event`)
+      return
+    }
+    lastEventTime = now
+    
     // サインイン系イベントは無視（ループ防止）
     if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
       callback(session?.user || null)

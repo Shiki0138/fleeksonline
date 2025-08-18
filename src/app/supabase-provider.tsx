@@ -23,19 +23,28 @@ export default function SupabaseProvider({
   const router = useRouter()
 
   useEffect(() => {
+    let isRefreshing = false
+    const refreshDebounce = setTimeout(() => {}, 0)
+    
     const {
       data: { subscription },
     } = supabaseClient.auth.onAuthStateChange((event, session) => {
       console.log('[SupabaseProvider] Auth state changed:', event, session?.user?.email)
       
-      if (event === 'SIGNED_OUT') {
-        router.refresh()
-      } else if (event === 'SIGNED_IN' && session) {
-        router.refresh()
+      // デバウンス処理で過剰なrefreshを防ぐ
+      clearTimeout(refreshDebounce)
+      
+      if ((event === 'SIGNED_OUT' || (event === 'SIGNED_IN' && session)) && !isRefreshing) {
+        isRefreshing = true
+        setTimeout(() => {
+          router.refresh()
+          isRefreshing = false
+        }, 300) // 300msの遅延を入れて重複を防ぐ
       }
     })
 
     return () => {
+      clearTimeout(refreshDebounce)
       subscription.unsubscribe()
     }
   }, [router, supabaseClient])

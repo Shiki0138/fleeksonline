@@ -48,7 +48,7 @@ export default class ErrorBoundary extends Component<Props, State> {
             <button
               onClick={() => {
                 this.setState({ hasError: false, error: undefined })
-                window.location.reload()
+                // window.location.reloadの代わりにステートリセットのみ
               }}
               className="inline-flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
             >
